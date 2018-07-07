@@ -91,13 +91,17 @@ class detachment():
         print("\nWhich {} unit would you like to add?".format(battlefield_role))
         if battlefield_role == "HQ":
             print("Available Models (Including Wargear):")
+            keys = list(units_dict["Named Characters"].keys())
+            top_len = len(max(keys, key=len))
             for keys, value in units_dict["Named Characters"].items():
-                print("- " + keys + "\t({}pts)".format(value.pts))
+                print("- " + keys.ljust(top_len) + "\t({}pts)".format(value.pts))
             print('')
 
         print("Available Models (Without Wargear):")
+        keys = list(units_dict[battlefield_role].keys())
+        top_len = len(max(keys, key=len))
         for keys, value in units_dict[battlefield_role].items():
-            print("- " + keys + "\t({}pts)".format(value.pts))
+            print("- " + keys.ljust(top_len) + "\t({}pts)".format(value.pts))
 
 
 
@@ -124,6 +128,8 @@ class unit_types():
     """
     def __init__(self, name, props):
         self.name = name
+
+        #if range of unit size, save as array, otherwise single number
         try:
             self.size = np.array([int(i) for i in props[0].split('-')])
         except AttributeError:
@@ -131,8 +137,29 @@ class unit_types():
 
         self.pts = int(props[1])
 
+        if props[2] != props[2]: #if entry is nan
+            self.wargear = None
+        else:
+            self.wargear = []
+            wargear = props[2].split(',')
+            for i in wargear:
+                i = i.split('*')
+                try:
+                    i[0] = int(i[0])
+                    for j in range(i[0]):
+                        self.wargear.append(i[-1])
+                except:
+                    self.wargear.append(i[0])
+
+        print(self.wargear)
+
+
+
     def __repr__(self):
         output = self.name + "\t" + str(self.pts) + "pts per model\t"
+        if self.wargear != None:
+            for i in self.wargear:
+                output += i +", "
         return output
 
 
@@ -150,10 +177,12 @@ def init(faction):
         detachments_dict[index] = detachment_types(index, rows)
 
     #determine faction of armylist and open units and wargear data
+    global units
     units = pd.read_excel("{}_units.xlsx".format(faction), sheetname=None, index_col=0, header=0)
     global units_dict
     units_dict = {}
     for key, value in units.items():
+#        print(value.head())
         units_dict[key] = {}
         for index, rows in units[key].iterrows():
             units_dict[key][index] = unit_types(index,rows)
