@@ -12,25 +12,102 @@ class army_list():
     def __init__(self, faction):
         self.faction = faction
         self.detachments = []
+
+        #define list of names to make searching and labelling easier
+        self.detachment_names = []
         return
 
-    def add_detachment(self):
-        print("Which detachment would you like to add?")
+    def add_detachment(self, user_input=None):
+        """Adds a detachment to the army list"""
+
+        if user_input == None:
+            print("Which detachment would you like to add?")
+            for keys, items in detachments_dict.items():
+                print('- ' + keys)
+
+            #get input to decide which detachments to add
+            user_input = input(">> ")
+
+        #allows users to add multiple detachments at once
+        for i in user_input.split(','):
+            i = i.replace(' ','')   #remove any extra spaces added by user
+            self.detachments.append(detachment(i))
+            self.detachment_names.append(i)
+
+        #number repeated detachment types
         for keys, items in detachments_dict.items():
-            print(keys)
-        self.detachments.append(detachment(input(">> ")))
+            if self.detachment_names.count(keys) > 1:
+                counter = 1
+                for i in self.detachments:
+                    if i.type == keys and i.default_name:
+                        i.rename(keys + ' ' + str(counter))
+                        counter += 1
         return
 
 class detachment():
-    def __init__(self, detachment_type):
+    def __init__(self, detachment_type, instance_no=None):
         self.foc = detachments_dict[detachment_type]
         self.type = detachment_type
+        self.name = self.type
+        self.default_name = True
+
+        if instance_no != None:
+            self.name += ' ' + str(instance_no)
 
     def __repr__(self):
-        return self.type
+        return self.name
+
+    def rename(self, new_name, user_given=False):
+        """
+        Changes the name of the detachment to the given new_name string,
+        user_given should only be True if the name change is from the user, and
+        not the addition of numbers to disambiguiate between multiple
+        detachments of the same type
+        """
+        self.name = new_name
+        if user_given:
+            self.default_name = False
+
+    def add_unit(self, battlefield_role=None):
+        """ Adds a unit to the detachment"""
+        if battlefield_role == None:
+            print("Which Battlefield Role would you like to add?")
+            print("- HQ\n- Troops\n- Elites\n- Fast Attack\n- Heavy Support")
+            battlefield_role = input(">> ")
+            battlefield_role = battlefield_role.replace(' ', '')
+
+            #sanitise inputs
+            if battlefield_role == "hq" or battlefield_role == "HQ":
+                battlefield_role = "HQ"
+            elif "roop" in battlefield_role:
+                battlefield_role = "Troops"
+            elif "lite" in battlefield_role:
+                battlefield_role = "Elites"
+            elif "eavy" in battlefield_role or battlefield_role == "HS" or battlefield_role == "hs":
+                battlefield_role = "Heavy Support"
+            elif "ast" in battlefield_role or battlefield_role == "FA" or battlefield_role == "fa":
+                battlefield_role = "Fast Attack"
+
+        print("\nWhich {} unit would you like to add?".format(battlefield_role))
+        if battlefield_role == "HQ":
+            print("Available Models (Including Wargear):")
+            for keys, value in units_dict["Named Characters"].items():
+                print("- " + keys + "\t({}pts)".format(value.pts))
+            print('')
+
+        print("Available Models (Without Wargear):")
+        for keys, value in units_dict[battlefield_role].items():
+            print("- " + keys + "\t({}pts)".format(value.pts))
+
+
+
 
 
 class detachment_types():
+    """
+    Class to group together the properties and benefits of each detachment
+    available to an army
+    """
     def __init__(self, name, props):
         self.name = name
         self.command_points = int(props[0])
@@ -41,6 +118,10 @@ class detachment_types():
         self.heavy_sup = np.array([int(i) for i in props[5].split('-')])
 
 class unit_types():
+    """
+    Class to group together the properties and options of a unit available to a
+    given faction in the army list
+    """
     def __init__(self, name, props):
         self.name = name
         try:
@@ -50,26 +131,25 @@ class unit_types():
 
         self.pts = int(props[1])
 
+    def __repr__(self):
+        output = self.name + "\t" + str(self.pts) + "pts per model\t"
+        return output
 
 
 
-def init():
+
+def init(faction):
+    """
+    Initialises the detachments dictionary which is universal to all armies
+    """
+    #Open list of possible detachments and generate object for each one
     detachments = pd.read_excel("./Detachments.xlsx", header=0, index_col=0)
     global detachments_dict
     detachments_dict = {}
     for index, rows in detachments.iterrows():
         detachments_dict[index] = detachment_types(index, rows)
 
-if __name__ == "__main__":
-    print("Army Builder Version 1.0")
-
-    #Open list of possible detachments and generate object for each one
-    init()
-
     #determine faction of armylist and open units and wargear data
-#    print("Which army are you using?")
-#    faction = input(">> ")
-    faction = "Necron"
     units = pd.read_excel("{}_units.xlsx".format(faction), sheetname=None, index_col=0, header=0)
     global units_dict
     units_dict = {}
@@ -86,6 +166,9 @@ if __name__ == "__main__":
         for index, rows in armoury[key].iterrows():
             armoury_dict[key][index] = rows[0]
 
-
-
-
+if __name__ == "__main__":
+    print("Army Builder Version 1.0")
+#    print("Which army are you using?")
+#    faction = input(">> ")
+    faction = "Necron"
+    init(faction)
