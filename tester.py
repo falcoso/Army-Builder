@@ -11,10 +11,13 @@ import pandas as pd
 main.init("Necron")
 faction = "Necron"
 
+#print(detachments_dict.items())
+#army = main.army_list("Necron")
+#army.add_detachment()
 army = main.detachment("Patrol")
 army.add_unit("HQ")
 
-for keys, values in units_dict.items():
-    print(keys)
-    for key2, values2 in values.items():
-        print(values2)
+#for keys, values in units_dict.items():
+#    print(keys)
+#    for key2, values2 in values.items():
+#        print(values2)

@@ -21,9 +21,10 @@ class army_list():
         """Adds a detachment to the army list"""
 
         if user_input == None:
+
             print("Which detachment would you like to add?")
-            for keys, items in detachments_dict.items():
-                print('- ' + keys)
+            for index, keys in enumerate(detachments_dict.keys()):
+                print(str(index +1)+'. ' + keys)
 
             #get input to decide which detachments to add
             user_input = input(">> ")
@@ -31,11 +32,15 @@ class army_list():
         #allows users to add multiple detachments at once
         for i in user_input.split(','):
             i = i.replace(' ','')   #remove any extra spaces added by user
-            self.detachments.append(detachment(i))
+            try:
+                self.detachments.append(detachment(i))
+            except KeyError:
+                i = list(detachments_dict.keys())[int(i)-1]
+                self.detachments.append(detachment(i))
             self.detachment_names.append(i)
 
         #number repeated detachment types
-        for keys, items in detachments_dict.items():
+        for keys in detachments_dict.keys():
             if self.detachment_names.count(keys) > 1:
                 counter = 1
                 for i in self.detachments:
@@ -50,6 +55,11 @@ class detachment():
         self.type = detachment_type
         self.name = self.type
         self.default_name = True
+        self.units = {"HQ":[],
+                      "Troops":[],
+                      "Elites":[],
+                      "Fast Attack":[],
+                      "Heavy Support":[]}
 
         if instance_no != None:
             self.name += ' ' + str(instance_no)
@@ -70,41 +80,66 @@ class detachment():
 
     def add_unit(self, battlefield_role=None):
         """ Adds a unit to the detachment"""
+        #list battlefield roles of chosen unit
         if battlefield_role == None:
+
+            roles = ["HQ", "Troops", "Elites", "Fast Attack", "Heavy Support"]
             print("Which Battlefield Role would you like to add?")
-            print("- HQ\n- Troops\n- Elites\n- Fast Attack\n- Heavy Support")
+            for index, role in enumerate(roles):
+                print(str(index)+'. '+role)
             battlefield_role = input(">> ")
             battlefield_role = battlefield_role.replace(' ', '')
 
-            #sanitise inputs
-            if battlefield_role == "hq" or battlefield_role == "HQ":
-                battlefield_role = "HQ"
-            elif "roop" in battlefield_role:
-                battlefield_role = "Troops"
-            elif "lite" in battlefield_role:
-                battlefield_role = "Elites"
-            elif "eavy" in battlefield_role or battlefield_role == "HS" or battlefield_role == "hs":
-                battlefield_role = "Heavy Support"
-            elif "ast" in battlefield_role or battlefield_role == "FA" or battlefield_role == "fa":
-                battlefield_role = "Fast Attack"
+            try:
+                battlefield_role = roles[int(battlefield_role)]
+            except:
+                #sanitise inputs
+                if battlefield_role == "hq" or battlefield_role == "HQ":
+                    battlefield_role = "HQ"
+                elif "roop" in battlefield_role:
+                    battlefield_role = "Troops"
+                elif "lite" in battlefield_role:
+                    battlefield_role = "Elites"
+                elif "eavy" in battlefield_role or battlefield_role == "HS" or battlefield_role == "hs":
+                    battlefield_role = "Heavy Support"
+                elif "ast" in battlefield_role or battlefield_role == "FA" or battlefield_role == "fa":
+                    battlefield_role = "Fast Attack"
 
+        #list available units from that role
         print("\nWhich {} unit would you like to add?".format(battlefield_role))
+        #if HQ add named characters as well
         if battlefield_role == "HQ":
-            print("Available Models (Including Wargear):")
+            print("Named Characters (Including Wargear):")
             keys = list(units_dict["Named Characters"].keys())
             top_len = len(max(keys, key=len))
-            for keys, value in units_dict["Named Characters"].items():
-                print("- " + keys.ljust(top_len) + "\t({}pts)".format(value.pts))
+            for index, [keys, value] in enumerate(units_dict["Named Characters"].items()):
+                print("A" + str(index+1)+". " + keys.ljust(top_len) + "\t({}pts)".format(value.pts))
             print('')
 
-        print("Available Models (Without Wargear):")
-        keys = list(units_dict[battlefield_role].keys())
-        top_len = len(max(keys, key=len))
-        for keys, value in units_dict[battlefield_role].items():
-            print("- " + keys.ljust(top_len) + "\t({}pts)".format(value.pts))
+            print("Other Characters (Without Wargear):")
+            units = list(units_dict[battlefield_role].keys())
+            top_len = len(max(units, key=len))
+            for index, [keys, value] in enumerate(units_dict[battlefield_role].items()):
+                print("B" + str(index+1) + ". " + keys.ljust(top_len) + "\t({}pts)".format(value.pts))
 
+        else:
+            #print available models and their points
+            print("Available Models (Without Wargear):")
+            units = list(units_dict[battlefield_role].keys())
+            top_len = len(max(units, key=len))
+            for index, [keys, value] in enumerate(units_dict[battlefield_role].items()):
+                print(str(index+1) + ". " + keys.ljust(top_len) + "\t({}pts)".format(value.pts))
 
-
+#            unit = input(">> ")
+#            try:
+#                self.detachments.append(detachment(i))
+#            except KeyError:
+#                i = list(detachments_dict.keys())[int(i)-1]
+#                self.detachments.append(detachment(i))
+#            self.detachment_names.append(i)
+class unit():
+    def __init__(self, name, properties):
+        pass
 
 
 class detachment_types():
@@ -151,10 +186,6 @@ class unit_types():
                 except:
                     self.wargear.append(i[0])
 
-        print(self.wargear)
-
-
-
     def __repr__(self):
         output = self.name + "\t" + str(self.pts) + "pts per model\t"
         if self.wargear != None:
@@ -162,12 +193,9 @@ class unit_types():
                 output += i +", "
         return output
 
-
-
-
 def init(faction):
     """
-    Initialises the detachments dictionary which is universal to all armies
+    Initialises the global variables for the chosen faction
     """
     #Open list of possible detachments and generate object for each one
     detachments = pd.read_excel("./Detachments.xlsx", header=0, index_col=0)
@@ -181,8 +209,7 @@ def init(faction):
     units = pd.read_excel("{}_units.xlsx".format(faction), sheetname=None, index_col=0, header=0)
     global units_dict
     units_dict = {}
-    for key, value in units.items():
-#        print(value.head())
+    for key in units.keys():
         units_dict[key] = {}
         for index, rows in units[key].iterrows():
             units_dict[key][index] = unit_types(index,rows)
@@ -190,7 +217,7 @@ def init(faction):
     armoury = pd.read_excel("{}_armoury.xlsx".format(faction), sheetname=None, index_col=0, header=0)
     global armoury_dict
     armoury_dict = {}
-    for key, value in armoury.items():
+    for key in armoury.keys():
         armoury_dict[key] = {}
         for index, rows in armoury[key].iterrows():
             armoury_dict[key][index] = rows[0]
