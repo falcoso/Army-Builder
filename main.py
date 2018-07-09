@@ -176,15 +176,18 @@ class unit_types():
             self.wargear = None
         else:
             self.wargear = []
-            wargear = props[2].split(',')
-            for i in wargear:
-                i = i.split('*')
-                try:
+            #split list if multiple wargear items in temporary variable for
+            #processing
+            wargear_temp = props[2].split(',')
+            for i in wargear_temp:
+                if '*' in i:
+                    i = i.split('*')
+                    #check to see if first item is a number i.e. that the li
                     i[0] = int(i[0])
                     for j in range(i[0]):
                         self.wargear.append(i[-1])
-                except:
-                    self.wargear.append(i[0])
+                else:
+                    self.wargear.append(i)
 
     def __repr__(self):
         output = self.name + "\t" + str(self.pts) + "pts per model\t"
