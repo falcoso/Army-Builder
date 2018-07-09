@@ -51,7 +51,7 @@ class army_list():
 
 class detachment():
     def __init__(self, detachment_type, instance_no=None):
-        self.foc = detachments_dict[detachment_type]
+        self.foc = detachments_dict[detachment_type].foc
         self.type = detachment_type
         self.name = self.type
         self.default_name = True
@@ -63,6 +63,12 @@ class detachment():
 
         if instance_no != None:
             self.name += ' ' + str(instance_no)
+
+#        populate compulsory slots
+        for keys, values in self.units.items():
+            while len(values) < self.foc[keys][0]:
+                print("Adding compulsory units from " + keys)
+                self.add_unit(keys)
 
     def __repr__(self):
         return self.name
@@ -122,6 +128,19 @@ class detachment():
             for index, [keys, value] in enumerate(units_dict[battlefield_role].items()):
                 print("B" + str(index+1) + ". " + keys.ljust(top_len) + "\t({}pts)".format(value.pts))
 
+            user_input = input(">> ")
+            if len(user_input) < 3:
+                if user_input[0] in ['A','a']:
+                    user_input = list(units_dict["Named Characters"].keys())[int(user_input[1:])-1]
+                    self.units[battlefield_role].append(unit(user_input, battlefield_role))
+                elif user_input[0] in ['B','b']:
+                    user_input = list(units_dict["HQ"].keys())[int(user_input[1:])-1]
+                    self.units[battlefield_role].append(unit(user_input, battlefield_role))
+                else:
+                    raise ValueError("Invalid user input for HQ selection")
+            else:
+                self.units[battlefield_role].append(unit(user_input, battlefield_role))
+
         else:
             #print available models and their points
             print("Available Models (Without Wargear):")
@@ -130,16 +149,29 @@ class detachment():
             for index, [keys, value] in enumerate(units_dict[battlefield_role].items()):
                 print(str(index+1) + ". " + keys.ljust(top_len) + "\t({}pts)".format(value.pts))
 
-#            unit = input(">> ")
-#            try:
-#                self.detachments.append(detachment(i))
-#            except KeyError:
-#                i = list(detachments_dict.keys())[int(i)-1]
-#                self.detachments.append(detachment(i))
-#            self.detachment_names.append(i)
+            user_input = input(">> ")
+            try:
+                self.units[battlefield_role].append(unit(user_input, battlefield_role))
+            except KeyError:
+                user_input = list(units_dict[battlefield_role].keys())[int(user_input)-1]
+                self.units[battlefield_role].append(unit(user_input, battlefield_role))
+
 class unit():
-    def __init__(self, name, properties):
-        pass
+    def __init__(self, unit_type, battlefield_role):
+        self.type = unit_type
+        self.battlefield_role = battlefield_role
+        self.name = self.type
+        self.default_name = True
+        #catch any characters being added
+        try:
+            base_unit = units_dict[self.battlefield_role][self.type]
+        except:
+            base_unit = units_dict["Named Characters"][self.type]
+
+        self.pts = base_unit.pts
+        self.wargear = base_unit.wargear
+        print(self.name + " added to detachment")
+        return
 
 
 class detachment_types():
@@ -150,11 +182,19 @@ class detachment_types():
     def __init__(self, name, props):
         self.name = name
         self.command_points = int(props[0])
-        self.hq =        np.array([int(i) for i in props[1].split('-')])
-        self.troops =    np.array([int(i) for i in props[2].split('-')])
-        self.elites =    np.array([int(i) for i in props[3].split('-')])
-        self.fast_at =   np.array([int(i) for i in props[4].split('-')])
-        self.heavy_sup = np.array([int(i) for i in props[5].split('-')])
+        self.foc ={"HQ":     np.array([int(i) for i in props[1].split('-')]),
+                   "Troops": np.array([int(i) for i in props[2].split('-')]),
+                   "Elites": np.array([int(i) for i in props[3].split('-')]),
+                   "Fast Attack":   np.array([int(i) for i in props[4].split('-')]),
+                   "Heavy Support": np.array([int(i) for i in props[5].split('-')])}
+
+    def __repr__(self):
+        output = self.name + "\n"
+        top_len = len(max(self.foc.keys(), key=len))
+        for key, value in self.foc.items():
+            output += key.ljust(top_len) + "\t{}-{}\n".format(*value)
+
+        return output
 
 class unit_types():
     """
@@ -180,14 +220,14 @@ class unit_types():
             #processing
             wargear_temp = props[2].split(',')
             for i in wargear_temp:
-                if '*' in i:
-                    i = i.split('*')
-                    #check to see if first item is a number i.e. that the li
-                    i[0] = int(i[0])
-                    for j in range(i[0]):
-                        self.wargear.append(i[-1])
-                else:
-                    self.wargear.append(i)
+#                if '*' in i:
+#                    i = i.split('*')
+#                    #check to see if first item is a number i.e. that the li
+#                    i[0] = int(i[0])
+#                    for j in range(i[0]):
+#                        self.wargear.append(i[-1])
+#                else:
+                self.wargear.append(i)
 
     def __repr__(self):
         output = self.name + "\t" + str(self.pts) + "pts per model\t"
