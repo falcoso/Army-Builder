@@ -9,6 +9,10 @@ import os, sys
 import numpy as np
 
 class army_list():
+    """
+    Overarching class to collect together all the detachments and keep track
+    of the army's factions and properties
+    """
     def __init__(self, faction):
         self.faction = faction
         self.detachments = []
@@ -50,6 +54,10 @@ class army_list():
         return
 
 class detachment():
+    """
+    Collects together all the units within a detachment, making sure that
+    minimum requirements are met and keeping track of points.
+    """
     def __init__(self, detachment_type, instance_no=None):
         self.foc = detachments_dict[detachment_type].foc
         self.type = detachment_type
@@ -64,10 +72,10 @@ class detachment():
         if instance_no != None:
             self.name += ' ' + str(instance_no)
 
-#        populate compulsory slots
+        #populate compulsory slots
         for keys, values in self.units.items():
             while len(values) < self.foc[keys][0]:
-                print("Adding compulsory units from " + keys)
+                print("***Adding compulsory units from " + keys + "***")
                 self.add_unit(keys)
 
     def __repr__(self):
@@ -122,7 +130,7 @@ class detachment():
                 print("A" + str(index+1)+". " + keys.ljust(top_len) + "\t({}pts)".format(value.pts))
             print('')
 
-            print("Other Characters (Without Wargear):")
+            print("Other Characters (Including base Wargear):")
             units = list(units_dict[battlefield_role].keys())
             top_len = len(max(units, key=len))
             for index, [keys, value] in enumerate(units_dict[battlefield_role].items()):
@@ -143,11 +151,11 @@ class detachment():
 
         else:
             #print available models and their points
-            print("Available Models (Without Wargear):")
+            print("Available Models (Including base Wargear):")
             units = list(units_dict[battlefield_role].keys())
             top_len = len(max(units, key=len))
             for index, [keys, value] in enumerate(units_dict[battlefield_role].items()):
-                print(str(index+1) + ". " + keys.ljust(top_len) + "\t({}pts)".format(value.pts))
+                print(str(index+1) + ". " + keys.ljust(top_len) + "\t({}pts for {} models)".format(value.pts*value.size[0], value.size[0]))
 
             user_input = input(">> ")
             try:
@@ -177,7 +185,7 @@ class unit():
 class detachment_types():
     """
     Class to group together the properties and benefits of each detachment
-    available to an army
+    available to an army for detachments_dict
     """
     def __init__(self, name, props):
         self.name = name
@@ -203,14 +211,14 @@ class unit_types():
     """
     def __init__(self, name, props):
         self.name = name
+        self.pts = int(props[1])
 
         #if range of unit size, save as array, otherwise single number
         try:
             self.size = np.array([int(i) for i in props[0].split('-')])
         except AttributeError:
-            self.size = props[0]
+            self.size = np.array([int(props[0])])
 
-        self.pts = int(props[1])
 
         if props[2] != props[2]: #if entry is nan
             self.wargear = None
@@ -218,16 +226,36 @@ class unit_types():
             self.wargear = []
             #split list if multiple wargear items in temporary variable for
             #processing
-            wargear_temp = props[2].split(',')
+            wargear_temp = props[2].split(', ')
             for i in wargear_temp:
-#                if '*' in i:
-#                    i = i.split('*')
-#                    #check to see if first item is a number i.e. that the li
-#                    i[0] = int(i[0])
-#                    for j in range(i[0]):
-#                        self.wargear.append(i[-1])
-#                else:
                 self.wargear.append(i)
+
+        #find default wargear costs
+        wargear_pts = 0
+        if self.wargear == None:
+            return
+
+        for i in self.wargear:
+            if '*' in i:
+                temp = i.split('*')
+                #check to see if first item is a number i.e. that the li
+
+                no_of = int(temp[0])
+                temp = temp[1]
+            else:
+                temp = i
+                no_of = 1
+
+            if temp in armoury_dict["Range"]:
+                wargear_pts += no_of*armoury_dict["Range"][temp]
+            elif temp in armoury_dict["Melee"]:
+                wargear_pts += no_of*armoury_dict["Melee"][temp]
+            elif temp in armoury_dict["Other Wargear"]:
+                wargear_pts += no_of*armoury_dict["Other Wargear"][temp]
+            else:
+                raise KeyError("{} for {} not found in _armoury.xlsx file".format(temp, self.name))
+
+        self.pts += wargear_pts
 
     def __repr__(self):
         output = self.name + "\t" + str(self.pts) + "pts per model\t"
@@ -248,6 +276,14 @@ def init(faction):
         detachments_dict[index] = detachment_types(index, rows)
 
     #determine faction of armylist and open units and wargear data
+    armoury = pd.read_excel("{}_armoury.xlsx".format(faction), sheetname=None, index_col=0, header=0)
+    global armoury_dict
+    armoury_dict = {}
+    for key in armoury.keys():
+        armoury_dict[key] = {}
+        for index, rows in armoury[key].iterrows():
+            armoury_dict[key][index] = rows[0]
+
     global units
     units = pd.read_excel("{}_units.xlsx".format(faction), sheetname=None, index_col=0, header=0)
     global units_dict
@@ -256,14 +292,6 @@ def init(faction):
         units_dict[key] = {}
         for index, rows in units[key].iterrows():
             units_dict[key][index] = unit_types(index,rows)
-
-    armoury = pd.read_excel("{}_armoury.xlsx".format(faction), sheetname=None, index_col=0, header=0)
-    global armoury_dict
-    armoury_dict = {}
-    for key in armoury.keys():
-        armoury_dict[key] = {}
-        for index, rows in armoury[key].iterrows():
-            armoury_dict[key][index] = rows[0]
 
 if __name__ == "__main__":
     print("Army Builder Version 1.0")

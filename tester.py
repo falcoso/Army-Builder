@@ -14,8 +14,8 @@ faction = "Necron"
 #print(detachments_dict.items())
 #army = main.army_list("Necron")
 #army.add_detachment()
-army = main.detachment("Battalion")
-#army.add_unit("HQ")
+#army = main.detachment("Patrol")
+army.add_unit("Elites")
 #print(type(army))
 #for keys, values in units_dict.items():
 #    print(keys)
