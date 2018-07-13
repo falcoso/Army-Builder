@@ -47,9 +47,10 @@ class army_list():
         for keys in detachments_dict.keys():
             if self.detachment_names.count(keys) > 1:
                 counter = 1
-                for i in self.detachments:
+                for i, j in zip(self.detachments, range(len(self.detachment_names))):
                     if i.type == keys and i.default_name:
                         i.rename(keys + ' ' + str(counter))
+                        self.detachment_names[j] = keys + ' ' + str(counter)
                         counter += 1
         return
 
@@ -79,7 +80,15 @@ class detachment():
                 self.add_unit(keys)
 
     def __repr__(self):
-        return self.name
+        output = "***" + self.name + "***\n"
+        for key, value in self.units.items():
+            if len(value) != 0:
+                output += "*" + key + "*\n"
+                for i in value:
+                    output += i.__repr__() + "\n"
+                output += "\n"
+
+        return output
 
     def rename(self, new_name, user_given=False):
         """
@@ -180,6 +189,19 @@ class unit():
         self.wargear = base_unit.wargear
         print(self.name + " added to detachment")
         return
+
+    def __repr__(self):
+        output = self.name
+        if not self.default_name:
+            output += "(" + self.type + ")"
+
+        output += "\t\t{}pts\n".format(self.pts)
+        if self.wargear != None:
+            for i in self.wargear:
+                output += "\t" + i + "\n"
+
+        return output
+
 
 
 class detachment_types():
