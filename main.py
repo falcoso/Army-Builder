@@ -47,10 +47,10 @@ class army_list():
         for keys in detachments_dict.keys():
             if self.detachment_names.count(keys) > 1:
                 counter = 1
-                for i, j in zip(self.detachments, range(len(self.detachment_names))):
-                    if i.type == keys and i.default_name:
-                        i.rename(keys + ' ' + str(counter))
-                        self.detachment_names[j] = keys + ' ' + str(counter)
+                for i in range(len(self.detachment_names)):
+                    if self.detachments[i].type == keys and self.detachments[i].default_name:
+                        self.detachments[i].rename(keys + ' ' + str(counter))
+                        self.detachment_names[i] = keys + ' ' + str(counter)
                         counter += 1
         return
 
@@ -60,7 +60,7 @@ class detachment():
     minimum requirements are met and keeping track of points.
     """
     def __init__(self, detachment_type, instance_no=None):
-        self.foc = detachments_dict[detachment_type].foc
+        self.foc = detachments_dict[detachment_type]["foc"]
         self.type = detachment_type
         self.name = self.type
         self.default_name = True
@@ -109,12 +109,12 @@ class detachment():
             roles = ["HQ", "Troops", "Elites", "Fast Attack", "Heavy Support"]
             print("Which Battlefield Role would you like to add?")
             for index, role in enumerate(roles):
-                print(str(index)+'. '+role)
+                print(str(index+1)+'. '+role)
             battlefield_role = input(">> ")
             battlefield_role = battlefield_role.replace(' ', '')
 
             try:
-                battlefield_role = roles[int(battlefield_role)]
+                battlefield_role = roles[int(battlefield_role)-1]
             except:
                 #sanitise inputs
                 if battlefield_role == "hq" or battlefield_role == "HQ":
@@ -185,8 +185,13 @@ class unit():
         except:
             base_unit = units_dict["Named Characters"][self.type]
 
-        self.pts = base_unit.pts
         self.wargear = base_unit.wargear
+        self.options = base_unit.options
+        self.wargear_pts = base_unit.wargear_pts
+        self.no_models   = base_unit.size[0]
+        self.size_range  = base_unit.size
+        self.pts_per_mod = base_unit.pts
+        self.pts = self.pts_per_mod*self.no_models
         print(self.name + " added to detachment")
         return
 
@@ -203,29 +208,6 @@ class unit():
         return output
 
 
-
-class detachment_types():
-    """
-    Class to group together the properties and benefits of each detachment
-    available to an army for detachments_dict
-    """
-    def __init__(self, name, props):
-        self.name = name
-        self.command_points = int(props[0])
-        self.foc ={"HQ":     np.array([int(i) for i in props[1].split('-')]),
-                   "Troops": np.array([int(i) for i in props[2].split('-')]),
-                   "Elites": np.array([int(i) for i in props[3].split('-')]),
-                   "Fast Attack":   np.array([int(i) for i in props[4].split('-')]),
-                   "Heavy Support": np.array([int(i) for i in props[5].split('-')])}
-
-    def __repr__(self):
-        output = self.name + "\n"
-        top_len = len(max(self.foc.keys(), key=len))
-        for key, value in self.foc.items():
-            output += key.ljust(top_len) + "\t{}-{}\n".format(*value)
-
-        return output
-
 class unit_types():
     """
     Class to group together the properties and options of a unit available to a
@@ -233,7 +215,12 @@ class unit_types():
     """
     def __init__(self, name, props):
         self.name = name
-        self.pts = int(props[1])
+        self.base_pts = int(props[1])
+        self.pts = self.base_pts
+        if props[3] != props[3]:
+            self.options = None
+        else:
+            self.options = props[3].split(',')
 
         #if range of unit size, save as array, otherwise single number
         try:
@@ -253,7 +240,7 @@ class unit_types():
                 self.wargear.append(i)
 
         #find default wargear costs
-        wargear_pts = 0
+        self.wargear_pts = 0
         if self.wargear == None:
             return
 
@@ -269,15 +256,15 @@ class unit_types():
                 no_of = 1
 
             if temp in armoury_dict["Range"]:
-                wargear_pts += no_of*armoury_dict["Range"][temp]
+                self.wargear_pts += no_of*armoury_dict["Range"][temp]
             elif temp in armoury_dict["Melee"]:
-                wargear_pts += no_of*armoury_dict["Melee"][temp]
+                self.wargear_pts += no_of*armoury_dict["Melee"][temp]
             elif temp in armoury_dict["Other Wargear"]:
-                wargear_pts += no_of*armoury_dict["Other Wargear"][temp]
+                self.wargear_pts += no_of*armoury_dict["Other Wargear"][temp]
             else:
                 raise KeyError("{} for {} not found in _armoury.xlsx file".format(temp, self.name))
 
-        self.pts += wargear_pts
+        self.pts += self.wargear_pts
 
     def __repr__(self):
         output = self.name + "\t" + str(self.pts) + "pts per model\t"
@@ -286,7 +273,7 @@ class unit_types():
                 output += i +", "
         return output
 
-def init(faction):
+def init(faction, return_out = False):
     """
     Initialises the global variables for the chosen faction
     """
@@ -295,7 +282,12 @@ def init(faction):
     global detachments_dict
     detachments_dict = {}
     for index, rows in detachments.iterrows():
-        detachments_dict[index] = detachment_types(index, rows)
+        detachments_dict[index] = {"cp": int(rows[0]),
+                                   "foc": {"HQ":     np.array([int(i) for i in rows[1].split('-')]),
+                                           "Troops": np.array([int(i) for i in rows[2].split('-')]),
+                                           "Elites": np.array([int(i) for i in rows[3].split('-')]),
+                                           "Fast Attack":   np.array([int(i) for i in rows[4].split('-')]),
+                                           "Heavy Support": np.array([int(i) for i in rows[5].split('-')])}}
 
     #determine faction of armylist and open units and wargear data
     armoury = pd.read_excel("{}_armoury.xlsx".format(faction), sheetname=None, index_col=0, header=0)
@@ -314,6 +306,11 @@ def init(faction):
         units_dict[key] = {}
         for index, rows in units[key].iterrows():
             units_dict[key][index] = unit_types(index,rows)
+
+    if return_out:
+        return detachments_dict, armoury_dict, units_dict
+
+    return
 
 if __name__ == "__main__":
     print("Army Builder Version 1.0")
