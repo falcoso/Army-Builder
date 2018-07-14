@@ -6,10 +6,10 @@ Created on Sat Jul  7 12:59:35 2018
 """
 
 import main
-import pandas as pd
+import init
 import pytest
 
-main.init("Necron")
+init.init("Necron")
 
 def test_army_list():
     """
@@ -25,6 +25,7 @@ def test_army_list():
         main.input = lambda s: i.pop(0)
         army = main.army_list("Necron")
         army.add_detachment()
+    return
 
 def test_auto_naming():
     """Checks the automatic numbering of repeated detachment types"""
@@ -38,6 +39,7 @@ def test_auto_naming():
     for i in range(len(army.detachments)):
         assert army.detachments[i].name == "Patrol {}".format(i+1)
     assert army.detachment_names == ['Patrol 1', 'Patrol 2']
+    return
 
 def test_add_unit_prog_input():
     """Checks adding a unit from programmers input for default option"""
@@ -49,6 +51,7 @@ def test_add_unit_prog_input():
     assert stalker.name == "Triarch Stalker"
     assert stalker.pts == 171
     assert stalker.wargear == ["Heat ray", "Massive forelimbs"]
+    return
 
 def test_add_unit_user_input():
     """Checks adding a unit from user input"""
@@ -62,6 +65,7 @@ def test_add_unit_user_input():
         detach.add_unit()
         assert detach.units["Fast Attack"][-1].name == "Canoptek Scarabs"
     assert detach.units["Elites"][-1].name == "Deathmarks"
+    return
 
 
 def test_detachment_rename():
@@ -73,19 +77,13 @@ def test_detachment_rename():
     assert detach.name != detach.type
     assert detach.default_name == False
     assert detach.name == "Test Name"
+    return
 
 def test_unit_class():
     """Checks the attributes of the units class"""
     warriors = main.unit("Necron Warriors", "Troops")
     assert warriors.pts == 120
     assert warriors.wargear == ["Gauss flayer"]
-
-def test_units_dict():
-    """Checks the points calculations for the units dict"""
-    detachments_dict, armoury_dict, units_dict = main.init("Necron", True)
-    units = pd.read_excel("Necron_units.xlsx", sheetname=None, index_col=0, header=0)
-
-    #check that points for wargear are being added
-    assert units["Elites"].loc["Lychguard"]["Points per Model"] != units_dict["Elites"]["Lychguard"].pts
+    return
 
 

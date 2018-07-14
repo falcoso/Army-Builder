@@ -7,6 +7,8 @@ Created on Fri Jul  6 22:45:30 2018
 import pandas as pd
 import os, sys
 import numpy as np
+import init
+import string
 
 class army_list():
     """
@@ -27,7 +29,7 @@ class army_list():
         if user_input == None:
 
             print("Which detachment would you like to add?")
-            for index, keys in enumerate(detachments_dict.keys()):
+            for index, keys in enumerate(init.detachments_dict.keys()):
                 print(str(index +1)+'. ' + keys)
 
             #get input to decide which detachments to add
@@ -39,12 +41,12 @@ class army_list():
             try:
                 self.detachments.append(detachment(i))
             except KeyError:
-                i = list(detachments_dict.keys())[int(i)-1]
+                i = list(init.detachments_dict.keys())[int(i)-1]
                 self.detachments.append(detachment(i))
             self.detachment_names.append(i)
 
         #number repeated detachment types
-        for keys in detachments_dict.keys():
+        for keys in init.detachments_dict.keys():
             if self.detachment_names.count(keys) > 1:
                 counter = 1
                 for i in range(len(self.detachment_names)):
@@ -60,7 +62,7 @@ class detachment():
     minimum requirements are met and keeping track of points.
     """
     def __init__(self, detachment_type, instance_no=None):
-        self.foc = detachments_dict[detachment_type]["foc"]
+        self.foc = init.detachments_dict[detachment_type]["foc"]
         self.type = detachment_type
         self.name = self.type
         self.default_name = True
@@ -133,25 +135,25 @@ class detachment():
         #if HQ add named characters as well
         if battlefield_role == "HQ":
             print("Named Characters (Including Wargear):")
-            keys = list(units_dict["Named Characters"].keys())
+            keys = list(init.units_dict["Named Characters"].keys())
             top_len = len(max(keys, key=len))
-            for index, [keys, value] in enumerate(units_dict["Named Characters"].items()):
+            for index, [keys, value] in enumerate(init.units_dict["Named Characters"].items()):
                 print("A" + str(index+1)+". " + keys.ljust(top_len) + "\t({}pts)".format(value.pts))
             print('')
 
             print("Other Characters (Including base Wargear):")
-            units = list(units_dict[battlefield_role].keys())
+            units = list(init.units_dict[battlefield_role].keys())
             top_len = len(max(units, key=len))
-            for index, [keys, value] in enumerate(units_dict[battlefield_role].items()):
+            for index, [keys, value] in enumerate(init.units_dict[battlefield_role].items()):
                 print("B" + str(index+1) + ". " + keys.ljust(top_len) + "\t({}pts)".format(value.pts))
 
             user_input = input(">> ")
             if len(user_input) < 3:
                 if user_input[0] in ['A','a']:
-                    user_input = list(units_dict["Named Characters"].keys())[int(user_input[1:])-1]
+                    user_input = list(init.units_dict["Named Characters"].keys())[int(user_input[1:])-1]
                     self.units[battlefield_role].append(unit(user_input, battlefield_role))
                 elif user_input[0] in ['B','b']:
-                    user_input = list(units_dict["HQ"].keys())[int(user_input[1:])-1]
+                    user_input = list(init.units_dict["HQ"].keys())[int(user_input[1:])-1]
                     self.units[battlefield_role].append(unit(user_input, battlefield_role))
                 else:
                     raise ValueError("Invalid user input for HQ selection")
@@ -161,19 +163,19 @@ class detachment():
         else:
             #print available models and their points
             print("Available Models (Including base Wargear):")
-            units = list(units_dict[battlefield_role].keys())
+            units = list(init.units_dict[battlefield_role].keys())
             top_len = len(max(units, key=len))
-            for index, [keys, value] in enumerate(units_dict[battlefield_role].items()):
+            for index, [keys, value] in enumerate(init.units_dict[battlefield_role].items()):
                 print(str(index+1) + ". " + keys.ljust(top_len) + "\t({}pts for {} models)".format(value.pts*value.size[0], value.size[0]))
 
             user_input = input(">> ")
             try:
                 self.units[battlefield_role].append(unit(user_input, battlefield_role))
             except KeyError:
-                user_input = list(units_dict[battlefield_role].keys())[int(user_input)-1]
+                user_input = list(init.units_dict[battlefield_role].keys())[int(user_input)-1]
                 self.units[battlefield_role].append(unit(user_input, battlefield_role))
 
-class unit():
+class unit(init.unit_types):
     def __init__(self, unit_type, battlefield_role):
         self.type = unit_type
         self.battlefield_role = battlefield_role
@@ -181,9 +183,9 @@ class unit():
         self.default_name = True
         #catch any characters being added
         try:
-            base_unit = units_dict[self.battlefield_role][self.type]
+            base_unit = init.units_dict[self.battlefield_role][self.type]
         except:
-            base_unit = units_dict["Named Characters"][self.type]
+            base_unit = init.units_dict["Named Characters"][self.type]
 
         self.wargear = base_unit.wargear
         self.options = base_unit.options
@@ -194,6 +196,108 @@ class unit():
         self.pts = self.pts_per_mod*self.no_models
         print(self.name + " added to detachment")
         return
+
+    def change_wargear(self):
+        """Change the wargear options for the unit"""
+        #define some helper functions
+        def and_option(combined_wargear):
+            """
+            Splits wargear options with + in and returns their combined output
+            as a string and points
+            """
+            split_wargear = combined_wargear.split('+')
+            output = ''
+            points = 0
+            for i in split_wargear[:-2]:
+                if '*' in split_wargear:
+                    temp_str, temp_points = self.multiple_option(i)
+                else:
+                    temp_str, temp_points = i, self.wargear_search(i)
+                points += temp_points
+                output += "{}, ".format(temp_str)
+
+            if '*' in split_wargear[-1]:
+                temp_str, temp_points = self.multiple_option(split_wargear[-1])
+            else:
+                temp_str, temp_points = split_wargear[-1], self.wargear_search(split_wargear[-1])
+            output = output[:-3] + "and" + temp_str
+            points += temp_points
+
+            return output, points
+
+        def standard_option(option):
+            if '*' in option:
+                temp_str, temp_points = self.multiple_option(option)
+            else:
+                temp_str, temp_points = option, self.wargear_search(option)
+
+            return "You may add: {} ({}pts)".format(temp_str, temp_points)
+
+        def exchange_option(option):
+            """Creates format string for exchange options"""
+            swap = option.split("/")
+            #check if it is swapping wargear for default option
+            if swap[0] in self.wargear:
+                output = "You may exchange {} for ".format(swap[0])
+                if len(swap) > 2:
+                    output += "1 of:"
+
+                output += "\n"
+                for sub_index, wargear in zip(string.ascii_lowercase[:len(swap[1:])], swap[1:]):
+                    if "+" in wargear:
+                        temp_str, temp_points = and_option(wargear)
+                    elif '*' in wargear:
+                        temp_str, temp_points = self.multiple_option(wargear)
+                    else:
+                        temp_str, temp_points = wargear, self.wargear_search(wargear)
+
+                    output += "\t{}. {} (net {}pts per model)\n".format(sub_index,
+                                 temp_str,
+                                 temp_points - self.wargear_search(swap[0]))
+
+            else:
+                output = "You may have 1 of the following: "
+                for i in swap:
+                    if '+' in i:
+                        temp_str, temp_points = and_option(i)
+                    elif '*' in i:
+                        temp_str, temp_points = self.multiple_option(i)
+                    else:
+                        temp_str, temp_points = i, self.wargear_search(i)
+                    output += temp_str + " ({}pts), ".format(temp_points)
+
+                #remove additional comma and space from the end
+                output += output[:-2]
+
+            return output
+
+        #actual function body
+        #show initial unit state
+        print("Current loadout for {}".format(self.name))
+        print(self)
+
+        #show options available
+        print("Options available:")
+        if self.options == None:
+            print("There are no wargear options available for this unit.")
+            return
+
+        for index, option in enumerate(self.options):
+            output = "{}.".format(index+1)
+            if '-' in option:
+                sub_option, no_models = option.split('-')
+                output += "For every {} models ".format(no_models)
+                if '/' in sub_option:
+                     output += exchange_option(sub_option)
+                else:
+                    output += standard_option(option)
+
+            elif '/' in option:
+                output += exchange_option(option)
+            else:
+                output += standard_option(option)
+
+            print(output)
 
     def __repr__(self):
         output = self.name
@@ -208,113 +312,11 @@ class unit():
         return output
 
 
-class unit_types():
-    """
-    Class to group together the properties and options of a unit available to a
-    given faction in the army list
-    """
-    def __init__(self, name, props):
-        self.name = name
-        self.base_pts = int(props[1])
-        self.pts = self.base_pts
-        if props[3] != props[3]:
-            self.options = None
-        else:
-            self.options = props[3].split(',')
-
-        #if range of unit size, save as array, otherwise single number
-        try:
-            self.size = np.array([int(i) for i in props[0].split('-')])
-        except AttributeError:
-            self.size = np.array([int(props[0])])
-
-
-        if props[2] != props[2]: #if entry is nan
-            self.wargear = None
-        else:
-            self.wargear = []
-            #split list if multiple wargear items in temporary variable for
-            #processing
-            wargear_temp = props[2].split(', ')
-            for i in wargear_temp:
-                self.wargear.append(i)
-
-        #find default wargear costs
-        self.wargear_pts = 0
-        if self.wargear == None:
-            return
-
-        for i in self.wargear:
-            if '*' in i:
-                temp = i.split('*')
-                #check to see if first item is a number i.e. that the li
-
-                no_of = int(temp[0])
-                temp = temp[1]
-            else:
-                temp = i
-                no_of = 1
-
-            if temp in armoury_dict["Range"]:
-                self.wargear_pts += no_of*armoury_dict["Range"][temp]
-            elif temp in armoury_dict["Melee"]:
-                self.wargear_pts += no_of*armoury_dict["Melee"][temp]
-            elif temp in armoury_dict["Other Wargear"]:
-                self.wargear_pts += no_of*armoury_dict["Other Wargear"][temp]
-            else:
-                raise KeyError("{} for {} not found in _armoury.xlsx file".format(temp, self.name))
-
-        self.pts += self.wargear_pts
-
-    def __repr__(self):
-        output = self.name + "\t" + str(self.pts) + "pts per model\t"
-        if self.wargear != None:
-            for i in self.wargear:
-                output += i +", "
-        return output
-
-def init(faction, return_out = False):
-    """
-    Initialises the global variables for the chosen faction
-    """
-    #Open list of possible detachments and generate object for each one
-    detachments = pd.read_excel("./Detachments.xlsx", header=0, index_col=0)
-    global detachments_dict
-    detachments_dict = {}
-    for index, rows in detachments.iterrows():
-        detachments_dict[index] = {"cp": int(rows[0]),
-                                   "foc": {"HQ":     np.array([int(i) for i in rows[1].split('-')]),
-                                           "Troops": np.array([int(i) for i in rows[2].split('-')]),
-                                           "Elites": np.array([int(i) for i in rows[3].split('-')]),
-                                           "Fast Attack":   np.array([int(i) for i in rows[4].split('-')]),
-                                           "Heavy Support": np.array([int(i) for i in rows[5].split('-')])}}
-
-    #determine faction of armylist and open units and wargear data
-    armoury = pd.read_excel("{}_armoury.xlsx".format(faction), sheetname=None, index_col=0, header=0)
-    global armoury_dict
-    armoury_dict = {}
-    for key in armoury.keys():
-        armoury_dict[key] = {}
-        for index, rows in armoury[key].iterrows():
-            armoury_dict[key][index] = rows[0]
-
-    global units
-    units = pd.read_excel("{}_units.xlsx".format(faction), sheetname=None, index_col=0, header=0)
-    global units_dict
-    units_dict = {}
-    for key in units.keys():
-        units_dict[key] = {}
-        for index, rows in units[key].iterrows():
-            units_dict[key][index] = unit_types(index,rows)
-
-    if return_out:
-        return detachments_dict, armoury_dict, units_dict
-
-    return
-
 if __name__ == "__main__":
     print("Army Builder Version 1.0")
 #    print("Which army are you using?")
 #    faction = input(">> ")
     faction = "Necron"
-    init(faction)
+    init.init(faction)
+    immortals = unit("Destroyers", "Fast Attack")
+    immortals.change_wargear()
