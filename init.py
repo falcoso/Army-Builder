@@ -55,7 +55,7 @@ class unit_types():
 
     def multiple_option(self, option):
         no_of, wargear = option.split('*')
-        return "{} {}".format(wargear, no_of), self.wargear_search(wargear)*int(no_of)
+        return "{} {}s".format(no_of, wargear), self.wargear_search(wargear)*int(no_of)
 
     def wargear_search(self, item):
         """
@@ -77,6 +77,25 @@ class unit_types():
             for i in self.wargear:
                 output += i +", "
         return output
+
+class option(unit_types):
+    def __init__(self, option_str):
+        self.no_models = 1
+
+        #extract per number of options allowed for option
+        if '-' in option_str:
+            option_str = option_str.split('-')
+            self.no_models = int(option_str[0])
+            option_str = option_str[-2]
+
+        self.wargear = option_str.split('/')
+
+    def __repr__():
+        pass
+
+
+
+
 
 def init(faction, return_out = False):
     """

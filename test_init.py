@@ -25,5 +25,5 @@ def test_units_dict_wargear():
     for foc, units in units_dict.items():
         for title, i in units.items():
             squad = main.unit(title, foc)
-            squad.change_wargear()
+            squad.change_wargear(split_only=True)
     return
