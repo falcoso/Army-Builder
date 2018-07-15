@@ -106,8 +106,8 @@ class detachment():
     def add_unit(self, battlefield_role=None):
         """ Adds a unit to the detachment"""
         #list battlefield roles of chosen unit
-        if battlefield_role == None:
-
+        def get_battlefield_role():
+            """Helper function to get battlefield role as user input"""
             roles = ["HQ", "Troops", "Elites", "Fast Attack", "Heavy Support"]
             print("Which Battlefield Role would you like to add?")
             for index, role in enumerate(roles):
@@ -115,65 +115,76 @@ class detachment():
             battlefield_role = input(">> ")
             battlefield_role = battlefield_role.replace(' ', '')
 
-            try:
-                battlefield_role = roles[int(battlefield_role)-1]
-            except:
-                #sanitise inputs
-                if battlefield_role == "hq" or battlefield_role == "HQ":
-                    battlefield_role = "HQ"
-                elif "roop" in battlefield_role:
-                    battlefield_role = "Troops"
-                elif "lite" in battlefield_role:
-                    battlefield_role = "Elites"
-                elif "eavy" in battlefield_role or battlefield_role == "HS" or battlefield_role == "hs":
-                    battlefield_role = "Heavy Support"
-                elif "ast" in battlefield_role or battlefield_role == "FA" or battlefield_role == "fa":
-                    battlefield_role = "Fast Attack"
 
-        #list available units from that role
-        print("\nWhich {} unit would you like to add?".format(battlefield_role))
-        #if HQ add named characters as well
-        if battlefield_role == "HQ":
-            print("Named Characters (Including Wargear):")
-            keys = list(init.units_dict["Named Characters"].keys())
-            top_len = len(max(keys, key=len))
-            for index, [keys, value] in enumerate(init.units_dict["Named Characters"].items()):
-                print("A" + str(index+1)+". " + keys.ljust(top_len) + "\t({}pts)".format(value.pts))
-            print('')
-
-            print("Other Characters (Including base Wargear):")
-            units = list(init.units_dict[battlefield_role].keys())
-            top_len = len(max(units, key=len))
-            for index, [keys, value] in enumerate(init.units_dict[battlefield_role].items()):
-                print("B" + str(index+1) + ". " + keys.ljust(top_len) + "\t({}pts)".format(value.pts))
-
-            user_input = input(">> ")
-            if len(user_input) < 3:
-                if user_input[0] in ['A','a']:
-                    user_input = list(init.units_dict["Named Characters"].keys())[int(user_input[1:])-1]
-                    self.units[battlefield_role].append(unit(user_input, battlefield_role))
-                elif user_input[0] in ['B','b']:
-                    user_input = list(init.units_dict["HQ"].keys())[int(user_input[1:])-1]
-                    self.units[battlefield_role].append(unit(user_input, battlefield_role))
-                else:
-                    raise ValueError("Invalid user input for HQ selection")
+            if battlefield_role.isdigit():
+                try:
+                    battlefield_role = roles[int(battlefield_role)-1]
+                except IndexError:
+                    print("{} is invalid, please enter the index or name of the battlefield role you wish to add".format(battlefield_role))
+                    battlefield_role = get_battlefield_role()
+            #sanitise inputs
+            elif battlefield_role == "hq" or battlefield_role == "HQ":
+                battlefield_role = "HQ"
+            elif "roop" in battlefield_role:
+                battlefield_role = "Troops"
+            elif "lite" in battlefield_role:
+                battlefield_role = "Elites"
+            elif "eavy" in battlefield_role or battlefield_role == "HS" or battlefield_role == "hs":
+                battlefield_role = "Heavy Support"
+            elif "ast" in battlefield_role or battlefield_role == "FA" or battlefield_role == "fa":
+                battlefield_role = "Fast Attack"
             else:
-                self.units[battlefield_role].append(unit(user_input, battlefield_role))
+                print("{} is invalid, please enter the index or name of the battlefield role you wish to add".format(battlefield_role))
+                battlefield_role = get_battlefield_role()
 
-        else:
-            #print available models and their points
-            print("Available Models (Including base Wargear):")
-            units = list(init.units_dict[battlefield_role].keys())
-            top_len = len(max(units, key=len))
-            for index, [keys, value] in enumerate(init.units_dict[battlefield_role].items()):
-                print(str(index+1) + ". " + keys.ljust(top_len) + "\t({}pts for {} models)".format(value.pts*value.size[0], value.size[0]))
+            return battlefield_role
+
+        def get_unit(battlefield_role):
+            print("\nWhich {} unit would you like to add?".format(battlefield_role))
+            #if HQ add named characters as well
+            if battlefield_role == "HQ":
+                print("Named Characters (Including Wargear):")
+                keys = list(init.units_dict["Named Characters"].keys())
+                top_len = len(max(keys, key=len))
+                for index, [keys, value] in enumerate(init.units_dict["Named Characters"].items()):
+                    print("A" + str(index+1)+". " + keys.ljust(top_len) + "\t({}pts)".format(value.pts))
+                print('')
+
+                print("Other Characters (Including base Wargear):")
+                units = list(init.units_dict[battlefield_role].keys())
+                top_len = len(max(units, key=len))
+                for index, [keys, value] in enumerate(init.units_dict[battlefield_role].items()):
+                    print("B" + str(index+1) + ". " + keys.ljust(top_len) + "\t({}pts)".format(value.pts))
+            else:
+                #print available models and their points
+                print("Available Models (Including base Wargear):")
+                units = list(init.units_dict[battlefield_role].keys())
+                top_len = len(max(units, key=len))
+                for index, [keys, value] in enumerate(init.units_dict[battlefield_role].items()):
+                    print(str(index+1) + ". " + keys.ljust(top_len) + "\t({}pts for {} models)".format(value.pts*value.size[0], value.size[0]))
 
             user_input = input(">> ")
             try:
+                if len(user_input) < 4:
+                    if user_input[0].isdigit():
+                        user_input = list(init.units_dict[battlefield_role].keys())[int(user_input)-1]
+                    elif user_input[0] in ['A','a']:
+                        user_input = list(init.units_dict["Named Characters"].keys())[int(user_input[1:])-1]
+                    elif user_input[0] in ['B','b']:
+                        user_input = list(init.units_dict["HQ"].keys())[int(user_input[1:])-1]
+
                 self.units[battlefield_role].append(unit(user_input, battlefield_role))
-            except KeyError:
-                user_input = list(init.units_dict[battlefield_role].keys())[int(user_input)-1]
-                self.units[battlefield_role].append(unit(user_input, battlefield_role))
+            except:
+                print("{} is not a valid option, please select the unit by name or input".format(user_input))
+                get_unit(battlefield_role)
+            return
+
+        if battlefield_role == None:
+            battlefield_role = get_battlefield_role()
+
+        get_unit(battlefield_role)
+
+
 
 class unit(init.unit_types):
     def __init__(self, unit_type, battlefield_role):

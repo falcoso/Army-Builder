@@ -53,6 +53,23 @@ def test_add_unit_prog_input():
     assert stalker.wargear == ["Heat ray", "Massive forelimbs"]
     return
 
+def test_invalid_input_handling():
+    """
+    Checks a range of different possible invalid inputs to make sure they are
+    caught
+    """
+    mock_input = ["Test invalid", "A1", "1",
+                  "Test invalid", "Break foc", "102", "Elites",
+                  "Triarch something", "26", "Triarch Stalker"]
+    main.input = lambda s: mock_input.pop(0)
+    detach = main.detachment("Patrol")
+    detach.add_unit()
+    stalker = detach.units["Elites"][0]
+    assert stalker.name == "Triarch Stalker"
+    assert stalker.pts == 171
+    assert stalker.wargear == ["Heat ray", "Massive forelimbs"]
+    return
+
 def test_add_unit_user_input():
     """Checks adding a unit from user input"""
     mock_input = ["A1", "1",
@@ -66,7 +83,6 @@ def test_add_unit_user_input():
         assert detach.units["Fast Attack"][-1].name == "Canoptek Scarabs"
     assert detach.units["Elites"][-1].name == "Deathmarks"
     return
-
 
 def test_detachment_rename():
     """Checks renaming method for detachment"""
@@ -85,5 +101,3 @@ def test_unit_class():
     assert warriors.pts == 120
     assert warriors.wargear == ["Gauss flayer"]
     return
-
-

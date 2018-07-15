@@ -27,3 +27,12 @@ def test_units_dict_wargear():
             squad = main.unit(title, foc)
             squad.change_wargear(split_only=True)
     return
+
+def test_detachments_dict_selection():
+    """
+    Makes sure all detachments in detachments_dict can be made
+    """
+    for key in init.detachments_dict:
+        main.input = lambda s: (['a1','a1','1','1']*20).pop(0)
+        detach = main.detachment(key)
+    return
