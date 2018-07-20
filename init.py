@@ -85,17 +85,20 @@ class option(unit_types):
         #extract per number of options allowed for option
         if '-' in option_str:
             option_str = option_str.split('-')
-            self.no_models = int(option_str[0])
+            self.no_models = int(option_str[-1])
             option_str = option_str[-2]
 
-        self.wargear = option_str.split('/')
+        wargear_temp = option_str.split('/')
+        self.wargear=[]
+        for i in wargear_temp:
+            temp_dict = {}
+            if '*' in i:
+                temp_dict["no_of"], temp_dict["wargear"] = i.split('*')
+            if '+' in i:
+                temp_dict["wargear"] = i.split('+')
 
     def __repr__():
         pass
-
-
-
-
 
 def init(faction, return_out = False):
     """

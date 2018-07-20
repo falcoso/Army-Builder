@@ -4,7 +4,6 @@ Created on Fri Jul  6 22:45:30 2018
 
 @author: jones
 """
-import pandas as pd
 import os, sys
 import numpy as np
 import init
@@ -115,7 +114,6 @@ class detachment():
             battlefield_role = input(">> ")
             battlefield_role = battlefield_role.replace(' ', '')
 
-
             if battlefield_role.isdigit():
                 try:
                     battlefield_role = roles[int(battlefield_role)-1]
@@ -123,15 +121,15 @@ class detachment():
                     print("{} is invalid, please enter the index or name of the battlefield role you wish to add".format(battlefield_role))
                     battlefield_role = get_battlefield_role()
             #sanitise inputs
-            elif battlefield_role == "hq" or battlefield_role == "HQ":
+            elif battlefield_role.lower() == "hq":
                 battlefield_role = "HQ"
-            elif "roop" in battlefield_role:
+            elif battlefield_role.lower() == "troops":
                 battlefield_role = "Troops"
-            elif "lite" in battlefield_role:
+            elif battlefield_role.lower() == "elites":
                 battlefield_role = "Elites"
-            elif "eavy" in battlefield_role or battlefield_role == "HS" or battlefield_role == "hs":
+            elif battlefield_role.lower() in {'hs', 'heavysupport'}:
                 battlefield_role = "Heavy Support"
-            elif "ast" in battlefield_role or battlefield_role == "FA" or battlefield_role == "fa":
+            elif battlefield_role.lower() in {'fa', 'fastattack'}:
                 battlefield_role = "Fast Attack"
             else:
                 print("{} is invalid, please enter the index or name of the battlefield role you wish to add".format(battlefield_role))
@@ -156,7 +154,8 @@ class detachment():
                 for index, [keys, value] in enumerate(init.units_dict[battlefield_role].items()):
                     print("B" + str(index+1) + ". " + keys.ljust(top_len) + "\t({}pts)".format(value.pts))
             else:
-                #print available models and their points
+                #print available models and their points with the points value
+                #left adjusted so they are in the same column
                 print("Available Models (Including base Wargear):")
                 units = list(init.units_dict[battlefield_role].keys())
                 top_len = len(max(units, key=len))
@@ -168,9 +167,9 @@ class detachment():
                 if len(user_input) < 4:
                     if user_input[0].isdigit():
                         user_input = list(init.units_dict[battlefield_role].keys())[int(user_input)-1]
-                    elif user_input[0] in ['A','a']:
+                    elif user_input[0] in {'A','a'}:
                         user_input = list(init.units_dict["Named Characters"].keys())[int(user_input[1:])-1]
-                    elif user_input[0] in ['B','b']:
+                    elif user_input[0] in {'B','b'}:
                         user_input = list(init.units_dict["HQ"].keys())[int(user_input[1:])-1]
 
                 self.units[battlefield_role].append(unit(user_input, battlefield_role))
