@@ -13,7 +13,56 @@ import enum
 
 init.init("Necron")
 
-def wargear_search(item):
+class OptionLexer():
+    tokens = ['ITEM', 'NUM', 'PLUS', 'MINUS', 'STAR', 'SLASH', 'COMMA']
+
+    # these are the regexes that the lexer uses to recognise the tokens
+    t_PLUS  = r'\+'
+    t_MINUS = '-'
+    t_STAR  = r'\*'
+    t_SLASH = '/'
+    t_COMMA = ','
+    t_ignore = ' '
+
+    def t_error(self, t):
+        print("Illegal character '%s'" % t.value[0])
+        t.lexer.skip(1)
+
+    def t_ITEM(self, t):
+        r'[a-zA-Z_][\w ]*[\w]'
+        t.value = WargearItem(t.value)
+        return t
+
+    def t_NUM(self,t):
+        '0|[1-9][0-9]*'
+        t.value = int(t.value)
+        return t
+
+    # Build the lexer
+    def build(self,**kwargs):
+        self.lexer = lex.lex(module=self, **kwargs)
+
+    # Test it output
+    def test(self,data):
+        self.lexer.input(data)
+        while True:
+             tok = self.lexer.token()
+             if not tok:
+                 break
+             print(tok)
+
+
+lexer = OptionLexer()
+lexer.build()
+
+class WargearItem():
+    def __init__(self, item):
+        self.item = item
+        self.points = self.wargear_search(item)
+        self.no_of = 1
+        return
+
+    def wargear_search(self, item):
         """
         Searches for a given wargear item in the armoury dictionary
         """
@@ -27,40 +76,47 @@ def wargear_search(item):
             raise KeyError("{} not found in _armoury.xlsx file".format(item))
         return
 
-tokens = ['ITEM', 'NUM', 'PLUS', 'MINUS', 'STAR', 'SLASH', 'COMMA']
-
-
-# these are the regexes that the lexer uses to recognise the tokens
-t_ITEM  = r'[a-zA-Z_][\w ]*[\w]'
-t_NUM   = '0|[1-9][0-9]*'
-t_PLUS  = r'\+'
-t_MINUS = '-'
-t_STAR  = r'\*'
-t_SLASH = '/'
-t_COMMA = ','
-t_ignore = ' '
-def t_error(t):
-    print("Illegal characters!")
-    t.lexer.skip(1)
-
-lexer = lex.lex()
-
-class CollectedItem():
-    def __init__(self, item):
-        self.item = item
-        self.points = wargear_search(item)
-        return
-
     def __repr__(self):
-        ret = self.item + " ({}pts per model)".format(self.points)
+        if self.no_of == 1:
+            ret = self.item
+        else:
+            ret = str(self.no_of) + ' ' + self.item + 's'
+        ret += " ({}pts per model)".format(self.points)
+        return ret
 
-class MultipleItem(CollectedItem):
+    def __mul__(self, integer):
+        self.points = self.points*integer
+        self.no_of  = self.no_of*integer
+        return self
+
+    def __add__(self, other_item):
+        if type(other_item) == MultipleItem:
+            other_item.item.append(self.item)
+            other_item.points += self.points
+            return other_item
+
+        else:
+            ret = MultipleItem(self, other_item)
+            return ret
+
+class MultipleItem(WargearItem):
     def __init__(self, *args):
-        self.item = args
+        self.item = list(map(lambda s: s.item, args))
         self.points = 0
-        for i in self.item:
-            self.points += wargear_search(i)
+        for i in args:
+            self.points += i.points
         return
+
+    def __mul__(self, other):
+        pass
+
+    def __add__(self, other_item):
+        if type(other_item) == MultipleItem:
+            self.item += other_item.item
+        else:
+            self.item.append(other_item.item)
+        self.points += other_item.points
+        return self
 
     def __repr__(self):
         ret = ''
@@ -69,23 +125,14 @@ class MultipleItem(CollectedItem):
             if i == len(self.item) - 1:
                 pass
             elif i == len(self.item) - 2:
-                ret += ' and '
+                ret += ' & '
             else:
                 ret += ', '
 
         ret += " ({}pts per model)".format(self.points)
         return ret
 
-class RepeatedItem(CollectedItem):
-    def __init__(self, *args):
-        self.no_of = int(args[0])
-        self.item = args[1]
-        self.points = self.no_of*wargear_search(self.item)
-        return
-
-    def __repr__(self):
-        return str(self.no_of) + ' of {} ({}pts per model)'.format(self.item, self.points)
-
+tokens = ['ITEM', 'NUM', 'PLUS', 'MINUS', 'STAR', 'SLASH', 'COMMA']
 #operator precedence
 precedence = (
     ('left', 'COMMA'),
@@ -105,7 +152,7 @@ def p_calc(p):
     print(run(p[1]))
 
 def p_error(p):
-    print("Syntax error")
+    print("Syntax error {} is not valid".format(p))
 
 def p_expression(p):
     '''
@@ -125,17 +172,21 @@ def p_expression_name(p):
     p[0] = p[1]
     return
 
-def p_mod_item(p):
+def p_mult_item(p):
     '''
     option : NUM STAR ITEM
-           | ITEM PLUS ITEM
-           | option PLUS option
+           | NUM STAR option
     '''
-    if p[2] == '*':
-        p[0] = RepeatedItem(p[1],p[3])
-    elif p[2] == '+':
-        p[0] = MultipleItem(p[1],p[3])
+    p[0] = p[3] * p[1]
     return
+
+def p_add_item(p):
+    '''
+    option : option PLUS option
+           | ITEM PLUS option
+           | ITEM PLUS ITEM
+    '''
+    p[0] = p[1] + p[3]
 
 def p_empty(p):
     '''
@@ -143,7 +194,9 @@ def p_empty(p):
     '''
     p[0] = None
 
+# Build the lexer
 parse = yacc.yacc()
+
 def run(p, top_level=True):
     index = string.ascii_lowercase
     if top_level:
@@ -157,16 +210,16 @@ def run(p, top_level=True):
                 ret += run(p[1], False)
             else:
                 run.count += 1
-                ret += '\t' + index[run.count] + '. ' + run(p[1], False) + '\n'
+                ret += '\t' + index[run.count] + ') ' + run(p[1], False) + '\n'
             if type(p[2]) == tuple:
                 ret += run(p[2], False)
             else:
                 run.count += 1
-                ret += '\t' + index[run.count] + '. ' + run(p[2], False) + '\n'
+                ret += '\t' + index[run.count] + ') ' + run(p[2], False) + '\n'
             return ret
         else:
             if p[0] == '-':
-                return 'For every {} models, you may exchange {} for:\n'.format(p[2], p[1][1]) + run(p[1], False)
+                return 'For every {} models, you may exchange {} for:\n'.format(p[2], p[1][1].item) + run(p[1], False)
 
     else:
         try:
@@ -175,10 +228,9 @@ def run(p, top_level=True):
             else:
                 return str(p)
         except:
-            print(p)
             return 'VOID ITEM'
 
-s = 'Gauss flayer, Gauss cannon/Heavy gauss cannon-3, 2* Heat ray, Tesla carbine/Synaptic disintergrator/Gauss blaster, Warscythe/Dispersion shield + Hyperphase sword'
+s = 'Gauss flayer,Gauss cannon/Heavy gauss cannon-3,2*Heat ray,Tesla carbine/Synaptic disintegrator/Gauss blaster,Warscythe/Voidblade+Dispersion shield+Hyperphase sword'
 run.count = -1
 for j, i in enumerate(s.split(',')):
     print('{}. '.format(j+1), end='')
