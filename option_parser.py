@@ -7,9 +7,8 @@ Created on Sat Jul 21 22:13:21 2018
 
 import ply.lex as lex
 import ply.yacc as yacc
-import string
 import init
-import enum
+import string
 
 init.init("Necron")
 
@@ -30,7 +29,7 @@ class OptionLexer():
 
     def t_ITEM(self, t):
         r'[a-zA-Z_][\w ]*[\w]'
-        t.value = WargearItem(t.value)
+        t.value = init.WargearItem(t.value)
         return t
 
     def t_NUM(self,t):
@@ -55,82 +54,6 @@ class OptionLexer():
 lexer = OptionLexer()
 lexer.build()
 
-class WargearItem():
-    def __init__(self, item):
-        self.item = item
-        self.points = self.wargear_search(item)
-        self.no_of = 1
-        return
-
-    def wargear_search(self, item):
-        """
-        Searches for a given wargear item in the armoury dictionary
-        """
-        if item in init.armoury_dict["Range"]:
-            return init.armoury_dict["Range"][item]
-        elif item in init.armoury_dict["Melee"]:
-            return init.armoury_dict["Melee"][item]
-        elif item in init.armoury_dict["Other Wargear"]:
-            return init.armoury_dict["Other Wargear"][item]
-        else:
-            raise KeyError("{} not found in _armoury.xlsx file".format(item))
-        return
-
-    def __repr__(self):
-        if self.no_of == 1:
-            ret = self.item
-        else:
-            ret = str(self.no_of) + ' ' + self.item + 's'
-        ret += " ({}pts per model)".format(self.points)
-        return ret
-
-    def __mul__(self, integer):
-        self.points = self.points*integer
-        self.no_of  = self.no_of*integer
-        return self
-
-    def __add__(self, other_item):
-        if type(other_item) == MultipleItem:
-            other_item.item.append(self.item)
-            other_item.points += self.points
-            return other_item
-
-        else:
-            ret = MultipleItem(self, other_item)
-            return ret
-
-class MultipleItem(WargearItem):
-    def __init__(self, *args):
-        self.item = list(map(lambda s: s.item, args))
-        self.points = 0
-        for i in args:
-            self.points += i.points
-        return
-
-    def __mul__(self, other):
-        pass
-
-    def __add__(self, other_item):
-        if type(other_item) == MultipleItem:
-            self.item += other_item.item
-        else:
-            self.item.append(other_item.item)
-        self.points += other_item.points
-        return self
-
-    def __repr__(self):
-        ret = ''
-        for i in range(len(self.item)):
-            ret += self.item[i]
-            if i == len(self.item) - 1:
-                pass
-            elif i == len(self.item) - 2:
-                ret += ' & '
-            else:
-                ret += ', '
-
-        ret += " ({}pts per model)".format(self.points)
-        return ret
 
 tokens = ['ITEM', 'NUM', 'PLUS', 'MINUS', 'STAR', 'SLASH', 'COMMA']
 #operator precedence
@@ -210,12 +133,12 @@ def run(p, top_level=True):
                 ret += run(p[1], False)
             else:
                 run.count += 1
-                ret += '\t' + index[run.count] + ') ' + run(p[1], False) + '\n'
+                ret += '\t' + index[run.count] + ') ' + run(p[1], False)
             if type(p[2]) == tuple:
                 ret += run(p[2], False)
             else:
                 run.count += 1
-                ret += '\t' + index[run.count] + ') ' + run(p[2], False) + '\n'
+                ret += '\t' + index[run.count] + ') ' + run(p[2], False)
             return ret
         else:
             if p[0] == '-':

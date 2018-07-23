@@ -6,8 +6,9 @@ Created on Fri Jul  6 22:45:30 2018
 """
 import os, sys
 import numpy as np
-import init
 import string
+import init
+import option_parser
 
 class army_list():
     """
@@ -172,7 +173,7 @@ class detachment():
                     elif user_input[0] in {'B','b'}:
                         user_input = list(init.units_dict["HQ"].keys())[int(user_input[1:])-1]
 
-                self.units[battlefield_role].append(unit(user_input, battlefield_role))
+                self.units[battlefield_role].append(Unit(user_input, battlefield_role))
             except:
                 print("{} is not a valid option, please select the unit by name or input".format(user_input))
                 get_unit(battlefield_role)
@@ -185,7 +186,7 @@ class detachment():
 
 
 
-class unit(init.unit_types):
+class Unit(init.UnitTypes):
     def __init__(self, unit_type, battlefield_role):
         self.type = unit_type
         self.battlefield_role = battlefield_role
@@ -351,7 +352,7 @@ class unit(init.unit_types):
         output += "\t\t{}pts\n".format(self.pts)
         if self.wargear != None:
             for i in self.wargear:
-                output += "\t" + i + "\n"
+                output += "\t" + i.__repr__() + "\n"
 
         return output
 
@@ -362,5 +363,6 @@ if __name__ == "__main__":
 #    faction = input(">> ")
     faction = "Necron"
     init.init(faction)
-    immortals = unit("Catacomb Command Barge", "HQ")
-    immortals.change_wargear()
+    immortals = Unit("Catacomb Command Barge", "HQ")
+    ret = str(immortals)
+    print(ret)

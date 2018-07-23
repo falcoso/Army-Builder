@@ -50,7 +50,7 @@ def test_add_unit_prog_input():
     stalker = detach.units["Elites"][0]
     assert stalker.name == "Triarch Stalker"
     assert stalker.pts == 171
-    assert stalker.wargear == ["Heat ray", "Massive forelimbs"]
+    assert stalker.wargear == [init.WargearItem("Heat ray"), init.WargearItem("Massive forelimbs")]
     return
 
 def test_invalid_input_handling():
@@ -67,7 +67,7 @@ def test_invalid_input_handling():
     stalker = detach.units["Elites"][0]
     assert stalker.name == "Triarch Stalker"
     assert stalker.pts == 171
-    assert stalker.wargear == ["Heat ray", "Massive forelimbs"]
+    assert stalker.wargear == [init.WargearItem("Heat ray"), init.WargearItem("Massive forelimbs")]
     return
 
 def test_add_unit_user_input():
@@ -97,7 +97,7 @@ def test_detachment_rename():
 
 def test_unit_class():
     """Checks the attributes of the units class"""
-    warriors = main.unit("Necron Warriors", "Troops")
+    warriors = main.Unit("Necron Warriors", "Troops")
     assert warriors.pts == 120
-    assert warriors.wargear == ["Gauss flayer"]
+    assert warriors.wargear == [init.WargearItem("Gauss flayer")]
     return

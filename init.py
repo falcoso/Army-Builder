@@ -8,7 +8,99 @@ Created on Sat Jul  7 13:06:29 2018
 import pandas as pd
 import numpy as np
 
-class unit_types():
+class WargearItem():
+    def __init__(self, item):
+        self.item = item
+        self.no_of = 1
+        if '*' in item:
+            self.no_of = int(item.split('*')[0])
+            self.item  = item.split('*')[1]
+        self.points = self.no_of*self.wargear_search(self.item)
+        return
+
+    def wargear_search(self, item):
+        """
+        Searches for a given wargear item in the armoury dictionary
+        """
+        if item in armoury_dict["Range"]:
+            return armoury_dict["Range"][item]
+        elif item in armoury_dict["Melee"]:
+            return   armoury_dict["Melee"][item]
+        elif item in armoury_dict["Other Wargear"]:
+            return   armoury_dict["Other Wargear"][item]
+        else:
+            raise KeyError("{} not found in _armoury.xlsx file".format(item))
+        return
+
+    def __repr__(self):
+        if self.no_of == 1:
+            ret = self.item
+        else:
+            ret = str(self.no_of) + ' ' + self.item + 's'
+        ret += " ({}pts per model)\n".format(self.points)
+        return ret
+
+    def __mul__(self, integer):
+        self.points = self.points*integer
+        self.no_of  = self.no_of*integer
+        return self
+
+    def __add__(self, other_item):
+        if type(other_item) == MultipleItem:
+            other_item.item.append(self.item)
+            other_item.points += self.points
+            return other_item
+
+        else:
+            ret = MultipleItem(self, other_item)
+            return ret
+
+    def __eq__(self, other):
+        try:
+            if self.item != other.item:
+                return False
+            if self.no_of != self.no_of:
+                return False
+            if self.points != self.points:
+                return False
+            return True
+        except:
+            return False
+
+class MultipleItem(WargearItem):
+    def __init__(self, *args):
+        self.item = list(map(lambda s: s.item, args))
+        self.points = 0
+        for i in args:
+            self.points += i.points
+        return
+
+    def __mul__(self, other):
+        pass
+
+    def __add__(self, other_item):
+        if type(other_item) == MultipleItem:
+            self.item += other_item.item
+        else:
+            self.item.append(other_item.item)
+        self.points += other_item.points
+        return self
+
+    def __repr__(self):
+        ret = ''
+        for i in range(len(self.item)):
+            ret += self.item[i]
+            if i == len(self.item) - 1:
+                pass
+            elif i == len(self.item) - 2:
+                ret += ' & '
+            else:
+                ret += ', '
+
+        ret += " ({}pts per model)\n".format(self.points)
+        return ret
+
+class UnitTypes():
     """
     Class to group together the properties and options of a unit available to a
     given faction in the army list
@@ -37,19 +129,16 @@ class unit_types():
             #processing
             wargear_temp = props[2].split(', ')
             for i in wargear_temp:
-                self.wargear.append(i)
+                self.wargear.append(WargearItem(i))
 
         #find default wargear costs
         self.wargear_pts = 0
         if self.wargear == None:
             return
+        else:
+            for i in self.wargear:
+                self.wargear_pts += i.points
 
-        for i in self.wargear:
-            if '*' in i:
-                option, points = self.multiple_option(i)
-                self.wargear_pts += points
-            else:
-                self.wargear_pts += self.wargear_search(i)
         self.pts += self.wargear_pts
         return
 
@@ -75,30 +164,8 @@ class unit_types():
         output = self.name + "\t" + str(self.pts) + "pts per model\t"
         if self.wargear != None:
             for i in self.wargear:
-                output += i +", "
+                output += i.__repr__() +", "
         return output
-
-class option(unit_types):
-    def __init__(self, option_str):
-        self.no_models = 1
-
-        #extract per number of options allowed for option
-        if '-' in option_str:
-            option_str = option_str.split('-')
-            self.no_models = int(option_str[-1])
-            option_str = option_str[-2]
-
-        wargear_temp = option_str.split('/')
-        self.wargear=[]
-        for i in wargear_temp:
-            temp_dict = {}
-            if '*' in i:
-                temp_dict["no_of"], temp_dict["wargear"] = i.split('*')
-            if '+' in i:
-                temp_dict["wargear"] = i.split('+')
-
-    def __repr__():
-        pass
 
 def init(faction, return_out = False):
     """
@@ -132,7 +199,7 @@ def init(faction, return_out = False):
     for key in units.keys():
         units_dict[key] = {}
         for index, rows in units[key].iterrows():
-            units_dict[key][index] = unit_types(index,rows)
+            units_dict[key][index] = UnitTypes(index,rows)
 
     if return_out:
         return detachments_dict, armoury_dict, units_dict

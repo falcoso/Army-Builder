@@ -24,7 +24,7 @@ def test_units_dict_wargear():
     detachments_dict, armoury_dict, units_dict = init.init("Necron", True)
     for foc, units in units_dict.items():
         for title, i in units.items():
-            squad = main.unit(title, foc)
+            squad = main.Unit(title, foc)
             squad.change_wargear(split_only=True)
     return
 
