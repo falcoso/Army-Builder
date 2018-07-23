@@ -23,7 +23,7 @@ def test_army_list():
 
     for i in mock_inputs:
         main.input = lambda s: i.pop(0)
-        army = main.army_list("Necron")
+        army = main.ArmyList("Necron")
         army.add_detachment()
     return
 
@@ -34,7 +34,7 @@ def test_auto_naming():
                    "b2", "Immortals"]
 
     main.input = lambda s: mock_inputs.pop(0)
-    army = main.army_list("Necron")
+    army = main.ArmyList("Necron")
     army.add_detachment()
     for i in range(len(army.detachments)):
         assert army.detachments[i].name == "Patrol {}".format(i+1)
@@ -45,7 +45,7 @@ def test_add_unit_prog_input():
     """Checks adding a unit from programmers input for default option"""
     mock_input = ["A1", "1", "Triarch Stalker"]
     main.input = lambda s: mock_input.pop(0)
-    detach = main.detachment("Patrol")
+    detach = main.Detachment("Patrol")
     detach.add_unit("Elites")
     stalker = detach.units["Elites"][0]
     assert stalker.name == "Triarch Stalker"
@@ -62,7 +62,7 @@ def test_invalid_input_handling():
                   "Test invalid", "Break foc", "102", "Elites",
                   "Triarch something", "26", "Triarch Stalker"]
     main.input = lambda s: mock_input.pop(0)
-    detach = main.detachment("Patrol")
+    detach = main.Detachment("Patrol")
     detach.add_unit()
     stalker = detach.units["Elites"][0]
     assert stalker.name == "Triarch Stalker"
@@ -77,7 +77,7 @@ def test_add_unit_user_input():
                   "fa", "1",
                   "3", "1"]
     main.input = lambda s: mock_input.pop(0)
-    detach = main.detachment("Patrol")
+    detach = main.Detachment("Patrol")
     for i in range(3):
         detach.add_unit()
         assert detach.units["Fast Attack"][-1].name == "Canoptek Scarabs"
@@ -88,7 +88,7 @@ def test_detachment_rename():
     """Checks renaming method for detachment"""
     mock_input = ["A1", "1"]
     main.input = lambda s: mock_input.pop(0)
-    detach = main.detachment("Patrol")
+    detach = main.Detachment("Patrol")
     detach.rename("Test Name", True)
     assert detach.name != detach.type
     assert detach.default_name == False

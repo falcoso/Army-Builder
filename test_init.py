@@ -34,5 +34,5 @@ def test_detachments_dict_selection():
     """
     for key in init.detachments_dict:
         main.input = lambda s: (['a1','a1','1','1']*20).pop(0)
-        detach = main.detachment(key)
+        detach = main.Detachment(key)
     return

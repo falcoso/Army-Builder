@@ -10,7 +10,7 @@ import string
 import init
 import option_parser
 
-class army_list():
+class ArmyList():
     """
     Overarching class to collect together all the detachments and keep track
     of the army's factions and properties
@@ -39,10 +39,10 @@ class army_list():
         for i in user_input.split(','):
             i = i.replace(' ','')   #remove any extra spaces added by user
             try:
-                self.detachments.append(detachment(i))
+                self.detachments.append(Detachment(i))
             except KeyError:
                 i = list(init.detachments_dict.keys())[int(i)-1]
-                self.detachments.append(detachment(i))
+                self.detachments.append(Detachment(i))
             self.detachment_names.append(i)
 
         #number repeated detachment types
@@ -56,7 +56,7 @@ class army_list():
                         counter += 1
         return
 
-class detachment():
+class Detachment():
     """
     Collects together all the units within a detachment, making sure that
     minimum requirements are met and keeping track of points.

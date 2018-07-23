@@ -54,107 +54,150 @@ class OptionLexer():
 lexer = OptionLexer()
 lexer.build()
 
+class OptionParser():
+    def __init__(self, current_wargear=None):
+        self.current_wargear = current_wargear #for checking if an exchange or option for '\' symbol
+        self.run_count = -1                    #helps to add sub_index to parsing list
 
-tokens = ['ITEM', 'NUM', 'PLUS', 'MINUS', 'STAR', 'SLASH', 'COMMA']
-#operator precedence
-precedence = (
-    ('left', 'COMMA'),
-    ('left', 'MINUS'),
-    ('left', 'SLASH'),
-    ('left', 'PLUS'),
-    ('left', 'STAR')
-)
+        #create lexer
+        self.lexer = OptionLexer()
+        self.lexer.build()
+        return
 
-#define grammar tree
-def p_calc(p):
-    '''
-    calc : expression
-         | empty
-    '''
+    def parse2(self, parse_string, **kwargs):
+        '''Wrapper for parser function to check the items being parsed'''
+        if '/' in parse_string:
+            self.swap_wargear = []
+            self.lexer.lexer.input(parse_string)
+            while True:
+                tok = self.lexer.lexer.token()
+                if not tok:
+                    break
+                if tok.type == 'ITEM':
+                    self.swap_wargear.append(tok.value)
 
-    print(run(p[1]))
+        self.parser.parse(parse_string, **kwargs)
 
-def p_error(p):
-    print("Syntax error {} is not valid".format(p))
+    tokens = OptionLexer.tokens
 
-def p_expression(p):
-    '''
-    expression : expression COMMA expression
-               | expression MINUS expression
-               | expression SLASH expression
-    '''
+    #operator precedence
+    precedence = (
+        ('left', 'COMMA'),
+        ('left', 'MINUS'),
+        ('left', 'SLASH'),
+        ('left', 'PLUS'),
+        ('left', 'STAR')
+    )
 
-    p[0] = (p[2],p[1],p[3])
+    def build(self, **kwargs):
+        self.parser = yacc.yacc(module=self)
+        return
 
-def p_expression_name(p):
-    '''
-    expression : ITEM
-               | NUM
-               | option
-    '''
-    p[0] = p[1]
-    return
+    #define grammar tree
+    def p_calc(self, p):
+        '''
+        calc : expression
+             | empty
+        '''
+        print(self.run(p[1]))
+        return
 
-def p_mult_item(p):
-    '''
-    option : NUM STAR ITEM
-           | NUM STAR option
-    '''
-    p[0] = p[3] * p[1]
-    return
+    def p_error(self, p):
+        print("Syntax error {} is not valid".format(p))
+        return
 
-def p_add_item(p):
-    '''
-    option : option PLUS option
-           | ITEM PLUS option
-           | ITEM PLUS ITEM
-    '''
-    p[0] = p[1] + p[3]
+    def p_expression(self, p):
+        '''
+        expression : expression COMMA expression
+                   | expression MINUS NUM
+                   | expression SLASH expression
+        '''
+        p[0] = (p[2],p[1],p[3])
+        return
 
-def p_empty(p):
-    '''
-    empty :
-    '''
-    p[0] = None
+    def p_expression_name(self, p):
+        '''
+        expression : ITEM
+                   | option
+        '''
+        p[0] = p[1]
+        return
 
-# Build the lexer
-parse = yacc.yacc()
+    def p_mult_item(self, p):
+        '''
+        option : NUM STAR ITEM
+               | NUM STAR option
+        '''
+        p[0] = p[3] * p[1]
+        return
 
-def run(p, top_level=True):
-    index = string.ascii_lowercase
-    if top_level:
-        run.count = -1
-    if type(p) == tuple:
-        if p[0] == '/':
-            ret = ''
-            if top_level:
-                ret += "You may take one of the following:\n"
-            if type(p[1]) == tuple:
-                ret += run(p[1], False)
-            else:
-                run.count += 1
-                ret += '\t' + index[run.count] + ') ' + run(p[1], False)
-            if type(p[2]) == tuple:
-                ret += run(p[2], False)
-            else:
-                run.count += 1
-                ret += '\t' + index[run.count] + ') ' + run(p[2], False)
-            return ret
+    def p_add_item(self, p):
+        '''
+        option : option PLUS option
+               | ITEM PLUS option
+               | ITEM PLUS ITEM
+        '''
+        p[0] = p[1] + p[3]
+        return
+
+    def p_empty(self, p):
+        '''
+        empty :
+        '''
+        p[0] = None
+        return
+
+
+    def run(self, p, top_level=True):
+        index = string.ascii_lowercase #for sub lists
+        if top_level:
+            self.run_count = -1
+
+        if type(p) == tuple:
+            if p[0] == '/':
+                ret = ''
+                if top_level: #add header to listing
+                    #check if any wargear items are already in use
+                    already_used = [False]
+                    if self.current_wargear != None:
+                        for i in self.swap_wargear:
+                            if i in self.current_wargear:
+                                already_used[0] = True
+                                already_used.append(i)
+                                break #may cause errors but don't think there should be more than one swap out
+
+                    if already_used[0]: #select header based on search above
+                        ret+="You may exchange {} with one of the following:\n".format(already_used[1].item)
+                    else:
+                        ret += "You may take one of the following:\n"
+
+                if type(p[1]) == tuple: #stops double sub-indexing if there is more than 2 options
+                    ret += self.run(p[1], False)
+                else:
+                    self.run_count += 1
+                    ret += '\t' + index[self.run_count] + ') ' + self.run(p[1], False)
+
+                #testing for tuple as above does not have the same problems if ommitted
+                self.run_count += 1
+                ret += '\t' + index[self.run_count] + ') ' + self.run(p[2], False)
+                return ret
+
+            elif p[0] == '-':
+                return 'For every {} models, you may exchange {} for:\n'.format(p[2], p[1][1].item) + self.run(p[1], False)
+
         else:
-            if p[0] == '-':
-                return 'For every {} models, you may exchange {} for:\n'.format(p[2], p[1][1].item) + run(p[1], False)
+            try:
+                if top_level: #just a single item that needs listing
+                    return "You may take " + str(p)
+                else: #sub level that needs to be appended to a listing
+                    return str(p)
+            except:
+                return 'VOID ITEM'
 
-    else:
-        try:
-            if top_level:
-                return "You may take " + str(p)
-            else:
-                return str(p)
-        except:
-            return 'VOID ITEM'
-
-s = 'Gauss flayer,Gauss cannon/Heavy gauss cannon-3,2*Heat ray,Tesla carbine/Synaptic disintegrator/Gauss blaster,Warscythe/Voidblade+Dispersion shield+Hyperphase sword'
-run.count = -1
-for j, i in enumerate(s.split(',')):
-    print('{}. '.format(j+1), end='')
-    parse.parse(i)
+if __name__ == "__main__":
+    parser = OptionParser([init.WargearItem("Tesla carbine")])
+    parser.build()
+    s = 'Gauss flayer,Gauss cannon/Heavy gauss cannon-3,2*Heat ray,Tesla carbine/Synaptic disintegrator/Gauss blaster,Warscythe/Voidblade+Dispersion shield+Hyperphase sword'
+    for j, i in enumerate(s.split(',')):
+        print('{}. '.format(j+1), end='')
+        parser.parse2(i)
