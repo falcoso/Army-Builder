@@ -210,88 +210,14 @@ class Unit(init.UnitTypes):
 
     def change_wargear(self, split_only=False):
         """Change the wargear options for the unit"""
-        #define some helper functions
-        def and_option(combined_wargear):
-            """
-            Splits wargear options with + in and returns their combined output
-            as a string and points
-            """
-            split_wargear = combined_wargear.split('+')
-            output = ''
-            points = 0
-            for i in split_wargear[:-2]:
-                if '*' in split_wargear:
-                    temp_str, temp_points = self.multiple_option(i)
-                else:
-                    temp_str, temp_points = i, self.wargear_search(i)
-                points += temp_points
-                output += "{}, ".format(temp_str)
-
-            if '*' in split_wargear[-1]:
-                temp_str, temp_points = self.multiple_option(split_wargear[-1])
-            else:
-                temp_str, temp_points = split_wargear[-1], self.wargear_search(split_wargear[-1])
-            output = output[:-3] + "and" + temp_str
-            points += temp_points
-
-            return output, points
-
-        def standard_option(option):
-            if '*' in option:
-                temp_str, temp_points = self.multiple_option(option)
-            else:
-                temp_str, temp_points = option, self.wargear_search(option)
-
-            return "You may add: {} ({}pts)".format(temp_str, temp_points), temp_str, temp_points
-
-        def exchange_option(option):
-            """Creates format string for exchange options"""
-            swap = option.split("/")
-            points_list = []
-            #check if it is swapping wargear for default option
-            if swap[0] in self.wargear:
-                output = "You may exchange {} for ".format(swap[0])
-                if len(swap) > 2:
-                    output += "1 of:"
-
-                output += "\n"
-                for sub_index, wargear in zip(string.ascii_lowercase[:len(swap[1:])], swap[1:]):
-                    if "+" in wargear:
-                        temp_str, temp_points = and_option(wargear)
-                    elif '*' in wargear:
-                        temp_str, temp_points = self.multiple_option(wargear)
-                    else:
-                        temp_str, temp_points = wargear, self.wargear_search(wargear)
-
-                    temp_points = temp_points - self.wargear_search(swap[0])
-                    output += "\t{}. {} (net {}pts per model)\n".format(sub_index,
-                                 temp_str, temp_points)
-                    points_list.append(temp_points)
-
-            else:
-                output = "You may have 1 of the following: "
-                for i in swap:
-                    if '+' in i:
-                        temp_str, temp_points = and_option(i)
-                    elif '*' in i:
-                        temp_str, temp_points = self.multiple_option(i)
-                    else:
-                        temp_str, temp_points = i, self.wargear_search(i)
-                    output += temp_str + " ({}pts), ".format(temp_points)
-
-                    points_list.append(temp_points)
-                #remove additional comma and space from the end
-                output += output[:-2]
-
-            options_list = swap
-            return output, options_list, points_list
-
-        #actual function body
         #show initial unit state
         print("Current loadout for {}".format(self.name))
         print(self)
         index_options = []
         index_points  = []
+        self.parser = option_parser.OptionParser(self.wargear)
+        self.parser.build()
+
 
         #show options available
         print("Options available:")
@@ -301,32 +227,8 @@ class Unit(init.UnitTypes):
 
         for index, option in enumerate(self.options):
             output = "{}.".format(index+1)
-            if '-' in option:
-                sub_option, no_models = option.split('-')
-                no_models = int(no_models)
-                print(sub_option)
-                print(no_models)
-                output += "For every {} models ".format(no_models)
-                if '/' in sub_option:
-                    temp_str, temp_options, points_list = exchange_option(sub_option)
-
-                else:
-                    temp_str, temp_options, points_list = standard_option(sub_option)
-
-                index_points.append(points_list)
-                temp_options.append(no_models)
-                index_options.append(temp_options)
-
-            else:
-                if '/' in option:
-                    temp_str, temp_options, points_list = exchange_option(option)
-                else:
-                    temp_str, temp_options, points_list = standard_option(option)
-
-                index_points.append(points_list)
-                index_options.append(temp_options)
-
-            output += temp_str
+            self.parser.parse2(option)
+            output += self.parser.ret
             print(output)
 
         if not split_only:
@@ -339,10 +241,7 @@ class Unit(init.UnitTypes):
                 self.pts += index_points[user_input[0]]
                 self.wargear_pts += index_points[user_input[0]]
                 print(index_options[user_input[0]] + " added")
-
-
         return
-
 
     def __repr__(self):
         output = self.name
@@ -352,7 +251,7 @@ class Unit(init.UnitTypes):
         output += "\t\t{}pts\n".format(self.pts)
         if self.wargear != None:
             for i in self.wargear:
-                output += "\t" + i.__repr__() + "\n"
+                output += "\t" + i.__repr__()
 
         return output
 
@@ -364,5 +263,4 @@ if __name__ == "__main__":
     faction = "Necron"
     init.init(faction)
     immortals = Unit("Catacomb Command Barge", "HQ")
-    ret = str(immortals)
-    print(ret)
+    immortals.change_wargear(split_only=True)

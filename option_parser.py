@@ -76,7 +76,7 @@ class OptionParser():
                 if tok.type == 'ITEM':
                     self.swap_wargear.append(tok.value)
 
-        self.parser.parse(parse_string, **kwargs)
+        return self.parser.parse(parse_string, **kwargs)
 
     tokens = OptionLexer.tokens
 
@@ -99,8 +99,7 @@ class OptionParser():
         calc : expression
              | empty
         '''
-        print(self.run(p[1]))
-        return
+        return self.run(p[1])
 
     def p_error(self, p):
         print("Syntax error {} is not valid".format(p))
@@ -180,19 +179,22 @@ class OptionParser():
                 #testing for tuple as above does not have the same problems if ommitted
                 self.run_count += 1
                 ret += '\t' + index[self.run_count] + ') ' + self.run(p[2], False)
-                return ret
 
             elif p[0] == '-':
-                return 'For every {} models, you may exchange {} for:\n'.format(p[2], p[1][1].item) + self.run(p[1], False)
+                ret = 'For every {} models, you may exchange {} for:\n'.format(p[2], p[1][1].item) + self.run(p[1], False)
 
         else:
             try:
                 if top_level: #just a single item that needs listing
-                    return "You may take " + str(p)
+                    ret = "You may take " + str(p)
                 else: #sub level that needs to be appended to a listing
-                    return str(p)
+                    ret = str(p)
             except:
-                return 'VOID ITEM'
+                ret = 'VOID ITEM'
+
+        if top_level: #if top level save the output to be manipulated
+            self.ret = ret
+        return ret
 
 if __name__ == "__main__":
     parser = OptionParser([init.WargearItem("Tesla carbine")])
@@ -201,3 +203,4 @@ if __name__ == "__main__":
     for j, i in enumerate(s.split(',')):
         print('{}. '.format(j+1), end='')
         parser.parse2(i)
+        print(parser.ret)
