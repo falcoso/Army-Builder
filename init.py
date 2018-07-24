@@ -32,12 +32,16 @@ class WargearItem():
             raise KeyError("{} not found in _armoury.xlsx file".format(item))
         return
 
-    def __repr__(self):
+    def __repr__(self, comparison=None):
         if self.no_of == 1:
             ret = self.item
         else:
             ret = str(self.no_of) + ' ' + self.item + 's'
-        ret += " ({}pts per model)\n".format(self.points)
+
+        if comparison:
+            ret += " (net {}pts per model)\n".format(self.points-comparison.points)
+        else:
+            ret += " ({}pts per model)\n".format(self.points)
         return ret
 
     def __mul__(self, integer):
@@ -86,7 +90,7 @@ class MultipleItem(WargearItem):
         self.points += other_item.points
         return self
 
-    def __repr__(self):
+    def __repr__(self, comparison=None):
         ret = ''
         for i in range(len(self.item)):
             ret += self.item[i]
@@ -97,7 +101,10 @@ class MultipleItem(WargearItem):
             else:
                 ret += ', '
 
-        ret += " ({}pts per model)\n".format(self.points)
+        if comparison:
+            ret += " (net {}pts per model)\n".format(self.points-comparison.points)
+        else:
+            ret += " ({}pts per model)\n".format(self.points)
         return ret
 
 class UnitTypes():
@@ -204,3 +211,6 @@ def init(faction, return_out = False):
     if return_out:
         return detachments_dict, armoury_dict, units_dict
     return
+
+if __name__ == '__main__':
+    init('Necron')

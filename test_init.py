@@ -20,7 +20,10 @@ def test_units_dict():
     return
 
 def test_units_dict_wargear():
-    """Checks spelling of the options in the units_dict"""
+    """
+    Checks spelling of the options in the units_dict by creating a unit for
+    each one.
+    """
     detachments_dict, armoury_dict, units_dict = init.init("Necron", True)
     for foc, units in units_dict.items():
         for title, i in units.items():
@@ -29,10 +32,14 @@ def test_units_dict_wargear():
     return
 
 def test_detachments_dict_selection():
-    """
-    Makes sure all detachments in detachments_dict can be made
-    """
+    """Makes sure all detachments in detachments_dict can be made"""
     for key in init.detachments_dict:
         main.input = lambda s: (['a1','a1','1','1']*20).pop(0)
         detach = main.Detachment(key)
     return
+
+def test_WargearItem():
+    """Checks that items can be created properly"""
+    for cat, wargear_list in init.armoury_dict.items():
+        for i in wargear_list:
+            item = init.WargearItem(i)

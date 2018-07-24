@@ -50,10 +50,6 @@ class OptionLexer():
                  break
              print(tok)
 
-
-lexer = OptionLexer()
-lexer.build()
-
 class OptionParser():
     def __init__(self, current_wargear=None):
         self.current_wargear = current_wargear #for checking if an exchange or option for '\' symbol
@@ -146,27 +142,33 @@ class OptionParser():
         p[0] = None
         return
 
+    def check_already_used(self):
+        '''Helped function for run() to check if a wargear option is in use'''
+        #check if any wargear items are already in use
+        self.already_used = [False]
+        if self.current_wargear != None:
+            for i in self.swap_wargear:
+                if i in self.current_wargear:
+                    self.already_used[0] = True
+                    self.already_used.append(i)
+                    break #may cause errors but don't
+        return
 
     def run(self, p, top_level=True):
+
         index = string.ascii_lowercase #for sub lists
         if top_level:
             self.run_count = -1
+            self.already_used = [False]
 
         if type(p) == tuple:
             if p[0] == '/':
                 ret = ''
                 if top_level: #add header to listing
-                    #check if any wargear items are already in use
-                    already_used = [False]
-                    if self.current_wargear != None:
-                        for i in self.swap_wargear:
-                            if i in self.current_wargear:
-                                already_used[0] = True
-                                already_used.append(i)
-                                break #may cause errors but don't think there should be more than one swap out
+                    self.check_already_used()
 
-                    if already_used[0]: #select header based on search above
-                        ret+="You may exchange {} with one of the following:\n".format(already_used[1].item)
+                    if self.already_used[0]: #select header based on search above
+                        ret+="You may exchange {} with one of the following:\n".format(self.already_used[1].item)
                     else:
                         ret += "You may take one of the following:\n"
 
@@ -181,26 +183,22 @@ class OptionParser():
                 ret += '\t' + index[self.run_count] + ') ' + self.run(p[2], False)
 
             elif p[0] == '-':
-                ret = 'For every {} models, you may exchange {} for:\n'.format(p[2], p[1][1].item) + self.run(p[1], False)
+                ret = "For every {} models, you may ".format(p[2])
+                self.check_already_used()
+                if self.already_used[0]:
+                    ret += "exchange {} for:\n".format(self.already_used[1].item) + self.run(p[1], False)
+                else:
+                    ret += "take one of:\n" + self.run(p[1], False)
 
         else:
-            try:
-                if top_level: #just a single item that needs listing
-                    ret = "You may take " + str(p)
-                else: #sub level that needs to be appended to a listing
+            if top_level: #just a single item that needs listing
+                ret = "You may take " + str(p)
+            else: #sub level that needs to be appended to a listing
+                if self.already_used[0]:
+                    ret = p.__repr__(self.already_used[1])
+                else:
                     ret = str(p)
-            except:
-                ret = 'VOID ITEM'
 
         if top_level: #if top level save the output to be manipulated
             self.ret = ret
         return ret
-
-if __name__ == "__main__":
-    parser = OptionParser([init.WargearItem("Tesla carbine")])
-    parser.build()
-    s = 'Gauss flayer,Gauss cannon/Heavy gauss cannon-3,2*Heat ray,Tesla carbine/Synaptic disintegrator/Gauss blaster,Warscythe/Voidblade+Dispersion shield+Hyperphase sword'
-    for j, i in enumerate(s.split(',')):
-        print('{}. '.format(j+1), end='')
-        parser.parse2(i)
-        print(parser.ret)

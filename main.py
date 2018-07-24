@@ -262,5 +262,5 @@ if __name__ == "__main__":
 #    faction = input(">> ")
     faction = "Necron"
     init.init(faction)
-    immortals = Unit("Catacomb Command Barge", "HQ")
+    immortals = Unit("Destroyers", "Fast Attack")
     immortals.change_wargear(split_only=True)
