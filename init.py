@@ -39,9 +39,9 @@ class WargearItem():
             ret = str(self.no_of) + ' ' + self.item + 's'
 
         if comparison:
-            ret += " (net {}pts per model)\n".format(self.points-comparison.points)
+            ret += " \t(net {}pts per model)".format(self.points-comparison.points)
         else:
-            ret += " ({}pts per model)\n".format(self.points)
+            ret += " \t({}pts per model)".format(self.points)
         return ret
 
     def __mul__(self, integer):
@@ -102,9 +102,9 @@ class MultipleItem(WargearItem):
                 ret += ', '
 
         if comparison:
-            ret += " (net {}pts per model)\n".format(self.points-comparison.points)
+            ret += " \t(net {}pts per model)".format(self.points-comparison.points)
         else:
-            ret += " ({}pts per model)\n".format(self.points)
+            ret += " \t({}pts per model)".format(self.points)
         return ret
 
 class UnitTypes():

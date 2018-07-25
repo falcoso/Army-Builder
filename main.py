@@ -4,9 +4,10 @@ Created on Fri Jul  6 22:45:30 2018
 
 @author: jones
 """
-import os, sys
 import numpy as np
 import string
+import re
+
 import init
 import option_parser
 
@@ -147,7 +148,7 @@ class Detachment():
                 top_len = len(max(keys, key=len))
                 for index, [keys, value] in enumerate(init.units_dict["Named Characters"].items()):
                     print("A" + str(index+1)+". " + keys.ljust(top_len) + "\t({}pts)".format(value.pts))
-                print('')
+                print('') #create space between set of options
 
                 print("Other Characters (Including base Wargear):")
                 units = list(init.units_dict[battlefield_role].keys())
@@ -174,7 +175,7 @@ class Detachment():
                         user_input = list(init.units_dict["HQ"].keys())[int(user_input[1:])-1]
 
                 self.units[battlefield_role].append(Unit(user_input, battlefield_role))
-            except:
+            except (KeyError, IndexError):
                 print("{} is not a valid option, please select the unit by name or input".format(user_input))
                 get_unit(battlefield_role)
             return
@@ -198,49 +199,94 @@ class Unit(init.UnitTypes):
         except:
             base_unit = init.units_dict["Named Characters"][self.type]
 
-        self.wargear = base_unit.wargear
-        self.options = base_unit.options
-        self.wargear_pts = base_unit.wargear_pts
+        self.wargear  = base_unit.wargear
+        self.options  = base_unit.options
+        self.base_pts = base_unit.base_pts
         self.no_models   = base_unit.size[0]
         self.size_range  = base_unit.size
-        self.pts_per_mod = base_unit.pts
-        self.pts = self.pts_per_mod*self.no_models
+        self.re_calc_points()
         print(self.name + " added to detachment")
         return
 
+    def re_calc_points(self):
+        self.wargear_pts = 0
+        if self.wargear != None:
+            for i in self.wargear:
+                self.wargear_pts += i.points
+        self.pts_per_model = self.base_pts + self.wargear_pts
+        self.pts = self.pts_per_model*self.no_models
+
     def change_wargear(self, split_only=False):
         """Change the wargear options for the unit"""
+
+        def get_user_options():
+            """Helper to get user input option"""
+            #show options available
+            print("Options available:")
+            if self.options == None:
+                print("There are no wargear options available for this unit.")
+                return
+
+            self.parser.options_list = []
+            for index, option in enumerate(self.options):
+                output = "{}.".format(index+1)
+                self.parser.parse2(option)
+                output += self.parser.ret
+                print(output)
+
+            #get user input
+            if not split_only:
+                print("Input format <index>[<sub_index>]")
+    #            user_input = input(">> ")
+                user_input = '1.a 1b, 2C 3'
+                #santise and create list of options
+                user_input = user_input.lower()
+                user_input = user_input.translate(str.maketrans('','',string.punctuation))
+                user_input = re.findall(r'[0-9][.,-]?[a-zA-Z]?', user_input)
+
+                wargear_to_add = []
+                #find the item each user input refers to
+                for choice in user_input:
+                    try:
+                        index = np.zeros(2, dtype=np.int8)
+                        index[0] = int(choice[0]) -1
+
+                        if len(choice) == 2:
+                            for index[1], i in enumerate(string.ascii_lowercase):
+                                if i == choice[1]:
+                                    break
+                            for i in self.parser.options_list[index[0]]:
+                                if i in self.wargear:
+                                    break
+                            wargear_to_add.append([self.parser.options_list[index[0]][index[1]], i])
+                        elif len(choice) == 1:
+                            wargear_to_add.append(self.parser.options_list[index[0]])
+                        else:
+                            raise ValueError("{} is not valid, input should be of format <index><sub-index>".format(choice))
+
+                    except:
+                        print('{} is not a valid option please input options in format <index><sub-index>'.format(choice))
+                        wargear_to_add = get_user_options
+
+                return wargear_to_add
+
         #show initial unit state
         print("Current loadout for {}".format(self.name))
         print(self)
-        index_options = []
-        index_points  = []
         self.parser = option_parser.OptionParser(self.wargear)
         self.parser.build()
 
-
-        #show options available
-        print("Options available:")
-        if self.options == None:
-            print("There are no wargear options available for this unit.")
-            return
-
-        for index, option in enumerate(self.options):
-            output = "{}.".format(index+1)
-            self.parser.parse2(option)
-            output += self.parser.ret
-            print(output)
-
+        wargear_to_add = get_user_options()
         if not split_only:
-            print("Input format <index>.<sub_index>")
-            user_input = input(">> ")
-            user_input = user_input.replace(' ','').split('.')
-            user_input[0] = int(user_input[0])
-            if len(user_input) == 1:
-                self.wargear.append(index_options[user_input[0]])
-                self.pts += index_points[user_input[0]]
-                self.wargear_pts += index_points[user_input[0]]
-                print(index_options[user_input[0]] + " added")
+            for wargear in wargear_to_add:
+                if type(wargear) == list:
+                    self.wargear.remove(wargear[1])
+                    self.wargear.append(wargear[0])
+                else:
+                    self.wargear.append(wargear)
+        self.re_calc_points()
+
+
         return
 
     def __repr__(self):
@@ -251,7 +297,7 @@ class Unit(init.UnitTypes):
         output += "\t\t{}pts\n".format(self.pts)
         if self.wargear != None:
             for i in self.wargear:
-                output += "\t" + i.__repr__()
+                output += "\t" + i.__repr__() + '\n'
 
         return output
 
@@ -262,5 +308,6 @@ if __name__ == "__main__":
 #    faction = input(">> ")
     faction = "Necron"
     init.init(faction)
-    immortals = Unit("Destroyers", "Fast Attack")
-    immortals.change_wargear(split_only=True)
+    immortals = Unit("Catacomb Command Barge", "HQ")
+    immortals.change_wargear(split_only=False)
+    print(immortals)

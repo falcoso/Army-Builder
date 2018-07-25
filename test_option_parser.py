@@ -38,11 +38,11 @@ def test_direct_string():
     parser.build()
 
     #create test string
-    comp_string = ['You may take Gauss flayer (0pts per model)\n',
-                   'For every 3 models, you may take one of:\n\ta) Gauss cannon (20pts per model)\n\tb) Heavy gauss cannon (27pts per model)\n',
-                   'You may take 2 Heat rays (108pts per model)\n',
-                   'You may exchange Tesla carbine with one of the following:\n\ta) Tesla carbine (net 0pts per model)\n\tb) Synaptic disintegrator (net -9pts per model)\n\tc) Gauss blaster (net 0pts per model)\n',
-                   'You may take one of the following:\n\ta) Warscythe (11pts per model)\n\tb) Dispersion shield, Hyperphase sword & Voidblade (21pts per model)\n']
+    comp_string = ['You may take Gauss flayer \t(0pts per model)\n',
+                   'For every 3 models, you may take one of:\n\ta) Gauss cannon \t(20pts per model)\n\tb) Heavy gauss cannon \t(27pts per model)\n',
+                   'You may take 2 Heat rays \t(108pts per model)\n',
+                   'You may exchange Tesla carbine with one of the following:\n\ta) Tesla carbine \t(net 0pts per model)\n\tb) Synaptic disintegrator \t(net -9pts per model)\n\tc) Gauss blaster \t(net 0pts per model)\n',
+                   'You may take one of the following:\n\ta) Warscythe \t(11pts per model)\n\tb) Dispersion shield, Hyperphase sword & Voidblade \t(21pts per model)\n']
 
     s = 'Gauss flayer,Gauss cannon/Heavy gauss cannon-3,2*Heat ray,Tesla carbine/Synaptic disintegrator/Gauss blaster, Warscythe/Voidblade+Dispersion shield+Hyperphase sword'
 
