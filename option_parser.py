@@ -12,6 +12,26 @@ import string
 
 init.init("Necron")
 
+class Option():
+    """
+    Collect together the list of options so that the the programme can select
+    and validate any options
+    """
+    def __init__(self, items_involved):
+        self.items_involved = items_involved
+        self.no_required = 1
+        self.selected = None
+
+    def __getitem__(self, i):
+        return self.items_involved[i]
+
+    def __repr__(self):
+        return str(self.items_involved)
+
+    def select(self, index):
+        self.selected = self.items_involved[index]
+        return
+
 class OptionLexer():
     tokens = ['ITEM', 'NUM', 'PLUS', 'MINUS', 'STAR', 'SLASH', 'COMMA']
 
@@ -58,19 +78,26 @@ class OptionParser():
         #create lexer
         self.lexer = OptionLexer()
         self.lexer.build()
+        self.options_list = [] #stores all available wargear in an options list
         return
 
     def parse2(self, parse_string, **kwargs):
-        '''Wrapper for parser function to check the items being parsed'''
-        if '/' in parse_string:
-            self.swap_wargear = []
-            self.lexer.lexer.input(parse_string)
-            while True:
-                tok = self.lexer.lexer.token()
-                if not tok:
-                    break
-                if tok.type == 'ITEM':
-                    self.swap_wargear.append(tok.value)
+        """Wrapper for parser function to check the items being parsed"""
+        self.swap_wargear = [] #saves all items being parsed
+        self.lexer.lexer.input(parse_string)
+
+        #find all items in the string
+        while True:
+            tok = self.lexer.lexer.token()
+            if not tok:
+                break
+            if tok.type == 'ITEM':
+                self.swap_wargear.append(tok.value)
+
+        if len(self.swap_wargear) == 1:     #if single item, unpack to help with error detection
+            self.options_list.append(self.swap_wargear[0])
+        else:
+            self.options_list.append(Option(self.swap_wargear))
 
         return self.parser.parse(parse_string, **kwargs)
 
@@ -143,7 +170,7 @@ class OptionParser():
         return
 
     def check_already_used(self):
-        '''Helped function for run() to check if a wargear option is in use'''
+        """Helper function for run() to check if a wargear option is in use"""
         #check if any wargear items are already in use
         self.already_used = [False]
         if self.current_wargear != None:
@@ -184,6 +211,7 @@ class OptionParser():
 
             elif p[0] == '-':
                 ret = "For every {} models, you may ".format(p[2])
+                self.options_list[-1].no_required = p[2] #save the min amount requirement for access in main
                 self.check_already_used()
                 if self.already_used[0]:
                     ret += "exchange {} for:\n".format(self.already_used[1].item) + self.run(p[1], False)
@@ -198,6 +226,7 @@ class OptionParser():
                     ret = p.__repr__(self.already_used[1])
                 else:
                     ret = str(p)
+            ret += '\n'
 
         if top_level: #if top level save the output to be manipulated
             self.ret = ret

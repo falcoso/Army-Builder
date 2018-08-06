@@ -238,23 +238,27 @@ class Unit(init.UnitTypes):
             if not split_only:
                 print("Input format <index>[<sub_index>]")
     #            user_input = input(">> ")
-                user_input = '1.a 1b, 2C 3'
+                user_input = '1.a'
                 #santise and create list of options
                 user_input = user_input.lower()
                 user_input = user_input.translate(str.maketrans('','',string.punctuation))
-                user_input = re.findall(r'[0-9][.,-]?[a-zA-Z]?', user_input)
+                user_input = re.findall(r'[0-9][a-zA-Z]?', user_input)
 
                 wargear_to_add = []
                 #find the item each user input refers to
                 for choice in user_input:
                     try:
+                        #convert the choice number into the index to select the item
                         index = np.zeros(2, dtype=np.int8)
                         index[0] = int(choice[0]) -1
 
                         if len(choice) == 2:
+                            #find the index corresponding to the lowercase letter
                             for index[1], i in enumerate(string.ascii_lowercase):
                                 if i == choice[1]:
-                                    break
+                                    break #index[1] will save as the last enumerate
+
+                            #create sub list containing item to add and item to remove
                             for i in self.parser.options_list[index[0]]:
                                 if i in self.wargear:
                                     break
@@ -266,7 +270,7 @@ class Unit(init.UnitTypes):
 
                     except:
                         print('{} is not a valid option please input options in format <index><sub-index>'.format(choice))
-                        wargear_to_add = get_user_options
+                        wargear_to_add = get_user_options()
 
                 return wargear_to_add
 
@@ -277,6 +281,9 @@ class Unit(init.UnitTypes):
         self.parser.build()
 
         wargear_to_add = get_user_options()
+        for i in wargear_to_add:
+            for j in i:
+                print(type(j))
         if not split_only:
             for wargear in wargear_to_add:
                 if type(wargear) == list:
@@ -308,6 +315,6 @@ if __name__ == "__main__":
 #    faction = input(">> ")
     faction = "Necron"
     init.init(faction)
-    immortals = Unit("Catacomb Command Barge", "HQ")
+    immortals = Unit("Destroyers", "Fast Attack")
     immortals.change_wargear(split_only=False)
     print(immortals)
