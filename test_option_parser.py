@@ -49,3 +49,18 @@ def test_direct_string():
     for i,j in zip(s.split(','), comp_string):
         parser.parse2(i)
         assert parser.ret == j
+
+def test_Option_class():
+    """
+    Checks list facilities in the Options class and that the object can be
+    inialised successfully
+    """
+    item_list = [init.WargearItem("Tesla carbine"),
+                 init.WargearItem("Gauss cannon"),
+                 init.WargearItem("Gauss blaster")]
+    option = option_parser.Option(item_list)
+    assert item_list[1] == option[1]
+    for i,j in enumerate(option):
+        assert j == item_list[i]
+
+

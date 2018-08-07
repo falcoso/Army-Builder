@@ -86,14 +86,6 @@ class OptionParser():
         self.swap_wargear = [] #saves all items being parsed
         self.lexer.lexer.input(parse_string)
 
-        #find all items in the string
-        while True:
-            tok = self.lexer.lexer.token()
-            if not tok:
-                break
-            if tok.type == 'ITEM':
-                self.swap_wargear.append(tok.value)
-
         if len(self.swap_wargear) == 1:     #if single item, unpack to help with error detection
             self.options_list.append(self.swap_wargear[0])
         else:
@@ -113,7 +105,7 @@ class OptionParser():
     )
 
     def build(self, **kwargs):
-        self.parser = yacc.yacc(module=self)
+        self.parser = yacc.yacc(module=self, **kwargs)
         return
 
     #define grammar tree
@@ -142,6 +134,8 @@ class OptionParser():
         expression : ITEM
                    | option
         '''
+        #save all items in the string to be accessed outside
+        self.swap_wargear.append(p[1])
         p[0] = p[1]
         return
 

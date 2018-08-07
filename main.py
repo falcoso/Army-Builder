@@ -238,7 +238,7 @@ class Unit(init.UnitTypes):
             if not split_only:
                 print("Input format <index>[<sub_index>]")
     #            user_input = input(">> ")
-                user_input = '1.a'
+                user_input = '1.b'
                 #santise and create list of options
                 user_input = user_input.lower()
                 user_input = user_input.translate(str.maketrans('','',string.punctuation))
@@ -251,22 +251,21 @@ class Unit(init.UnitTypes):
                         #convert the choice number into the index to select the item
                         index = np.zeros(2, dtype=np.int8)
                         index[0] = int(choice[0]) -1
+                        sel_option = self.parser.options_list[index[0]]
 
                         if len(choice) == 2:
                             #find the index corresponding to the lowercase letter
                             for index[1], i in enumerate(string.ascii_lowercase):
                                 if i == choice[1]:
                                     break #index[1] will save as the last enumerate
+                            sel_option.select(index[1])
 
-                            #create sub list containing item to add and item to remove
-                            for i in self.parser.options_list[index[0]]:
-                                if i in self.wargear:
-                                    break
-                            wargear_to_add.append([self.parser.options_list[index[0]][index[1]], i])
                         elif len(choice) == 1:
-                            wargear_to_add.append(self.parser.options_list[index[0]])
+                            pass
                         else:
                             raise ValueError("{} is not valid, input should be of format <index><sub-index>".format(choice))
+
+                        wargear_to_add.append(sel_option)
 
                     except:
                         print('{} is not a valid option please input options in format <index><sub-index>'.format(choice))
@@ -281,14 +280,21 @@ class Unit(init.UnitTypes):
         self.parser.build()
 
         wargear_to_add = get_user_options()
-        for i in wargear_to_add:
-            for j in i:
-                print(type(j))
         if not split_only:
             for wargear in wargear_to_add:
-                if type(wargear) == list:
-                    self.wargear.remove(wargear[1])
-                    self.wargear.append(wargear[0])
+                if type(wargear) == option_parser.Option:
+                    if wargear.no_required > self.no_models:
+                        if not wargear.selected in self.wargear:
+                            print("Unable to add {} as {} models are required. The unit size is currently {}".format(wargear.selected,
+                                  wargear.no_required,
+                                  self.no_models))
+                        continue
+                    for i in wargear.items_involved:
+                        if i in self.wargear:
+                            self.wargear.remove(i)
+                            #may need to check if there are cases when multiple options need to be replaced
+                            break
+                    self.wargear.append(wargear.selected)
                 else:
                     self.wargear.append(wargear)
         self.re_calc_points()
@@ -315,6 +321,6 @@ if __name__ == "__main__":
 #    faction = input(">> ")
     faction = "Necron"
     init.init(faction)
-    immortals = Unit("Destroyers", "Fast Attack")
+    immortals = Unit("Lychguard", "Elites")
     immortals.change_wargear(split_only=False)
     print(immortals)
