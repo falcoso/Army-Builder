@@ -101,3 +101,22 @@ def test_unit_class():
     assert warriors.pts == 120
     assert warriors.wargear == [init.WargearItem("Gauss flayer")]
     return
+
+def test_re_size():
+    """Checks the Unit.re_size() method"""
+    warriors = main.Unit("Necron Warriors", "Troops")
+    mock_input = ["test", 2, 15]
+    main.input = lambda s: mock_input.pop(0)
+    warriors.re_size()
+    assert warriors.pts == warriors.pts_per_model*15
+
+    for i in ["test", 2]:
+        try:
+            warriors.re_size("test")
+            raise AssertionError("Test should reach exception at this point. Current i={}".format(i))
+        except (TypeError, ValueError):
+            pass
+
+    warriors.re_size(10)
+    assert warriors.pts == 120
+    return

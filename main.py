@@ -80,7 +80,10 @@ class Detachment():
         for keys, values in self.units.items():
             while len(values) < self.foc[keys][0]:
                 print("***Adding compulsory units from " + keys + "***")
-                self.add_unit(keys)
+                success = self.add_unit(keys)
+                if not success:
+                    print("Exiting addition of compulsory units, note detachment may not be legal")
+                    return
 
     def __repr__(self):
         output = "***" + self.name + "***\n"
@@ -133,6 +136,8 @@ class Detachment():
                 battlefield_role = "Heavy Support"
             elif battlefield_role.lower() in {'fa', 'fastattack'}:
                 battlefield_role = "Fast Attack"
+            elif battlefield_role.lower() in {'q', 'exit', 'cancel', 'quit', 'return', ''}:
+                return False
             else:
                 print("{} is invalid, please enter the index or name of the battlefield role you wish to add".format(battlefield_role))
                 battlefield_role = get_battlefield_role()
@@ -166,7 +171,9 @@ class Detachment():
 
             user_input = input(">> ")
             try:
-                if len(user_input) < 4:
+                if user_input.lower() in {'q', 'exit', 'cancel', 'quit', 'return'}:
+                    return False
+                elif len(user_input) < 4:
                     if user_input[0].isdigit():
                         user_input = list(init.units_dict[battlefield_role].keys())[int(user_input)-1]
                     elif user_input[0] in {'A','a'}:
@@ -177,13 +184,18 @@ class Detachment():
                 self.units[battlefield_role].append(Unit(user_input, battlefield_role))
             except (KeyError, IndexError):
                 print("{} is not a valid option, please select the unit by name or input".format(user_input))
+                print("To quit please enter 'q'")
                 get_unit(battlefield_role)
             return
 
         if battlefield_role == None:
             battlefield_role = get_battlefield_role()
 
-        get_unit(battlefield_role)
+        #in case user chooses to exit
+        if not battlefield_role:
+            return False
+        #check if user decides to exit
+        return get_unit(battlefield_role)
 
 
 
@@ -196,11 +208,11 @@ class Unit(init.UnitTypes):
         #catch any characters being added
         try:
             base_unit = init.units_dict[self.battlefield_role][self.type]
-        except:
+        except KeyError:
             base_unit = init.units_dict["Named Characters"][self.type]
 
-        self.wargear  = base_unit.wargear
-        self.options  = base_unit.options
+        self.wargear  = base_unit.wargear #init.WargearItem
+        self.options  = base_unit.options #str
         self.base_pts = base_unit.base_pts
         self.no_models   = base_unit.size[0]
         self.size_range  = base_unit.size
@@ -208,13 +220,43 @@ class Unit(init.UnitTypes):
         print(self.name + " added to detachment")
         return
 
+    def re_size(self, size=None):
+        """Changes the size of the unit"""
+
+        def get_size():
+            print("Enter the new size of the unit ({}-{})".format(*self.size_range))
+            try:
+                size = int(input(">>"))
+            except ValueError:
+                print("Please enter integer number for unit size")
+                size = get_size()
+
+            #check valid int is within size range
+            if size < self.size_range[0] or size > self.size_range[1]:
+                print("Invalid size. Unit must be between {} and {} models".format(*self.size_range))
+                size = get_size()
+            return size
+
+        if size == None:
+            size = get_size()
+        elif type(size) != int:
+            raise TypeError("Invalid direct input for resize of {}. Size must be an integer".format(size))
+        elif size < self.size_range[0] or size > self.size_range[1]:
+            raise ValueError("Invalid size. Unit must be between {} and {} models".format(*self.size_range))
+
+        self.no_models = size
+        self.re_calc_points()
+        return
+
     def re_calc_points(self):
+        """Updates any points values after changes to the unit"""
         self.wargear_pts = 0
         if self.wargear != None:
             for i in self.wargear:
                 self.wargear_pts += i.points
         self.pts_per_model = self.base_pts + self.wargear_pts
         self.pts = self.pts_per_model*self.no_models
+        return
 
     def change_wargear(self, split_only=False):
         """Change the wargear options for the unit"""
@@ -237,7 +279,7 @@ class Unit(init.UnitTypes):
             #get user input
             if not split_only:
                 print("Input format <index>[<sub_index>]")
-    #            user_input = input(">> ")
+#                user_input = input(">> ")
                 user_input = '1.b'
                 #santise and create list of options
                 user_input = user_input.lower()
@@ -267,7 +309,7 @@ class Unit(init.UnitTypes):
 
                         wargear_to_add.append(sel_option)
 
-                    except:
+                    except ValueError:
                         print('{} is not a valid option please input options in format <index><sub-index>'.format(choice))
                         wargear_to_add = get_user_options()
 
@@ -314,11 +356,18 @@ class Unit(init.UnitTypes):
 
         return output
 
+class Model():
+    """Keeps track of variations in the model makeup of a unit"""
+    def __init__(self, parent_unit, wargear=None):
+        self.base_pts = parent_unit.base_pts
+        if wargear:
+            self.wargear = wargear
+        else:
+            self.wargear = parent_unit.wargear
+
 
 if __name__ == "__main__":
     print("Army Builder Version 1.0")
-#    print("Which army are you using?")
-#    faction = input(">> ")
     faction = "Necron"
     init.init(faction)
     immortals = Unit("Lychguard", "Elites")
