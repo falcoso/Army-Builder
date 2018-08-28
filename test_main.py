@@ -107,16 +107,19 @@ def test_re_size():
     warriors = main.Unit("Necron Warriors", "Troops")
     mock_input = ["test", 2, 15]
     main.input = lambda s: mock_input.pop(0)
+    #first two should error but re-call to input
     warriors.re_size()
-    assert warriors.pts == warriors.pts_per_model*15
+    assert warriors.pts == warriors.pts_per_model*15 #check valid input modifies the unit points
 
+    #check programmer input raises the correct errors
     for i in ["test", 2]:
         try:
             warriors.re_size("test")
             raise AssertionError("Test should reach exception at this point. Current i={}".format(i))
         except (TypeError, ValueError):
-            pass
+            continue
 
+    #check valid programmer input
     warriors.re_size(10)
     assert warriors.pts == 120
     return

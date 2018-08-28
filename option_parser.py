@@ -21,6 +21,7 @@ class Option():
         self.items_involved = items_involved
         self.no_required = 1
         self.selected = None
+        self.all_models = True
 
     def __getitem__(self, i):
         return self.items_involved[i]
@@ -124,6 +125,7 @@ class OptionParser():
         '''
         expression : expression COMMA expression
                    | expression MINUS NUM
+                   | expression MINUS empty
                    | expression SLASH expression
         '''
         p[0] = (p[2],p[1],p[3])
@@ -165,7 +167,7 @@ class OptionParser():
 
     def check_already_used(self):
         """Helper function for run() to check if a wargear option is in use"""
-        #check if any wargear items are already in use
+        #check if any wargear items are already in use in the unit
         self.already_used = [False]
         if self.current_wargear != None:
             for i in self.swap_wargear:
@@ -189,9 +191,9 @@ class OptionParser():
                     self.check_already_used()
 
                     if self.already_used[0]: #select header based on search above
-                        ret+="You may exchange {} with one of the following:\n".format(self.already_used[1].item)
+                        ret+="The whole unit may exchange {} with one of the following:\n".format(self.already_used[1].item)
                     else:
-                        ret += "You may take one of the following:\n"
+                        ret += "The whole unit may take one of the following:\n"
 
                 if type(p[1]) == tuple: #stops double sub-indexing if there is more than 2 options
                     ret += self.run(p[1], False)
@@ -204,17 +206,22 @@ class OptionParser():
                 ret += '\t' + index[self.run_count] + ') ' + self.run(p[2], False)
 
             elif p[0] == '-':
-                ret = "For every {} models, you may ".format(p[2])
-                self.options_list[-1].no_required = p[2] #save the min amount requirement for access in main
-                self.check_already_used()
-                if self.already_used[0]:
-                    ret += "exchange {} for:\n".format(self.already_used[1].item) + self.run(p[1], False)
-                else:
-                    ret += "take one of:\n" + self.run(p[1], False)
+                if p[2] == None: #if just a tag to check its the whole unit
+                    ret = "Any model"
+                    ret += self.run(p[1], True)
+                    ret = ret.replace("The whole unit", '')
+                else: #requires per X models to be taken
+                    ret = "For every {} models, you may ".format(p[2])
+                    self.options_list[-1].no_required = p[2] #save the min amount requirement for access in main
+                    self.check_already_used()
+                    if self.already_used[0]:
+                        ret += "exchange {} for:\n".format(self.already_used[1].item) + self.run(p[1], False)
+                    else:
+                        ret += "take one of:\n" + self.run(p[1], False)
 
         else:
             if top_level: #just a single item that needs listing
-                ret = "You may take " + str(p)
+                ret = "The whole unit may take " + str(p)
             else: #sub level that needs to be appended to a listing
                 if self.already_used[0]:
                     ret = p.__repr__(self.already_used[1])
@@ -225,3 +232,8 @@ class OptionParser():
         if top_level: #if top level save the output to be manipulated
             self.ret = ret
         return ret
+
+parser = OptionParser()
+parser.build()
+parser.parse2("Gauss blaster/Tesla carbine")
+print(parser.ret)

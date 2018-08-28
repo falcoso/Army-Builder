@@ -81,7 +81,7 @@ class Detachment():
             while len(values) < self.foc[keys][0]:
                 print("***Adding compulsory units from " + keys + "***")
                 success = self.add_unit(keys)
-                if not success:
+                if success == False:
                     print("Exiting addition of compulsory units, note detachment may not be legal")
                     return
 
@@ -212,7 +212,7 @@ class Unit(init.UnitTypes):
             base_unit = init.units_dict["Named Characters"][self.type]
 
         self.wargear  = base_unit.wargear #init.WargearItem
-        self.options  = base_unit.options #str
+        self.options  = base_unit.options #list of str
         self.base_pts = base_unit.base_pts
         self.no_models   = base_unit.size[0]
         self.size_range  = base_unit.size
@@ -370,6 +370,6 @@ if __name__ == "__main__":
     print("Army Builder Version 1.0")
     faction = "Necron"
     init.init(faction)
-    immortals = Unit("Lychguard", "Elites")
+    immortals = Unit("Catacomb Command Barge", "HQ")
     immortals.change_wargear(split_only=False)
-    print(immortals)
+#    print(immortals.options)
