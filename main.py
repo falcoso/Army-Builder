@@ -211,18 +211,37 @@ class Unit(init.UnitTypes):
         except KeyError:
             base_unit = init.units_dict["Named Characters"][self.type]
 
-        self.wargear  = base_unit.wargear #init.WargearItem
         self.options  = base_unit.options #list of str
-        self.base_pts = base_unit.base_pts
-        self.no_models   = base_unit.size[0]
-        self.default_model = Model(self)
         self.size_range  = base_unit.size
+        self.default_model = Model(base_unit, no_models=self.size_range[0]) #standard model to be added on resize
+        self.ex_models = []              #any variation in the standard model as a list
         self.re_calc_points()
         print(self.name + " added to detachment")
         return
 
+    def re_calc_points(self):
+        """Updates any points values after changes to the unit"""
+        self.default_model.re_calc_points()
+        self.pts = self.default_model.pts
+        for i in self.ex_models:
+            i.re_calc_points()
+            self.pts += i.pts
+        return
+
+    def get_size(self):
+        """Get function to sum all the model sizes in the unit"""
+        size = self.default_model.no_models
+        for i in self.ex_models:
+            size += i.no_models
+        return size
+
+    def get_wargear(self):
+        return self.default_model.wargear
+
     def re_size(self, size=None):
-        """Changes the size of the unit"""
+        """
+        Changes the size of the unit by increasing the number of deafult models
+        """
 
         def get_size():
             print("Enter the new size of the unit ({}-{})".format(*self.size_range))
@@ -245,18 +264,9 @@ class Unit(init.UnitTypes):
         elif size < self.size_range[0] or size > self.size_range[1]:
             raise ValueError("Invalid size. Unit must be between {} and {} models".format(*self.size_range))
 
-        self.no_models = size
+        size_change = size - self.get_size()
+        self.default_model.no_models += size_change
         self.re_calc_points()
-        return
-
-    def re_calc_points(self):
-        """Updates any points values after changes to the unit"""
-        self.wargear_pts = 0
-        if self.wargear is not None:
-            for i in self.wargear:
-                self.wargear_pts += i.points
-        self.pts_per_model = self.base_pts + self.wargear_pts
-        self.pts = self.pts_per_model*self.no_models
         return
 
     def change_wargear(self, user_input=None, split_only=False):
@@ -325,32 +335,31 @@ class Unit(init.UnitTypes):
         #show initial unit state
         print("Current loadout for {}".format(self.name))
         print(self)
-        self.parser = option_parser.OptionParser(self.wargear)
+        self.parser = option_parser.OptionParser(self.default_model.wargear)
         self.parser.build()
 
-        wargear_to_add = get_user_options(user_input)
+        wargear_to_add = get_user_options(user_input) #get the list of wargear to modify the unit with
         if not split_only:
             for wargear in wargear_to_add:
                 #check there are the correct amount of models in the unit oto be legal
-                if wargear.no_required > self.no_models:
-                    if not wargear.selected in self.wargear:
+                if wargear.no_required > self.get_size():
+                    if not wargear.selected in self.default_model.wargear:
                         print("Unable to add {} as {} models are required. The unit size is currently {}".format(wargear.selected,
                               wargear.no_required,
-                              self.no_models))
+                              self.get_size()))
                         print("Would you like to re-size the unit to add this option?")
                         print("Input y to increase the unit size to {} for {}pts".format(wargear.no_required,
-                              self.pts_per_model*(wargear.no_required - self.no_models)))
+                              self.pts_per_model*(wargear.no_required - self.get_size())))
                         re_size = input('>>')
                         if re_size == 'y':
                             pass
                     continue
                 for i in wargear.items_involved:
-                    if i in self.wargear:
-                        self.wargear.remove(i)
+                    if i in self.default_model.wargear:
+                        self.default_model.wargear.remove(i)
                         #may need to check if there are cases when multiple options need to be replaced
                         break
-                self.wargear.append(wargear.selected)
-                self.default_model.wargear = self.wargear
+                self.default_model.wargear.append(wargear.selected)
         self.re_calc_points()
         return
 
@@ -360,27 +369,39 @@ class Unit(init.UnitTypes):
             output += "(" + self.type + ")"
 
         output += "\t\t{}pts\n".format(self.pts)
-        if self.wargear != None:
-            for i in self.wargear:
+        if self.default_model.wargear != None:
+            for i in self.default_model.wargear:
                 output += "\t" + i.__repr__() + '\n'
 
         return output
 
 class Model():
     """Keeps track of variations in the model makeup of a unit"""
-    def __init__(self, parent_unit, wargear=None):
+    def __init__(self, parent_unit, no_models=1, wargear=None):
         self.base_pts = parent_unit.base_pts
-        self.no_of = parent_unit.no_models
-        if wargear is None:
+        self.no_models = no_models
+        if wargear is not None:
             self.wargear = wargear
         else:
             self.wargear = parent_unit.wargear
+        self.re_calc_points
+
+    def re_calc_points(self):
+        """Updates any points values after changes to the unit"""
+        self.wargear_pts = 0
+        if self.wargear is not None:
+            for i in self.wargear:
+                self.wargear_pts += i.points
+        self.pts_per_model = self.base_pts + self.wargear_pts
+        self.pts = self.pts_per_model*self.no_models
+        return
 
 
 if __name__ == "__main__":
     print("Army Builder Version 1.0")
     faction = "Necron"
     init.init(faction)
-    immortals = Unit("Catacomb Command Barge", "HQ")
-    immortals.change_wargear('3')
+    immortals = Unit("Necron Warriors", "Troops")
+    print(immortals.re_size())
+    print(immortals)
 #    print(immortals.options)

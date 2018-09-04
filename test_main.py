@@ -50,7 +50,7 @@ def test_add_unit_prog_input():
     stalker = detach.units["Elites"][0]
     assert stalker.name == "Triarch Stalker"
     assert stalker.pts == 171
-    assert stalker.wargear == [init.WargearItem("Heat ray"), init.WargearItem("Massive forelimbs")]
+    assert stalker.get_wargear() == [init.WargearItem("Heat ray"), init.WargearItem("Massive forelimbs")]
     return
 
 def test_invalid_input_handling():
@@ -67,7 +67,7 @@ def test_invalid_input_handling():
     stalker = detach.units["Elites"][0]
     assert stalker.name == "Triarch Stalker"
     assert stalker.pts == 171
-    assert stalker.wargear == [init.WargearItem("Heat ray"), init.WargearItem("Massive forelimbs")]
+    assert stalker.get_wargear() == [init.WargearItem("Heat ray"), init.WargearItem("Massive forelimbs")]
     return
 
 def test_add_unit_user_input():
@@ -99,7 +99,7 @@ def test_unit_class():
     """Checks the attributes of the units class"""
     warriors = main.Unit("Necron Warriors", "Troops")
     assert warriors.pts == 120
-    assert warriors.wargear == [init.WargearItem("Gauss flayer")]
+    assert warriors.default_model.wargear == [init.WargearItem("Gauss flayer")]
     return
 
 def test_re_size():
@@ -109,7 +109,7 @@ def test_re_size():
     main.input = lambda s: mock_input.pop(0)
     #first two should error but re-call to input
     warriors.re_size()
-    assert warriors.pts == warriors.pts_per_model*15 #check valid input modifies the unit points
+    assert warriors.pts == warriors.default_model.pts_per_model*15 #check valid input modifies the unit points
 
     #check programmer input raises the correct errors
     for i in ["test", 2]:
@@ -135,5 +135,5 @@ def test_change_wargear():
                         init.WargearItem("Phylactery"),
                         init.WargearItem("Resurrection orb")]
     for i in wargear_selected:
-        assert i in unit.wargear
+        assert i in unit.default_model.wargear
 

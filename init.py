@@ -8,6 +8,20 @@ Created on Sat Jul  7 13:06:29 2018
 import pandas as pd
 import numpy as np
 
+def wargear_search_base(item):
+    """
+    Searches for a given wargear item in the armoury dictionary
+    """
+    if item in armoury_dict["Range"]:
+        return armoury_dict["Range"][item]
+    elif item in armoury_dict["Melee"]:
+        return   armoury_dict["Melee"][item]
+    elif item in armoury_dict["Other Wargear"]:
+        return   armoury_dict["Other Wargear"][item]
+    else:
+        raise KeyError("{} not found in _armoury.xlsx file".format(item))
+    return
+
 class WargearItem():
     def __init__(self, item):
         self.item = item
@@ -19,18 +33,7 @@ class WargearItem():
         return
 
     def wargear_search(self, item):
-        """
-        Searches for a given wargear item in the armoury dictionary
-        """
-        if item in armoury_dict["Range"]:
-            return armoury_dict["Range"][item]
-        elif item in armoury_dict["Melee"]:
-            return   armoury_dict["Melee"][item]
-        elif item in armoury_dict["Other Wargear"]:
-            return   armoury_dict["Other Wargear"][item]
-        else:
-            raise KeyError("{} not found in _armoury.xlsx file".format(item))
-        return
+        return wargear_search_base(item)
 
     def __repr__(self, comparison=None):
         if self.no_of == 1:
@@ -154,16 +157,9 @@ class UnitTypes():
         return "{} {}s".format(no_of, wargear), self.wargear_search(wargear)*int(no_of)
 
     def wargear_search(self, item):
-        """
-        Searches for a given wargear item in the armoury dictionary
-        """
-        if item in armoury_dict["Range"]:
-            return armoury_dict["Range"][item]
-        elif item in armoury_dict["Melee"]:
-            return armoury_dict["Melee"][item]
-        elif item in armoury_dict["Other Wargear"]:
-            return armoury_dict["Other Wargear"][item]
-        else:
+        try:
+            return wargear_search_base(item)
+        except:
             raise KeyError("{} for {} not found in _armoury.xlsx file".format(item, self.name))
         return
 
