@@ -215,6 +215,7 @@ class Unit(init.UnitTypes):
         self.options  = base_unit.options #list of str
         self.base_pts = base_unit.base_pts
         self.no_models   = base_unit.size[0]
+        self.default_model = Model(self)
         self.size_range  = base_unit.size
         self.re_calc_points()
         print(self.name + " added to detachment")
@@ -251,17 +252,21 @@ class Unit(init.UnitTypes):
     def re_calc_points(self):
         """Updates any points values after changes to the unit"""
         self.wargear_pts = 0
-        if self.wargear != None:
+        if self.wargear is not None:
             for i in self.wargear:
                 self.wargear_pts += i.points
         self.pts_per_model = self.base_pts + self.wargear_pts
         self.pts = self.pts_per_model*self.no_models
         return
 
-    def change_wargear(self, split_only=False):
-        """Change the wargear options for the unit"""
+    def change_wargear(self, user_input=None, split_only=False):
+        """
+        Change the wargear options for the unit. split_only=True will only
+        parse the option strings and a user_input can be submitted by
+        programmer or left up to the user.
+        """
 
-        def get_user_options():
+        def get_user_options(user_input=None):
             """Helper to get user input option"""
             #show options available
             print("Options available:")
@@ -279,8 +284,8 @@ class Unit(init.UnitTypes):
             #get user input
             if not split_only:
                 print("Input format <index>[<sub_index>]")
-#                user_input = input(">> ")
-                user_input = '1.b'
+                if user_input is None:
+                    user_input = input(">> ")
                 #santise and create list of options
                 user_input = user_input.lower()
                 user_input = user_input.translate(str.maketrans('','',string.punctuation))
@@ -288,6 +293,9 @@ class Unit(init.UnitTypes):
 
                 wargear_to_add = []
                 #find the item each user input refers to
+                if user_input == []:
+                    wargear_to_add = get_user_options()
+
                 for choice in user_input:
                     try:
                         #convert the choice number into the index to select the item
@@ -303,10 +311,9 @@ class Unit(init.UnitTypes):
                             sel_option.select(index[1])
 
                         elif len(choice) == 1:
-                            pass
+                            sel_option.select(0)
                         else:
                             raise ValueError("{} is not valid, input should be of format <index><sub-index>".format(choice))
-
                         wargear_to_add.append(sel_option)
 
                     except ValueError:
@@ -321,27 +328,30 @@ class Unit(init.UnitTypes):
         self.parser = option_parser.OptionParser(self.wargear)
         self.parser.build()
 
-        wargear_to_add = get_user_options()
+        wargear_to_add = get_user_options(user_input)
         if not split_only:
             for wargear in wargear_to_add:
-                if type(wargear) == option_parser.Option:
-                    if wargear.no_required > self.no_models:
-                        if not wargear.selected in self.wargear:
-                            print("Unable to add {} as {} models are required. The unit size is currently {}".format(wargear.selected,
-                                  wargear.no_required,
-                                  self.no_models))
-                        continue
-                    for i in wargear.items_involved:
-                        if i in self.wargear:
-                            self.wargear.remove(i)
-                            #may need to check if there are cases when multiple options need to be replaced
-                            break
-                    self.wargear.append(wargear.selected)
-                else:
-                    self.wargear.append(wargear)
+                #check there are the correct amount of models in the unit oto be legal
+                if wargear.no_required > self.no_models:
+                    if not wargear.selected in self.wargear:
+                        print("Unable to add {} as {} models are required. The unit size is currently {}".format(wargear.selected,
+                              wargear.no_required,
+                              self.no_models))
+                        print("Would you like to re-size the unit to add this option?")
+                        print("Input y to increase the unit size to {} for {}pts".format(wargear.no_required,
+                              self.pts_per_model*(wargear.no_required - self.no_models)))
+                        re_size = input('>>')
+                        if re_size == 'y':
+                            pass
+                    continue
+                for i in wargear.items_involved:
+                    if i in self.wargear:
+                        self.wargear.remove(i)
+                        #may need to check if there are cases when multiple options need to be replaced
+                        break
+                self.wargear.append(wargear.selected)
+                self.default_model.wargear = self.wargear
         self.re_calc_points()
-
-
         return
 
     def __repr__(self):
@@ -360,7 +370,8 @@ class Model():
     """Keeps track of variations in the model makeup of a unit"""
     def __init__(self, parent_unit, wargear=None):
         self.base_pts = parent_unit.base_pts
-        if wargear:
+        self.no_of = parent_unit.no_models
+        if wargear is None:
             self.wargear = wargear
         else:
             self.wargear = parent_unit.wargear
@@ -371,5 +382,5 @@ if __name__ == "__main__":
     faction = "Necron"
     init.init(faction)
     immortals = Unit("Catacomb Command Barge", "HQ")
-    immortals.change_wargear(split_only=False)
+    immortals.change_wargear('3')
 #    print(immortals.options)

@@ -73,7 +73,7 @@ class OptionLexer():
 
 class OptionParser():
     def __init__(self, current_wargear=None):
-        self.current_wargear = current_wargear #for checking if an exchange or option for '\' symbol
+        self.current_wargear = current_wargear #for checking if an exchange or addition option for '/' symbol
         self.run_count = -1                    #helps to add sub_index to parsing list
 
         #create lexer
@@ -86,12 +86,7 @@ class OptionParser():
         """Wrapper for parser function to check the items being parsed"""
         self.swap_wargear = [] #saves all items being parsed
         self.lexer.lexer.input(parse_string)
-
-        if len(self.swap_wargear) == 1:     #if single item, unpack to help with error detection
-            self.options_list.append(self.swap_wargear[0])
-        else:
-            self.options_list.append(Option(self.swap_wargear))
-
+        self.options_list.append(Option(self.swap_wargear))
         return self.parser.parse(parse_string, **kwargs)
 
     tokens = OptionLexer.tokens
@@ -210,6 +205,8 @@ class OptionParser():
                     ret = "Any model"
                     ret += self.run(p[1], True)
                     ret = ret.replace("The whole unit", '')
+                    self.options_list[-1].all_models = False
+
                 else: #requires per X models to be taken
                     ret = "For every {} models, you may ".format(p[2])
                     self.options_list[-1].no_required = p[2] #save the min amount requirement for access in main
@@ -232,8 +229,3 @@ class OptionParser():
         if top_level: #if top level save the output to be manipulated
             self.ret = ret
         return ret
-
-parser = OptionParser()
-parser.build()
-parser.parse2("Gauss blaster/Tesla carbine")
-print(parser.ret)

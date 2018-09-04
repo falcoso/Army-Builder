@@ -123,3 +123,17 @@ def test_re_size():
     warriors.re_size(10)
     assert warriors.pts == 120
     return
+
+def test_change_wargear():
+    """Checks the Unit.change_wargear() method applies correct wargear"""
+    unit = main.Unit("Catacomb Command Barge", "HQ")
+    mock_input = ["test", "1b, 2c,3, 4"]
+    main.input = lambda s: mock_input.pop(0)
+    unit.change_wargear()
+    wargear_selected = [init.WargearItem("Tesla cannon"),
+                        init.WargearItem("Hyperphase sword"),
+                        init.WargearItem("Phylactery"),
+                        init.WargearItem("Resurrection orb")]
+    for i in wargear_selected:
+        assert i in unit.wargear
+
