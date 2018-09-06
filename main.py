@@ -7,6 +7,7 @@ Created on Fri Jul  6 22:45:30 2018
 import numpy as np
 import string
 import re
+import copy
 
 import init
 import option_parser
@@ -214,7 +215,7 @@ class Unit(init.UnitTypes):
         self.options  = base_unit.options #list of str
         self.size_range  = base_unit.size
         self.default_model = Model(base_unit, no_models=self.size_range[0]) #standard model to be added on resize
-        self.ex_models = []              #any variation in the standard model as a list
+        self.ex_models = []              #any variation in the standard model as a list CONVERT TO SET WHEN SEARCHED
         self.re_calc_points()
         print(self.name + " added to detachment")
         return
@@ -243,22 +244,22 @@ class Unit(init.UnitTypes):
         Changes the size of the unit by increasing the number of deafult models
         """
 
-        def get_size():
+        def get_user_input():
             print("Enter the new size of the unit ({}-{})".format(*self.size_range))
             try:
                 size = int(input(">>"))
             except ValueError:
                 print("Please enter integer number for unit size")
-                size = get_size()
+                size = get_user_input()
 
             #check valid int is within size range
             if size < self.size_range[0] or size > self.size_range[1]:
                 print("Invalid size. Unit must be between {} and {} models".format(*self.size_range))
-                size = get_size()
+                size = get_user_input()
             return size
 
         if size == None:
-            size = get_size()
+            size = get_user_input()
         elif type(size) != int:
             raise TypeError("Invalid direct input for resize of {}. Size must be an integer".format(size))
         elif size < self.size_range[0] or size > self.size_range[1]:
@@ -293,17 +294,17 @@ class Unit(init.UnitTypes):
 
             #get user input
             if not split_only:
-                print("Input format <index>[<sub_index>]")
+                print("Input format <index>[<sub_index>][-<no_of(default:max)>]")
                 if user_input is None:
                     user_input = input(">> ")
                 #santise and create list of options
                 user_input = user_input.lower()
                 user_input = user_input.translate(str.maketrans('','',string.punctuation))
-                user_input = re.findall(r'[0-9][a-zA-Z]?', user_input)
+                user_input = set(re.findall(r'[0-9][a-zA-Z]?', user_input))
 
                 wargear_to_add = []
                 #find the item each user input refers to
-                if user_input == []:
+                if user_input == set(): #if user just hit enter giving empty input
                     wargear_to_add = get_user_options()
 
                 for choice in user_input:
@@ -321,7 +322,7 @@ class Unit(init.UnitTypes):
                             sel_option.select(index[1])
 
                         elif len(choice) == 1:
-                            sel_option.select(0)
+                            sel_option.select(0) #there will only eveer be one item to select
                         else:
                             raise ValueError("{} is not valid, input should be of format <index><sub-index>".format(choice))
                         wargear_to_add.append(sel_option)
@@ -341,26 +342,53 @@ class Unit(init.UnitTypes):
         wargear_to_add = get_user_options(user_input) #get the list of wargear to modify the unit with
         if not split_only:
             for wargear in wargear_to_add:
-                #check there are the correct amount of models in the unit oto be legal
-                if wargear.no_required > self.get_size():
-                    if not wargear.selected in self.default_model.wargear:
-                        print("Unable to add {} as {} models are required. The unit size is currently {}".format(wargear.selected,
-                              wargear.no_required,
-                              self.get_size()))
-                        print("Would you like to re-size the unit to add this option?")
-                        print("Input y to increase the unit size to {} for {}pts".format(wargear.no_required,
-                              self.pts_per_model*(wargear.no_required - self.get_size())))
-                        re_size = input('>>')
-                        if re_size == 'y':
-                            pass
-                    continue
-                for i in wargear.items_involved:
-                    if i in self.default_model.wargear:
-                        self.default_model.wargear.remove(i)
-                        #may need to check if there are cases when multiple options need to be replaced
-                        break
-                self.default_model.wargear.append(wargear.selected)
+                #check there are the correct amount of models in the unit to be legal
+                if wargear.no_required == 1:
+                    for i in wargear.items_involved:
+                        if i in self.default_model.wargear:
+                            self.default_model.wargear.remove(i)
+                            #may need to check if there are cases when multiple options need to be replaced
+                            break
+                    self.default_model.wargear.append(wargear.selected)
+
+                else:
+                    if wargear.no_required > self.get_size():
+                        if not wargear.selected in self.default_model.wargear:
+                            print("Unable to add {} as {} models are required. The unit size is currently {}".format(wargear.selected,
+                                  wargear.no_required,
+                                  self.get_size()))
+                            print("Would you like to re-size the unit to add this option?")
+                            print("Input y to increase the unit size to {} for {}pts".format(wargear.no_required,
+                                  self.pts_per_model*(wargear.no_required - self.get_size())))
+                            re_size = input('>>')
+                            if re_size == 'y':
+                                pass
+                        continue
+                    else:
+                        #create new model to be added
+                        new_mod = copy.deepcopy(self.default_model)
+                        current_size = self.get_size()
+                        for i in wargear.items_involved:
+                            if i in new_mod.wargear:
+                                new_mod.wargear.remove(i)
+                                #may need to check if there are cases when multiple options need to be replaced
+                                break
+                        new_mod.wargear.append(wargear.selected)
+                        if new_mod in self.ex_models:
+                            for index, mod in enumerate(self.ex_models):
+                                if new_mod == mod:
+                                    break
+                            self.ex_models[index].no_models = current_size//wargear.no_required
+                        else:
+
+                            new_mod.no_models = self.get_size()//wargear.no_required
+                            self.ex_models.append(new_mod)
+
+                        #change the no of default models
+                        size_change = self.get_size() - current_size
+                        self.default_model.no_models -= size_change
         self.re_calc_points()
+        print(self)
         return
 
     def __repr__(self):
@@ -369,9 +397,9 @@ class Unit(init.UnitTypes):
             output += "(" + self.type + ")"
 
         output += "\t\t{}pts\n".format(self.pts)
-        if self.default_model.wargear != None:
-            for i in self.default_model.wargear:
-                output += "\t" + i.__repr__() + '\n'
+        output += '\t' + self.default_model.__repr__(indent='\t') + '\n'
+        for i in self.ex_models:
+            output += '\t' + i.__repr__(indent='\t') + '\n'
 
         return output
 
@@ -396,12 +424,28 @@ class Model():
         self.pts = self.pts_per_model*self.no_models
         return
 
+    def __eq__(self, other_model):
+        try:
+            if self.wargear == other_model.wargear:
+                return True
+            else:
+                False
+        except:
+            return False
+
+    def __repr__(self, indent=''):
+        ret = "No. of: {}".format(self.no_models)
+        if self.wargear is not None:
+            for i in self.wargear:
+                ret += '\n' + indent + i.__repr__()
+        ret += "\n\t\t{}pts".format(self.pts)
+        return ret
 
 if __name__ == "__main__":
     print("Army Builder Version 1.0")
     faction = "Necron"
     init.init(faction)
-    immortals = Unit("Necron Warriors", "Troops")
-    print(immortals.re_size())
-    print(immortals)
+    immortals = Unit("Catacomb Command Barge", "HQ")
+#    immortals.re_size(6)
+    immortals.change_wargear()
 #    print(immortals.options)

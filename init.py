@@ -64,11 +64,7 @@ class WargearItem():
 
     def __eq__(self, other):
         try:
-            if self.item != other.item:
-                return False
-            if self.no_of != self.no_of:
-                return False
-            if self.points != self.points:
+            if self.item != other.item or self.no_of != self.no_of or self.points != self.points:
                 return False
             return True
         except:
@@ -83,7 +79,8 @@ class MultipleItem(WargearItem):
         return
 
     def __mul__(self, other):
-        pass
+        raise TypeError("Multiplication of MultiplItem types not yet defined")
+        return
 
     def __add__(self, other_item):
         if type(other_item) == MultipleItem:
@@ -159,7 +156,7 @@ class UnitTypes():
     def wargear_search(self, item):
         try:
             return wargear_search_base(item)
-        except:
+        except KeyError:
             raise KeyError("{} for {} not found in _armoury.xlsx file".format(item, self.name))
         return
 
