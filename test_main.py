@@ -8,6 +8,7 @@ Created on Sat Jul  7 12:59:35 2018
 import main
 import init
 import pytest
+import copy
 
 init.init("Necron")
 
@@ -152,3 +153,29 @@ def test_change_wargear():
     assert unit.default_model.no_models == 4
     assert unit.ex_models[0].wargear == [init.WargearItem("Heavy gauss cannon")]
     return
+
+def test_reset():
+    """
+    Checks the Unit.reset() method returns the Unit back to its initial state
+    """
+    mock_input = ["1b", 'no', 'y']
+    main.input = lambda s: mock_input.pop(0)
+    unit = main.Unit("Destroyers", "Fast Attack")
+    unit_copy = copy.deepcopy(unit)
+    unit.re_size(3)
+    unit.change_wargear()   #input = '1b'
+
+    #input = 'no'
+    unit.reset()
+    assert unit_copy.get_size() != unit.get_size()
+    assert unit_copy.ex_models  != unit.ex_models
+    assert unit_copy.default_model.no_models != unit.default_model.no_models
+
+    #input = 'y'
+    unit.reset()
+    assert unit_copy.get_size() == unit.get_size()
+    assert unit_copy.ex_models  == unit.ex_models
+    assert unit_copy.default_model.no_models == unit.default_model.no_models
+
+
+

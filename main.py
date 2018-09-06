@@ -229,6 +229,19 @@ class Unit(init.UnitTypes):
             self.pts += i.pts
         return
 
+    def reset(self, user_call=True):
+        """
+        Returns the unit back to its initialised state. This may be useful if
+        there are a lot of changes that need to be undone at once.
+        """
+        if user_call:
+            print("Are you sure you wish to return {} back to default? [y]/n".format(self.name))
+            user_input = input(">>")
+            if user_input != 'y' or '':
+                return
+        self.__init__(self.type, self.battlefield_role)
+        return
+
     def get_size(self):
         """Get function to sum all the model sizes in the unit"""
         size = self.default_model.no_models
@@ -445,7 +458,9 @@ if __name__ == "__main__":
     print("Army Builder Version 1.0")
     faction = "Necron"
     init.init(faction)
-    immortals = Unit("Catacomb Command Barge", "HQ")
-#    immortals.re_size(6)
+    immortals = Unit("Destroyers", "Fast Attack")
+    immortals.re_size(6)
     immortals.change_wargear()
+    immortals.reset(False)
+    print(immortals)
 #    print(immortals.options)
