@@ -204,8 +204,9 @@ class Unit(init.UnitTypes):
                                 if new_mod == mod:
                                     break
                             self.ex_models[index].no_models = current_size//wargear.no_required
+                        elif new_mod == self.default_model:
+                            continue
                         else:
-
                             new_mod.no_models = self.get_size()//wargear.no_required
                             self.ex_models.append(new_mod)
 
@@ -221,14 +222,15 @@ class Unit(init.UnitTypes):
         if not self.default_name:
             output += "(" + self.type + ")"
 
-        no_of = self.get_size() == 1
-        output += "\t\t{}pts\n".format(self.pts)
+        no_of = self.get_size() != 1
+        output += "\t\t{}pts".format(self.pts)
         if len(self.ex_models) == 0:
-            output += '\t' + self.default_model.__repr__(indent='\t', pts_footer=False, no_of=no_of) + '\n'
+            output += '\n\t' + self.default_model.__repr__(indent='\t', pts_footer=False, no_of=no_of)
         else:
-            output += '\t' + self.default_model.__repr__(indent='\t', no_of=no_of) + '\n'
+            output += '\n\t' + self.default_model.__repr__(indent='\t', no_of=no_of)
+
         for i in self.ex_models:
-            output += '\t' + i.__repr__(indent='\t') + '\n'
+            output += '\n\t' + i.__repr__(indent='\t')
 
         return output
 
@@ -263,11 +265,15 @@ class Model():
         except:
             return False
 
-    def __repr__(self, indent='', pts_footer=True, no_of=False):
-        ret = "No. of: {}".format(self.no_models)
+    def __repr__(self, indent='', pts_footer=True, no_of=True):
+        if no_of:
+            ret = "No. of: {}\n".format(self.no_models)
+        else:
+            ret = ''
+            indent = ''
         if self.wargear is not None:
             for i in self.wargear:
-                ret += '\n' + indent + i.__repr__()
+                ret += indent + i.__repr__() +'\n'
         if pts_footer:
-            ret += "\n\t\t{}pts".format(self.pts)
+            ret += "\t\t{}pts".format(self.pts)
         return ret
