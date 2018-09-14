@@ -9,6 +9,7 @@ import init
 import pandas as pd
 import pytest
 import main
+import unit_class
 
 def test_units_dict():
     """Checks the points calculations for the units dict"""
@@ -27,7 +28,7 @@ def test_units_dict_wargear():
     detachments_dict, armoury_dict, units_dict = init.init("Necron", True)
     for foc, units in units_dict.items():
         for title, i in units.items():
-            squad = main.Unit(title, foc)
+            squad = unit_class.Unit(title, foc)
             squad.change_wargear(split_only=True)
     return
 
