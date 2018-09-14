@@ -15,24 +15,23 @@ def test_army_list():
     Checks adding of simple detachments and minimum requirement units in
     different formats
     """
-    mock_inputs  = [["Battalion",
+    mock_inputs  = [["Patrol", "A1", '1'],
+                    ["Battalion",
                      "b2", "C'tan Shard of the Deciever",
-                     "1", "Necron Warriors", "Immortals"],
-                    ["Patrol", "A1", '1']]
+                     "1", "Necron Warriors", "Immortals"]]
 
     for i in mock_inputs:
         main.input = lambda s: i.pop(0)
         army = main.ArmyList("Necron")
         army.add_detachment()
+    assert army.cp == 5
     return
 
 def test_add_detachment():
     """Checks that combinations of inputs create valid detachments"""
-    mock_inputs = ["Battalion", "a1", "b1", "1", "1", "1",
-                   "1, 3", "a1", "1", "a1", "a1", "a1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1",
-                   "Brigade 4", "a1", "a1", "a1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1",
-                       "a1", "1" ,"1", "1"
-                   ]
+    mock_inputs = ["Battalion", "q",
+                   "1, 3", "cancel", "quit",
+                   "Brigade 4", "q", "exit"]
 
     main.input = lambda s: mock_inputs.pop(0)
     detach_list = ["Battalion", "Patrol", "Brigade", "Brigade", "Vanguard"]

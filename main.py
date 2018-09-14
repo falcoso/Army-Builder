@@ -7,7 +7,6 @@ Created on Fri Jul  6 22:45:30 2018
 import init
 import unit_class
 import re
-import string
 
 class ArmyList():
     """
@@ -20,7 +19,20 @@ class ArmyList():
 
         #define list of names to make searching and labelling easier
         self.detachment_names = []
+        self.re_calc_cp()
         return
+
+    def get_pts(self):
+        """Calculates the total poins of the army"""
+        pts = 0
+        for i in self.detachments:
+            pts += i.pts
+        return pts
+
+    def re_calc_cp(self):
+        self.cp = 0
+        for i in self.detachments:
+            self.cp += i.cp
 
     def add_detachment(self, user_input=None):
         """Adds a detachment to the army list"""
@@ -35,18 +47,14 @@ class ArmyList():
             user_input = input(">> ")
 
         #allows users to add multiple detachments at once
-        choices = re.findall(r'[0-9]?[a-zA-Z]*', user_input)
-        for i in choices:
-            if i == '':
-                continue
-            elif i.isdigit():
+        user_input = re.findall(r'[0-9]+|[a-zA-Z]+', user_input)
+        for i in user_input:
+            if i.isdigit():
                 i = list(init.detachments_dict.keys())[int(i)-1]
-                print("Adding {} to army".format(i))
-                self.detachments.append(Detachment(i))
-            else:
-                print("Adding {} to army".format(i))
-                self.detachments.append(Detachment(i))
+            print("Adding {} to army".format(i))
+            self.detachments.append(Detachment(i))
             self.detachment_names.append(i)
+            self.cp += self.detachments[-1].cp
 
         #number repeated detachment types
         for keys in init.detachments_dict.keys():
@@ -57,6 +65,7 @@ class ArmyList():
                         self.detachments[i].rename(keys + ' ' + str(counter))
                         self.detachment_names[i] = keys + ' ' + str(counter)
                         counter += 1
+        self.re_calc_cp()
         return
 
 class Detachment():
@@ -66,6 +75,7 @@ class Detachment():
     """
     def __init__(self, detachment_type, instance_no=None):
         self.foc = init.detachments_dict[detachment_type]["foc"]
+        self.cp  = init.detachments_dict[detachment_type]["cp"]
         self.type = detachment_type
         self.name = self.type
         self.default_name = True
@@ -85,7 +95,11 @@ class Detachment():
                 success = self.add_unit(keys)
                 if success == False:
                     print("Exiting addition of compulsory units, note detachment may not be legal")
-                    return
+                    break
+            if success == False:
+                break
+        self.re_calc_points()
+        return
 
     def __repr__(self):
         output = "***" + self.name + "***\n"
@@ -97,6 +111,14 @@ class Detachment():
                 output += "\n"
 
         return output
+
+    def re_calc_points(self):
+        """Updates any points values after changes to the unit"""
+        self.pts = 0
+        for key, unit in self.units.items():
+            for i in unit:
+                self.pts += i.pts
+        return
 
     def rename(self, new_name, user_given=False):
         """
