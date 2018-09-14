@@ -6,6 +6,8 @@ Created on Fri Jul  6 22:45:30 2018
 """
 import init
 import unit_class
+import re
+import string
 
 class ArmyList():
     """
@@ -33,12 +35,16 @@ class ArmyList():
             user_input = input(">> ")
 
         #allows users to add multiple detachments at once
-        for i in user_input.split(','):
-            i = i.replace(' ','')   #remove any extra spaces added by user
-            try:
-                self.detachments.append(Detachment(i))
-            except KeyError:
+        choices = re.findall(r'[0-9]?[a-zA-Z]*', user_input)
+        for i in choices:
+            if i == '':
+                continue
+            elif i.isdigit():
                 i = list(init.detachments_dict.keys())[int(i)-1]
+                print("Adding {} to army".format(i))
+                self.detachments.append(Detachment(i))
+            else:
+                print("Adding {} to army".format(i))
                 self.detachments.append(Detachment(i))
             self.detachment_names.append(i)
 

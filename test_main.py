@@ -26,6 +26,24 @@ def test_army_list():
         army.add_detachment()
     return
 
+def test_add_detachment():
+    """Checks that combinations of inputs create valid detachments"""
+    mock_inputs = ["Battalion", "a1", "b1", "1", "1", "1",
+                   "1, 3", "a1", "1", "a1", "a1", "a1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1",
+                   "Brigade 4", "a1", "a1", "a1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1",
+                       "a1", "1" ,"1", "1"
+                   ]
+
+    main.input = lambda s: mock_inputs.pop(0)
+    detach_list = ["Battalion", "Patrol", "Brigade", "Brigade", "Vanguard"]
+    army = main.ArmyList("Necron")
+    for i in range(3):
+        army.add_detachment()
+
+    for i in range(len(detach_list)):
+        assert army.detachments[i].type == detach_list[i]
+    return
+
 def test_auto_naming():
     """Checks the automatic numbering of repeated detachment types"""
     mock_inputs = ["Patrol,Patrol",
