@@ -223,7 +223,7 @@ class Unit(init.UnitTypes):
             output += "(" + self.type + ")"
 
         no_of = self.get_size() != 1
-        output += "\t\t{}pts".format(self.pts)
+        output = output.ljust(28) + "\t\t{}pts".format(self.pts)
         if len(self.ex_models) == 0:
             output += '\n\t' + self.default_model.__repr__(indent='\t', pts_footer=False, no_of=no_of)
         else:
@@ -269,8 +269,7 @@ class Model():
         if no_of:
             ret = "No. of: {}\n".format(self.no_models)
         else:
-            ret = ''
-            indent = ''
+            ret = '\b'
         if self.wargear is not None:
             for i in self.wargear:
                 ret += indent + i.__repr__() +'\n'

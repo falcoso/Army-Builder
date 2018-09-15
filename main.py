@@ -16,10 +16,11 @@ class ArmyList():
     def __init__(self, faction):
         self.faction = faction
         self.detachments = []
+        self.cp = 0
 
         #define list of names to make searching and labelling easier
         self.detachment_names = []
-        self.re_calc_cp()
+        self.add_detachment()
         return
 
     def get_pts(self):
@@ -65,8 +66,41 @@ class ArmyList():
                         self.detachments[i].rename(keys + ' ' + str(counter))
                         self.detachment_names[i] = keys + ' ' + str(counter)
                         counter += 1
-        self.re_calc_cp()
         return
+
+    def add_unit(self):
+        """Wrapper to add unit to detachment in the army list"""
+        def get_user_input():
+            print("Which Detachment would you like to add the unit to?")
+            for index, i in self.detachments:
+                print("{}. {}".format(index+1, i.name))
+
+            user_input = input(">> ")
+            #FILTER OUT ANY PUNCTUATION
+            if user_input.isdigit():
+                if int(user_input) < len(self.detachments):
+                    return user_input-1
+                else:
+                    print("{} is an invalid index".format(user_input))
+            else:
+                for index, i in self.detachment_names:
+                    if i == user_input:
+                        return index
+                print("{} is not a valid option".format(user_input))
+
+            return get_user_input()
+
+        if len(self.detachments) == 1:
+            self.detachments[0].add_unit()
+        else:
+            self.detachments[get_user_input].add_unit()
+
+    def __repr__(self):
+        ret = self.faction + '\n'
+        for i in self.detachments:
+            ret += i.__repr__()
+
+        return ret
 
 class Detachment():
     """
@@ -102,7 +136,7 @@ class Detachment():
         return
 
     def __repr__(self):
-        output = "***" + self.name + "***\n"
+        output = "***" + self.name + "\t\t" + "Total:{}pts".format(self.pts) + "***\n"
         for key, value in self.units.items():
             if len(value) != 0:
                 output += "*" + key + "*\n"

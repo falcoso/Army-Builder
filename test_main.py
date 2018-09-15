@@ -23,7 +23,6 @@ def test_army_list():
     for i in mock_inputs:
         main.input = lambda s: i.pop(0)
         army = main.ArmyList("Necron")
-        army.add_detachment()
     assert army.cp == 5
     return
 
@@ -36,7 +35,7 @@ def test_add_detachment():
     main.input = lambda s: mock_inputs.pop(0)
     detach_list = ["Battalion", "Patrol", "Brigade", "Brigade", "Vanguard"]
     army = main.ArmyList("Necron")
-    for i in range(3):
+    for i in range(2):
         army.add_detachment()
 
     for i in range(len(detach_list)):
@@ -51,7 +50,6 @@ def test_auto_naming():
 
     main.input = lambda s: mock_inputs.pop(0)
     army = main.ArmyList("Necron")
-    army.add_detachment()
     for i in range(len(army.detachments)):
         assert army.detachments[i].name == "Patrol {}".format(i+1)
     assert army.detachment_names == ['Patrol 1', 'Patrol 2']

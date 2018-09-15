@@ -19,8 +19,6 @@ def test_units_dict_options():
     parser = option_parser.OptionParser()
     parser.build()
 
-
-
     detachments_dict, armoury_dict, units_dict = init.init("Necron", True)
     for foc, units in units_dict.items():
         for title, i in units.items():
@@ -30,25 +28,6 @@ def test_units_dict_options():
             for option in i.options:
                 parser.parse2(option)
     return
-
-def test_direct_string():
-    """Parses the a direct string through the parser and confirms its output"""
-     #create parser
-    parser = option_parser.OptionParser([init.WargearItem("Tesla carbine")])
-    parser.build()
-
-    #create test string
-    comp_string = ['The whole unit may take Gauss flayer \t(0pts per model)\n',
-                   'For every 3 models, you may take one of:\n\ta) Gauss cannon \t(20pts per model)\n\tb) Heavy gauss cannon \t(27pts per model)\n',
-                   'The whole unit may take 2 Heat rays \t(108pts per model)\n',
-                   'The whole unit may exchange Tesla carbine with one of the following:\n\ta) Tesla carbine \t(net 0pts per model)\n\tb) Synaptic disintegrator \t(net -9pts per model)\n\tc) Gauss blaster \t(net 0pts per model)\n',
-                   'The whole unit may take one of the following:\n\ta) Warscythe \t(11pts per model)\n\tb) Dispersion shield, Hyperphase sword & Voidblade \t(21pts per model)\n']
-
-    s = 'Gauss flayer,Gauss cannon/Heavy gauss cannon-3,2*Heat ray,Tesla carbine/Synaptic disintegrator/Gauss blaster, Warscythe/Voidblade+Dispersion shield+Hyperphase sword'
-
-    for i,j in zip(s.split(','), comp_string):
-        parser.parse2(i)
-        assert parser.ret == j
 
 def test_Option_class():
     """

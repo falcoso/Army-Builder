@@ -41,6 +41,7 @@ class WargearItem():
         else:
             ret = str(self.no_of) + ' ' + self.item + 's'
 
+        ret = ret.ljust(16)
         if comparison:
             ret += " \t(net {}pts per model)".format(self.points-comparison.points)
         else:
