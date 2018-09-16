@@ -257,10 +257,8 @@ class Detachment():
 
 if __name__ == "__main__":
     print("Army Builder Version 1.0")
-    faction = "Necron"
+    faction = "Tau"
     init.init(faction)
-    immortals = unit_class.Unit("Catacomb Command Barge", "HQ")
-    immortals.change_wargear()
-    immortals.reset(False)
-    print(immortals)
+    detac = Detachment("Battalion")
+    print(detac)
 #    print(immortals.options)

@@ -20,7 +20,7 @@ def wargear_search_base(item):
     elif item in armoury_dict["Other Wargear"]:
         return   armoury_dict["Other Wargear"][item]
     else:
-        raise KeyError("{} not found in _armoury.xlsx file".format(item))
+        raise KeyError("{} not found in Armoury/*.csv file".format(item))
     return
 
 class WargearItem():
@@ -116,7 +116,10 @@ class UnitTypes():
     """
     def __init__(self, name, props):
         self.name = name
-        self.base_pts = int(props[1])
+        try:
+            self.base_pts = int(props[1])
+        except:
+            raise ValueError("Unable to load base_pts from {} for {}".format(props[1],self.name))
         self.pts = self.base_pts
         if props[3] != props[3]:
             self.options = None
@@ -138,7 +141,10 @@ class UnitTypes():
             #processing
             wargear_temp = props[2].split(', ')
             for i in wargear_temp:
-                self.wargear.append(WargearItem(i))
+                try:
+                    self.wargear.append(WargearItem(i))
+                except KeyError:
+                    raise KeyError("{} for {} not found in Armoury/*.csv file".format(i, self.name))
 
         #find default wargear costs
         self.wargear_pts = 0
@@ -217,4 +223,4 @@ def init(faction, return_out=False):
     return
 
 if __name__ == '__main__':
-    init('Necron')
+    init('Tau')
