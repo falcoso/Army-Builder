@@ -14,10 +14,10 @@ import unit_class
 def test_units_dict():
     """Checks the points calculations for the units dict"""
     detachments_dict, armoury_dict, units_dict = init.init("Necron", True)
-    units = pd.read_excel("Necron_units.xlsx", sheetname=None, index_col=0, header=0)
+    units = pd.read_csv("Necron/Units/Elites.csv", index_col=0, header=0)
 
     #check that points for wargear are being added
-    assert units["Elites"].loc["Lychguard"]["Points per Model"] != units_dict["Elites"]["Lychguard"].pts
+    assert units.loc["Lychguard"]["Points per Model"] != units_dict["Elites"]["Lychguard"].pts
     return
 
 def test_units_dict_wargear():

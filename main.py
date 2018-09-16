@@ -259,8 +259,7 @@ if __name__ == "__main__":
     print("Army Builder Version 1.0")
     faction = "Necron"
     init.init(faction)
-    immortals = unit_class.Unit("Destroyers", "Fast Attack")
-    immortals.re_size(6)
+    immortals = unit_class.Unit("Catacomb Command Barge", "HQ")
     immortals.change_wargear()
     immortals.reset(False)
     print(immortals)

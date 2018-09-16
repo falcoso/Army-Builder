@@ -7,6 +7,7 @@ Created on Sat Jul  7 13:06:29 2018
 
 import pandas as pd
 import numpy as np
+import glob
 
 def wargear_search_base(item):
     """
@@ -41,7 +42,7 @@ class WargearItem():
         else:
             ret = str(self.no_of) + ' ' + self.item + 's'
 
-        ret = ret.ljust(16)
+        ret = ret.ljust(20)
         if comparison:
             ret += " \t(net {}pts per model)".format(self.points-comparison.points)
         else:
@@ -168,12 +169,22 @@ class UnitTypes():
                 output += i.__repr__() +", "
         return output
 
-def init(faction, return_out = False):
+def extract_files(folder):
+    """Creates a dictionary of all the csv files in the given folder"""
+    files = glob.glob(folder + "/*.csv")
+    ret = {}
+    for file in files:
+        name = file.replace(folder + "\\", '')
+        name = name.replace(".csv", '')
+        ret[name] = pd.read_csv(file, index_col=0, header=0)
+    return ret
+
+def init(faction, return_out=False):
     """
     Initialises the global variables for the chosen faction
     """
     #Open list of possible detachments and generate object for each one
-    detachments = pd.read_excel("./Detachments.xlsx", header=0, index_col=0)
+    detachments = pd.read_csv("./Detachments.csv", header=0, index_col=0)
     global detachments_dict
     detachments_dict = {}
     for index, rows in detachments.iterrows():
@@ -185,7 +196,7 @@ def init(faction, return_out = False):
                                            "Heavy Support": np.array([int(i) for i in rows[5].split('-')])}}
 
     #determine faction of armylist and open units and wargear data
-    armoury = pd.read_excel("{}_armoury.xlsx".format(faction), sheetname=None, index_col=0, header=0)
+    armoury = extract_files("{}/Armoury".format(faction))
     global armoury_dict
     armoury_dict = {}
     for key in armoury.keys():
@@ -193,8 +204,7 @@ def init(faction, return_out = False):
         for index, rows in armoury[key].iterrows():
             armoury_dict[key][index] = rows[0]
 
-    global units
-    units = pd.read_excel("{}_units.xlsx".format(faction), sheetname=None, index_col=0, header=0)
+    units = extract_files("{}/Units".format(faction))
     global units_dict
     units_dict = {}
     for key in units.keys():

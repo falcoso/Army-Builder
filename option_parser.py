@@ -20,8 +20,10 @@ class Option():
     def __init__(self, items_involved):
         self.items_involved = items_involved
         self.no_required = 1
+        self.all_models  = True
         self.selected = None
-        self.all_models = True
+        self.no_picks = 1
+        self.upto = -1
 
     def __getitem__(self, i):
         return self.items_involved[i]
@@ -34,7 +36,7 @@ class Option():
         return
 
 class OptionLexer():
-    tokens = ['ITEM', 'NUM', 'PLUS', 'MINUS', 'STAR', 'SLASH', 'COMMA']
+    tokens = ['ITEM', 'NUM', 'PLUS', 'MINUS', 'STAR', 'SLASH', 'COMMA', 'HASH', 'LIST', 'CARET']
 
     # these are the regexes that the lexer uses to recognise the tokens
     t_PLUS  = r'\+'
@@ -42,6 +44,8 @@ class OptionLexer():
     t_STAR  = r'\*'
     t_SLASH = '/'
     t_COMMA = ','
+    t_HASH  = r'\#'
+    t_CARET = r'\^'
     t_ignore = ' '
 
     def t_error(self, t):
@@ -51,6 +55,16 @@ class OptionLexer():
     def t_ITEM(self, t):
         r'[a-zA-Z_][\w ]*[\w]'
         t.value = init.WargearItem(t.value)
+        return t
+
+    def t_LIST(self, t):
+        r'\[.*\]'
+        key = t.value[1:-1].split('/')
+        options = []
+        for i in key:
+            options += init.armoury_dict[i]
+        options = list(map(init.WargearItem, options))
+        t.value = Option(options)
         return t
 
     def t_NUM(self,t):
@@ -85,7 +99,6 @@ class OptionParser():
     def parse2(self, parse_string, **kwargs):
         """Wrapper for parser function to check the items being parsed"""
         self.swap_wargear = [] #saves all items being parsed
-        self.lexer.lexer.input(parse_string)
         self.options_list.append(Option(self.swap_wargear))
         return self.parser.parse(parse_string, **kwargs)
 
@@ -94,6 +107,8 @@ class OptionParser():
     #operator precedence
     precedence = (
         ('left', 'COMMA'),
+        ('left', 'HASH'),
+        ('left', 'LIST'),
         ('left', 'MINUS'),
         ('left', 'SLASH'),
         ('left', 'PLUS'),
@@ -121,6 +136,7 @@ class OptionParser():
         expression : expression COMMA expression
                    | expression MINUS NUM
                    | expression MINUS empty
+                   | NUM HASH expression
                    | expression SLASH expression
         '''
         p[0] = (p[2],p[1],p[3])
@@ -133,6 +149,13 @@ class OptionParser():
         '''
         #save all items in the string to be accessed outside
         self.swap_wargear.append(p[1])
+        p[0] = p[1]
+        return
+
+    def p_list(self, p):
+        '''
+        expression : LIST
+        '''
         p[0] = p[1]
         return
 
@@ -194,11 +217,11 @@ class OptionParser():
                     ret += self.run(p[1], False)
                 else:
                     self.run_count += 1
-                    ret += '\t' + index[self.run_count] + ') ' + self.run(p[1], False)
+                    ret += '\t' + index[self.run_count%len(index)] + ') ' + self.run(p[1], False)
 
                 #testing for tuple as above does not have the same problems if ommitted
                 self.run_count += 1
-                ret += '\t' + index[self.run_count] + ') ' + self.run(p[2], False)
+                ret += '\t' + index[self.run_count%len(index)] + ') ' + self.run(p[2], False)
 
             elif p[0] == '-':
                 if p[2] == None: #if just a tag to check its the whole unit
@@ -216,6 +239,20 @@ class OptionParser():
                     else:
                         ret += "take one of:\n" + self.run(p[1], False)
 
+            elif p[0] == '#':
+                self.options_list[-1].no_picks = p[1]
+                ret = self.run(p[2], True)
+                ret = ret.replace("take one", "take {}".format(p[1]))
+
+        elif type(p) == Option:
+            if top_level:
+                ret = "The whole unit may take one of:\n"
+            else:
+                ret = ''
+            for i, j in enumerate(p.items_involved):
+                ret+= '\t' + index[i%len(index)] +') ' + str(j) + '\n'
+
+
         else:
             if top_level: #just a single item that needs listing
                 ret = "The whole unit may take " + str(p)
@@ -229,3 +266,10 @@ class OptionParser():
         if top_level: #if top level save the output to be manipulated
             self.ret = ret
         return ret
+
+if __name__ == "__main__":
+    parser = OptionParser()
+    parser.build()
+    test_string = '2#[Range/Melee]'
+    parser.parse2(test_string)
+    print(parser.ret)
