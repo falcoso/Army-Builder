@@ -53,7 +53,7 @@ class OptionLexer():
         t.lexer.skip(1)
 
     def t_ITEM(self, t):
-        r'[a-zA-Z_][\w ]*[\w]'
+        r'[a-zA-Z_][\w -]*[\w]+[\w]'
         t.value = init.WargearItem(t.value)
         return t
 
@@ -136,6 +136,8 @@ class OptionParser():
         expression : expression COMMA expression
                    | expression MINUS NUM
                    | expression MINUS empty
+                   | expression CARET NUM
+                   | expression CARET empty
                    | NUM HASH expression
                    | expression SLASH expression
         '''
@@ -239,6 +241,13 @@ class OptionParser():
                     else:
                         ret += "take one of:\n" + self.run(p[1], False)
 
+            elif p[0] == '^':
+                if p[2] == 1:
+                    ret = '{} model may take one of:\n'.format(p[2])
+                else:
+                    ret = '{} models may take one of:\n'.format(p[2])
+                self.run(p[1], False)
+
             elif p[0] == '#':
                 self.options_list[-1].no_picks = p[1]
                 ret = self.run(p[2], True)
@@ -264,7 +273,7 @@ class OptionParser():
             ret += '\n'
 
         if top_level: #if top level save the output to be manipulated
-            self.ret = ret
+                self.ret = ret
         return ret
 
 if __name__ == "__main__":

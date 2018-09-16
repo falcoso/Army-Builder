@@ -36,7 +36,7 @@ class WargearItem():
     def wargear_search(self, item):
         return wargear_search_base(item)
 
-    def __repr__(self, comparison=None):
+    def __repr__(self, comparison=None, tidy=False):
         if self.no_of == 1:
             ret = self.item
         else:
@@ -45,7 +45,7 @@ class WargearItem():
         ret = ret.ljust(20)
         if comparison:
             ret += " \t(net {}pts per model)".format(self.points-comparison.points)
-        else:
+        elif self.points != 0:
             ret += " \t({}pts per model)".format(self.points)
         return ret
 

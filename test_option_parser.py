@@ -19,14 +19,18 @@ def test_units_dict_options():
     parser = option_parser.OptionParser()
     parser.build()
 
-    detachments_dict, armoury_dict, units_dict = init.init("Necron", True)
-    for foc, units in units_dict.items():
-        for title, i in units.items():
-            if i.options == None:
-                continue
+    for faction in ["Tau", "Necron"]:
+        detachments_dict, armoury_dict, units_dict = init.init(faction, True)
+        for foc, units in units_dict.items():
+            for title, i in units.items():
+                if i.options == None:
+                    continue
 
-            for option in i.options:
-                parser.parse2(option)
+                for option in i.options:
+                    try:
+                        parser.parse2(option)
+                    except Exception as e:
+                        raise ValueError('Error in {}:{}'.format(i.name,str(e)))
     return
 
 def test_Option_class():
@@ -34,6 +38,7 @@ def test_Option_class():
     Checks list facilities in the Options class and that the object can be
     inialised successfully
     """
+    init.init("Necron")
     item_list = [init.WargearItem("Tesla carbine"),
                  init.WargearItem("Gauss cannon"),
                  init.WargearItem("Gauss blaster")]

@@ -1,9 +1,9 @@
 ﻿Unit,Models Per Unit,Points per Model,Wargear,Options
-XV8 Crisis Battlesuits,3-9,42,,"3#[Range/Other Wargear]-,XV8-02 Crisis Iridium Battlesuit-3"
-XV8 Crisis Bodyguards,3-9,45,,"3#[Range/Other Wargear]-,XV8-02 Crisis Iridium Battlesuit-3"
+XV8 Crisis Battlesuits,3-9,42,,"3#Airbursting fragmentation projector/Burst cannon/Cyclic ion blaster/Flamer/Fusion blaster/Missile pod/Plasma rifle/Advanced targeting system/Counterfire defence system/Drone controller/Early warning override/Multi-tracker/Shield generator/Target lock/Velocity tracker-, XV8-02 Crisis Iridium Battlesuit-3"
+XV8 Crisis Bodyguards,3-9,45,,"3#Airbursting fragmentation projector/Burst cannon/Cyclic ion blaster/Flamer/Fusion blaster/Missile pod/Plasma rifle/Advanced targeting system/Counterfire defence system/Drone controller/Early warning override/Multi-tracker/Shield generator/Target lock/Velocity tracker-, XV8-02 Crisis Iridium Battlesuit-3"
 Firesight Marksman,1,21,"Markerlight, Pulse pistol",
-XV95 Ghostkeel Battlesuit,1,82,"Fusion collider, 2*Flamer","Fusion collider/Cyclic ion raker,2*Flamer/2*Burst cannon/2*Fusion blaster,2#[Other Wargear]"
+XV95 Ghostkeel Battlesuit,1,82,"Fusion collider, 2*Flamer","Fusion collider/Cyclic ion raker, 2*Flamer/2*Burst cannon/2*Fusion blaster, 2#Greater advanced targeting system/Counterfire defence system/Drone controller/Greater early warning override/Multi-tracker/Shield generator/Greater target lock/Greater velocity tracker"
 Krootox Riders,1-3,34,"Kroot gun, Krootox fists",
 Kroot Shaper,1,31,"Kroot rifle, Ritual blade",
-XV104 Riptide Battlesuit,1,185,"Heavy burst cannon, 2*Smart missile system","2*Smart missile system/2*Plasma rifle/2*Fusion blaster, Heavy burst cannon/Ion accelerator, 2#[Other Wargear]"
-XV25 Stealth Battlesuit,3-6,20,Burst cannon,"[Other Wargear], Markerlight+Target lock-1,Homing beacon-1,Burst cannon/Fusion blaster-3"
+XV104 Riptide Battlesuit,1,185,"Heavy burst cannon, 2*Smart missile system","2*Smart missile system/2*Plasma rifle/2*Fusion blaster, Heavy burst cannon/Ion accelerator, 2#Greater advanced targeting system/Counterfire defence system/Drone controller/Greater early warning override/Multi-tracker/Shield generator/Greater target lock/Greater velocity tracker"
+XV25 Stealth Battlesuit,3-6,20,Burst cannon,"Advanced targeting system/Counterfire defence system/Drone controller/Early warning override/Multi-tracker/Shield generator/Target lock/Velocity tracker-, Markerlight+Target lock^1, Homing beacon^1, Burst cannon/Fusion blaster-3"
