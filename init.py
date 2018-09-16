@@ -13,14 +13,10 @@ def wargear_search_base(item):
     """
     Searches for a given wargear item in the armoury dictionary
     """
-    if item in armoury_dict["Range"]:
-        return armoury_dict["Range"][item]
-    elif item in armoury_dict["Melee"]:
-        return   armoury_dict["Melee"][item]
-    elif item in armoury_dict["Other Wargear"]:
-        return   armoury_dict["Other Wargear"][item]
-    else:
-        raise KeyError("{} not found in Armoury/*.csv file".format(item))
+    for key, obj in armoury_dict.items():
+        if item in obj:
+            return obj[item]
+    raise KeyError("{} not found in Armoury/*.csv file".format(item))
     return
 
 class WargearItem():
@@ -72,10 +68,14 @@ class WargearItem():
         except:
             return False
 
+    def __hash__(self):
+            return hash((tuple(self.item), self.no_of, self.points))
+
 class MultipleItem(WargearItem):
     def __init__(self, *args):
         self.item = list(map(lambda s: s.item, args))
         self.points = 0
+        self.no_of = 1
         for i in args:
             self.points += i.points
         return

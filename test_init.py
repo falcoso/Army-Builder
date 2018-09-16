@@ -25,11 +25,12 @@ def test_units_dict_wargear():
     Checks spelling of the options in the units_dict by creating a unit for
     each one.
     """
-    detachments_dict, armoury_dict, units_dict = init.init("Necron", True)
-    for foc, units in units_dict.items():
-        for title, i in units.items():
-            squad = unit_class.Unit(title, foc)
-            squad.change_wargear(split_only=True)
+    for faction in ["Tau", "Necron"]:
+        detachments_dict, armoury_dict, units_dict = init.init(faction, True)
+        for foc, units in units_dict.items():
+            for title, i in units.items():
+                squad = unit_class.Unit(title, foc)
+                squad.change_wargear(split_only=True)
     return
 
 def test_detachments_dict_selection():

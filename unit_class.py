@@ -27,7 +27,7 @@ class Unit(init.UnitTypes):
         self.options  = base_unit.options #list of str
         self.size_range  = base_unit.size
         self.default_model = Model(base_unit, no_models=self.size_range[0]) #standard model to be added on resize
-        self.ex_models = []              #any variation in the standard model as a list CONVERT TO SET WHEN SEARCHED
+        self.ex_models = set()             #any variation in the standard model as a set
         self.re_calc_points()
         print(self.name + " added to detachment")
         return
@@ -220,7 +220,7 @@ class Unit(init.UnitTypes):
     def __repr__(self):
         output = self.name
         if not self.default_name:
-            output += "(" + self.type + ")"
+            output += " (" + self.type + ")"
 
         no_of = self.get_size() != 1
         output = output.ljust(32) + "\t\t{}pts".format(self.pts)
@@ -243,7 +243,7 @@ class Model():
         if wargear is not None:
             self.wargear = wargear
         else:
-            self.wargear = parent_unit.wargear
+            self.wargear = copy.deepcopy(parent_unit.wargear)
         self.re_calc_points
 
     def re_calc_points(self):
@@ -264,6 +264,9 @@ class Model():
                 False
         except:
             return False
+
+    def __hash__(self):
+        return hash(tuple(self.wargear))
 
     def __repr__(self, indent='', pts_footer=True, no_of=True):
         if no_of:

@@ -36,14 +36,13 @@ class Option():
         return
 
 class OptionLexer():
-    tokens = ['ITEM', 'NUM', 'PLUS', 'MINUS', 'STAR', 'SLASH', 'COMMA', 'HASH', 'LIST', 'CARET']
+    tokens = ['ITEM', 'NUM', 'PLUS', 'MINUS', 'STAR', 'SLASH', 'HASH', 'LIST', 'CARET']
 
     # these are the regexes that the lexer uses to recognise the tokens
     t_PLUS  = r'\+'
     t_MINUS = '-'
     t_STAR  = r'\*'
     t_SLASH = '/'
-    t_COMMA = ','
     t_HASH  = r'\#'
     t_CARET = r'\^'
     t_ignore = ' '
@@ -106,7 +105,6 @@ class OptionParser():
 
     #operator precedence
     precedence = (
-        ('left', 'COMMA'),
         ('left', 'HASH'),
         ('left', 'LIST'),
         ('left', 'MINUS'),
@@ -133,8 +131,7 @@ class OptionParser():
 
     def p_expression(self, p):
         '''
-        expression : expression COMMA expression
-                   | expression MINUS NUM
+        expression : expression MINUS NUM
                    | expression MINUS empty
                    | expression CARET NUM
                    | expression CARET empty
