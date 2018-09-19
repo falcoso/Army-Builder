@@ -24,12 +24,13 @@ class Option():
         self.selected = None
         self.no_picks = 1
         self.upto = -1
+        self.repr = ''
 
     def __getitem__(self, i):
         return self.items_involved[i]
 
     def __repr__(self):
-        return str(self.items_involved)
+        return self.repr
 
     def select(self, index):
         self.selected = self.items_involved[index]
@@ -270,7 +271,7 @@ class OptionParser():
             ret += '\n'
 
         if top_level: #if top level save the output to be manipulated
-                self.ret = ret
+                self.options_list[-1].repr = ret
         return ret
 
 if __name__ == "__main__":
@@ -278,4 +279,4 @@ if __name__ == "__main__":
     parser.build()
     test_string = '2#[Range/Melee]'
     parser.parse2(test_string)
-    print(parser.ret)
+    print(parser.options_list[0])

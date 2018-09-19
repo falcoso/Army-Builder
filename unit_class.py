@@ -114,7 +114,7 @@ class Unit(init.UnitTypes):
             for index, option in enumerate(self.options):
                 output = "{}.".format(index+1)
                 self.parser.parse2(option)
-                output += self.parser.ret
+                output += self.parser.options_list[-1].__repr__()
                 print(output)
 
             #get user input
