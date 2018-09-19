@@ -72,10 +72,13 @@ class WargearItem():
             return hash((tuple(self.item), self.no_of, self.points))
 
 class MultipleItem(WargearItem):
-    def __init__(self, *args):
+    def __init__(self, *args, storage=False):
+        if type(args[0]) == str:
+            args = (WargearItem(i) for i in args)
         self.item = list(map(lambda s: s.item, args))
         self.points = 0
-        self.no_of = 1
+        self.no_of  = 1
+        self.storage = storage
         for i in args:
             self.points += i.points
         return
@@ -128,9 +131,9 @@ class UnitTypes():
 
         #if range of unit size, save as array, otherwise single number
         try:
-            self.size = np.array([int(i) for i in props[0].split('-')])
+            self.size = tuple([int(i) for i in props[0].split('-')])
         except AttributeError:
-            self.size = np.array([int(props[0])])
+            self.size = tuple([int(props[0])])
 
 
         if props[2] != props[2]: #if entry is nan
@@ -144,7 +147,10 @@ class UnitTypes():
                 try:
                     self.wargear.append(WargearItem(i))
                 except KeyError:
-                    raise KeyError("{} for {} not found in Armoury/*.csv file".format(i, self.name))
+#                    try:
+                    self.wargear.append(MultipleItem(*i.split('/'), storage=True))
+#                    except:
+#                        raise KeyError("{} for {} not found in Armoury/*.csv file".format(i, self.name))
 
         #find default wargear costs
         self.wargear_pts = 0
@@ -152,7 +158,10 @@ class UnitTypes():
             return
         else:
             for i in self.wargear:
-                self.wargear_pts += i.points
+                if type(i) == MultipleItem:
+                    self.wargear_pts +=  i.wargear_search(i.item[0])
+                else:
+                    self.wargear_pts += i.points
 
         self.pts += self.wargear_pts
         return

@@ -13,7 +13,7 @@ import init
 import option_parser
 
 class Unit(init.UnitTypes):
-    def __init__(self, unit_type, battlefield_role):
+    def __init__(self, unit_type, battlefield_role, div_str=None):
         self.type = unit_type
         self.battlefield_role = battlefield_role
         self.name = self.type
@@ -24,9 +24,15 @@ class Unit(init.UnitTypes):
         except KeyError:
             base_unit = init.units_dict["Named Characters"][self.type]
 
+        if div_str == None:
+            pass
+        else:
+            div_str = div_str.split('/')
+            div_str = [int(i) for i in div_str]
+            self.models
         self.options  = base_unit.options #list of str
         self.size_range  = base_unit.size
-        self.default_model = Model(base_unit, no_models=self.size_range[0]) #standard model to be added on resize
+        self.default_model = Model(base_unit.base_pts, base_unit.wargear, no_models=self.size_range[0]) #standard model to be added on resize
         self.ex_models = set()             #any variation in the standard model as a set
         self.re_calc_points()
         print(self.name + " added to detachment")
@@ -291,10 +297,10 @@ class Unit(init.UnitTypes):
 
 class Model():
     """Keeps track of variations in the model makeup of a unit"""
-    def __init__(self, parent_unit, no_models=1):
-        self.base_pts = parent_unit.base_pts
+    def __init__(self, base_pts, wargear, no_models=1, div_str=None):
+        self.base_pts = base_pts
         self.no_models = no_models
-        self.wargear = copy.deepcopy(parent_unit.wargear)
+        self.wargear = copy.deepcopy(wargear)
         self.re_calc_points()
 
     def re_calc_points(self):
