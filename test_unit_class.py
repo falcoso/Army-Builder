@@ -44,7 +44,7 @@ def test_re_size():
 def test_change_wargear():
     """Checks the Unit.change_wargear() method applies correct wargear"""
     unit = unit_class.Unit("Catacomb Command Barge", "HQ")
-    mock_input = ["test", "1b, 2c,3, 4", "1b", "1b"]
+    mock_input = ["test", "1b, 2c,3, 4", "1b", "1b", "1b", "y"]
     unit_class.input = lambda s: mock_input.pop(0)
     unit.change_wargear()
     wargear_selected = [init.WargearItem("Tesla cannon"),
@@ -60,14 +60,20 @@ def test_change_wargear():
     unit.change_wargear()
     assert unit.get_size() == 3
     assert unit.default_model.no_models == 2
-    assert unit.ex_models[0].wargear == [init.WargearItem("Heavy gauss cannon")]
+    assert list(unit.ex_models)[0].wargear == [init.WargearItem("Heavy gauss cannon")]
 
     #check that when re-sizing and repeating the existing extra model is modified
     unit.re_size(6)
     unit.change_wargear()
     assert unit.get_size() == 6
     assert unit.default_model.no_models == 4
-    assert unit.ex_models[0].wargear == [init.WargearItem("Heavy gauss cannon")]
+    assert list(unit.ex_models)[0].wargear == [init.WargearItem("Heavy gauss cannon")]
+
+    unit.reset(False)
+    unit.change_wargear()
+    assert unit.get_size() == 3
+    assert unit.default_model.no_models == 2
+    assert list(unit.ex_models)[0].wargear == [init.WargearItem("Heavy gauss cannon")]
     return
 
 def test_reset():

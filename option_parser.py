@@ -227,7 +227,6 @@ class OptionParser():
                     ret = "Any model"
                     ret += self.run(p[1], True)
                     ret = ret.replace("The whole unit", '')
-                    self.options_list[-1].all_models = False
 
                 else: #requires per X models to be taken
                     ret = "For every {} models, you may ".format(p[2])
@@ -237,6 +236,7 @@ class OptionParser():
                         ret += "exchange {} for:\n".format(self.already_used[1].item) + self.run(p[1], False)
                     else:
                         ret += "take one of:\n" + self.run(p[1], False)
+                self.options_list[-1].all_models = False
 
             elif p[0] == '^':
                 if p[2] == 1:

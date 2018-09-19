@@ -259,6 +259,6 @@ if __name__ == "__main__":
     print("Army Builder Version 1.0")
     faction = "Tau"
     init.init(faction)
-    detac = Detachment("Battalion")
+    detac = Detachment("Brigade")
     print(detac)
 #    print(immortals.options)

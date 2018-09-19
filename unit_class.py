@@ -167,8 +167,8 @@ class Unit(init.UnitTypes):
         wargear_to_add = get_user_options(user_input) #get the list of wargear to modify the unit with
         if not split_only:
             for wargear in wargear_to_add:
-                #check there are the correct amount of models in the unit to be legal
-                if wargear.no_required == 1:
+                #check option applies to entire unit
+                if wargear.all_models:
                     for i in wargear.items_involved:
                         if i in self.default_model.wargear:
                             self.default_model.wargear.remove(i)
@@ -176,43 +176,97 @@ class Unit(init.UnitTypes):
                             break
                     self.default_model.wargear.append(wargear.selected)
 
+                    #apply to any extra models as well
+                    for model in self.ex_models:
+                        for i in wargear.items_involved:
+                            if i in model.wargear:
+                                self.default_model.wargear.remove(i)
+                                break
+                        self.default_model.wargear.append(wargear.selected)
+
                 else:
-                    if wargear.no_required > self.get_size():
-                        if not wargear.selected in self.default_model.wargear:
-                            print("Unable to add {} as {} models are required. The unit size is currently {}".format(wargear.selected,
-                                  wargear.no_required,
-                                  self.get_size()))
-                            print("Would you like to re-size the unit to add this option?")
-                            print("Input y to increase the unit size to {} for {}pts".format(wargear.no_required,
-                                  self.pts_per_model*(wargear.no_required - self.get_size())))
-                            re_size = input('>>')
-                            if re_size == 'y':
-                                pass
+                    #find how many existing instances of the wargear there is
+                    inst = 0
+                    if wargear.selected in self.default_model.wargear:
+                        inst += self.default_model.no_models
+                    for i in self.ex_models:
+                        if wargear.selected in i.wargear:
+                            inst += i.no_models
+
+                    legal_no = wargear.no_required*(inst+1)
+                    #check there are the correct amount of models in the unit to be legal
+                    if legal_no > self.get_size():
+                        if legal_no > self.size_range[1]:
+                            print("There are already the maximum number of {}s allowed in this unit".format(wargear.selected.item))
+                            continue
+
+                        print("Unable to add {} as {} models are required. The unit size is currently {}".format(wargear.selected.item,
+                              wargear.no_required,
+                              self.get_size()))
+                        print("Would you like to re-size the unit to add this option?")
+                        print("Input y to increase the unit size to {} for {}pts".format(wargear.no_required,
+                              self.default_model.pts_per_model*(wargear.no_required - self.get_size())))
+                        re_size = input('>>')
+                        if re_size == 'y':
+                            self.re_size(legal_no)
+
+                    #check how many models should be changed
+                    #if there are no extra models, only the default model can be changed
+#                    if self.ex_models == set() and (wargear.selected not in self.default_model.wargear):
+#                        print("How many models would you like to give {}?".format(wargear.selected.item))
+#                        user_input = int(input(">>"))
+#                        if user_input > self.get_size() or user_input < 1:
+#                            print("INVALID SORT LATER")
+#                            continue
+#                        new_mod = copy.deepcopy(self.default_model)
+#                        new_mod.no_models = user_input
+#                        self.default_model.no_models -= user_input
+#                        self.ex_models.add(new_mod)
+#                        continue
+#                    else:
+                        #see if option is an exchange into an existing model
+#                        swap_option = False
+#                        for i in wargear:
+#                            if i in self.default_model.wargear:
+#                                swap_option = True
+#                                break
+#
+#                        in_use = False
+#                        for i in self.ex_models:
+#                            if wargear.selected in i.wargear:
+#                                in_use = True
+#                                break
+#
+#                        index = 1
+#                        print(str(index)+ '. ' + self.default_model.__repr__(indent='  '))
+#                        index +=1
+#                        for i in self.ex_models:
+#                             print(str(index)+ '. ' + i.__repr__(indent='  '))
+####################################################################################################
+
+                    #create new model to be added
+                    new_mod = copy.deepcopy(self.default_model)
+                    current_size = self.get_size()
+                    for i in wargear.items_involved:
+                        if i in new_mod.wargear:
+                            new_mod.wargear.remove(i)
+                            #may need to check if there are cases when multiple options need to be replaced
+                            break
+                    new_mod.wargear.append(wargear.selected)
+                    if new_mod in self.ex_models:
+                        for index, mod in enumerate(self.ex_models):
+                            if new_mod == mod:
+                                break
+                        mod.no_models = current_size//wargear.no_required
+                    elif new_mod == self.default_model:
                         continue
                     else:
-                        #create new model to be added
-                        new_mod = copy.deepcopy(self.default_model)
-                        current_size = self.get_size()
-                        for i in wargear.items_involved:
-                            if i in new_mod.wargear:
-                                new_mod.wargear.remove(i)
-                                #may need to check if there are cases when multiple options need to be replaced
-                                break
-                        new_mod.wargear.append(wargear.selected)
-                        if new_mod in self.ex_models:
-                            for index, mod in enumerate(self.ex_models):
-                                if new_mod == mod:
-                                    break
-                            self.ex_models[index].no_models = current_size//wargear.no_required
-                        elif new_mod == self.default_model:
-                            continue
-                        else:
-                            new_mod.no_models = self.get_size()//wargear.no_required
-                            self.ex_models.append(new_mod)
+                        new_mod.no_models = self.get_size()//wargear.no_required
+                        self.ex_models.add(new_mod)
 
-                        #change the no of default models
-                        size_change = self.get_size() - current_size
-                        self.default_model.no_models -= size_change
+                    #change the no of default models
+                    size_change = self.get_size() - current_size
+                    self.default_model.no_models -= size_change
         self.re_calc_points()
         print(self)
         return
@@ -237,14 +291,11 @@ class Unit(init.UnitTypes):
 
 class Model():
     """Keeps track of variations in the model makeup of a unit"""
-    def __init__(self, parent_unit, no_models=1, wargear=None):
+    def __init__(self, parent_unit, no_models=1):
         self.base_pts = parent_unit.base_pts
         self.no_models = no_models
-        if wargear is not None:
-            self.wargear = wargear
-        else:
-            self.wargear = copy.deepcopy(parent_unit.wargear)
-        self.re_calc_points
+        self.wargear = copy.deepcopy(parent_unit.wargear)
+        self.re_calc_points()
 
     def re_calc_points(self):
         """Updates any points values after changes to the unit"""
@@ -279,3 +330,10 @@ class Model():
         if pts_footer:
             ret += "\t\t{}pts".format(self.pts)
         return ret
+
+if __name__ == "__main__":
+    init.init("Tau")
+    dest = Unit("Strike Team", "Troops")
+    print(dest)
+    dest.change_wargear("1b")
+
