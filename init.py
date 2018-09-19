@@ -8,6 +8,7 @@ Created on Sat Jul  7 13:06:29 2018
 import pandas as pd
 import numpy as np
 import glob
+import json
 
 def wargear_search_base(item):
     """
@@ -117,41 +118,31 @@ class UnitTypes():
     Class to group together the properties and options of a unit available to a
     given faction in the army list
     """
-    def __init__(self, name, props):
-        self.name = name
+    def __init__(self, props):
+        self.name = props["name"]
         try:
-            self.base_pts = int(props[1])
+            self.base_pts = props["base_pts"]
         except:
             raise ValueError("Unable to load base_pts from {} for {}".format(props[1],self.name))
         self.pts = self.base_pts
-        if props[3] != props[3]:
-            self.options = None
-        else:
-            self.options = props[3].split(', ')
+        self.options = props["options"]
 
         #if range of unit size, save as array, otherwise single number
-        try:
-            self.size = tuple([int(i) for i in props[0].split('-')])
-        except AttributeError:
-            self.size = tuple([int(props[0])])
+        self.size = props["size"]
 
-
-        if props[2] != props[2]: #if entry is nan
-            self.wargear = None
-        else:
+        if props["wargear"] != None:
+            wargear_temp = props["wargear"]
             self.wargear = []
-            #split list if multiple wargear items in temporary variable for
-            #processing
-            wargear_temp = props[2].split(', ')
             for i in wargear_temp:
                 try:
                     self.wargear.append(WargearItem(i))
                 except KeyError:
-#                    try:
+    #                    try:
                     self.wargear.append(MultipleItem(*i.split('/'), storage=True))
-#                    except:
-#                        raise KeyError("{} for {} not found in Armoury/*.csv file".format(i, self.name))
-
+    #                    except:
+    #                        raise KeyError("{} for {} not found in Armoury/*.csv file".format(i, self.name))
+        else:
+            self.wargear = None
         #find default wargear costs
         self.wargear_pts = 0
         if self.wargear == None:
@@ -199,33 +190,23 @@ def init(faction, return_out=False):
     Initialises the global variables for the chosen faction
     """
     #Open list of possible detachments and generate object for each one
-    detachments = pd.read_csv("./Detachments.csv", header=0, index_col=0)
     global detachments_dict
-    detachments_dict = {}
-    for index, rows in detachments.iterrows():
-        detachments_dict[index] = {"cp": int(rows[0]),
-                                   "foc": {"HQ":     np.array([int(i) for i in rows[1].split('-')]),
-                                           "Troops": np.array([int(i) for i in rows[2].split('-')]),
-                                           "Elites": np.array([int(i) for i in rows[3].split('-')]),
-                                           "Fast Attack":   np.array([int(i) for i in rows[4].split('-')]),
-                                           "Heavy Support": np.array([int(i) for i in rows[5].split('-')])}}
+    with open('./Detachments.json', 'r') as file:
+        detachments_dict = json.load(file)
 
     #determine faction of armylist and open units and wargear data
-    armoury = extract_files("{}/Armoury".format(faction))
     global armoury_dict
-    armoury_dict = {}
-    for key in armoury.keys():
-        armoury_dict[key] = {}
-        for index, rows in armoury[key].iterrows():
-            armoury_dict[key][index] = rows[0]
+    with open("{}/Armoury.json".format(faction), 'r') as file:
+        armoury_dict = json.load(file)
 
-    units = extract_files("{}/Units".format(faction))
     global units_dict
     units_dict = {}
+    with open("{}/Units.json".format(faction), 'r') as file:
+        units = json.load(file)
     for key in units.keys():
         units_dict[key] = {}
-        for index, rows in units[key].iterrows():
-            units_dict[key][index] = UnitTypes(index,rows)
+        for index, rows in units[key].items():
+            units_dict[key][index] = UnitTypes(rows)
 
     if return_out:
         return detachments_dict, armoury_dict, units_dict
