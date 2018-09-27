@@ -20,11 +20,13 @@ class Option():
         self.no_required = 1
         self.selected = None
         self.no_picks = 1
-        self.repr = ''
         self.header = ''
 
     def __getitem__(self, i):
         return self.items_involved[i]
+
+    def __hash__(self):
+        return hash(self.items_involved) + hash(self.no_required) + hash(self.no_picks) + hash(self.header)
 
     def __repr__(self, comparison=None):
         ret = self.header
@@ -36,7 +38,20 @@ class Option():
         return ret
 
     def select(self, index):
-        self.selected = self.items_involved[index]
+        if self.no_picks > 1:
+            if self.selected is None:
+                self.selected = [self.items_involved[index]]
+            elif self.items_involved[index] in self.selected:
+                for i in self.selected:
+                    if i == self.items_involved[index]:
+                        i.set_no_of(i.no_of+1)
+            else:
+                self.selected.append(self.items_involved[index])
+
+            if len(self.selected) > self.no_picks:
+                raise RuntimeError("Unable to select item as only {} picks are allowed for this option. Current selected:{}".format(self.no_picks, self.selected))
+        else:
+            self.selected = self.items_involved[index]
         return
 
 class OptionLexer():
@@ -104,8 +119,7 @@ class OptionParser():
                 if pr:
                     continue
 
-            ret += i.__repr__()
-            ret += "\n"
+            ret += i.__repr__() + "\n\n"
         return ret
 
 

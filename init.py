@@ -27,6 +27,11 @@ class WargearItem():
         self.points = self.no_of*self.wargear_search(self.item)
         return
 
+    def set_no_of(self, no_of):
+        self.no_of = no_of
+        self.points = self.no_of*self.wargear_search(self.item)
+        return
+
     def wargear_search(self, item):
         return wargear_search_base(item)
 
@@ -55,9 +60,12 @@ class WargearItem():
             other_item.points += self.points
             return other_item
 
-        else:
+        elif type(other_item) == WargearItem:
             ret = MultipleItem(self, other_item)
             return ret
+
+        else:
+            raise TypeError("Addition between init.WargearItem and {} not defined".format(type(other_item)))
 
     def __eq__(self, other):
         try:
@@ -94,7 +102,7 @@ class MultipleItem(WargearItem):
         self.points += other_item.points
         return self
 
-    def __repr__(self, comparison=None):
+    def __repr__(self, comparison=None, tidy=False):
         ret = ''
         for i in range(len(self.item)):
             ret += self.item[i]
@@ -105,10 +113,12 @@ class MultipleItem(WargearItem):
             else:
                 ret += ', '
 
+        if tidy:
+            ret = ret.ljust(28)
         if comparison:
             ret += " \t(net {}pts per model)".format(self.points-comparison.points)
         else:
-            ret += " \t({}pts per model)".format(self.points)
+            ret += " ({}pts)".format(self.points)
         return ret
 
 class UnitTypes():

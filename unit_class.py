@@ -211,6 +211,20 @@ class Unit(init.UnitTypes):
         self.re_calc_points()
         return
 
+    def change_all_wargear(self, user_input=None):
+        """
+        Calls change_wargear on all models in the unit and the unit as a whole
+        """
+        if user_input is None:
+            user_input = [None]*(len(self.models)+1)
+
+        self.change_wargear(user_input=user_input.pop(0))
+        for i in self.models:
+            i.change_wargear(user_input=user_input.pop(0))
+
+        self.re_calc_points()
+        return
+
     def change_wargear(self, user_input=None):
         """
         Change the wargear options for the unit. split_only=True will only
@@ -243,7 +257,7 @@ class Unit(init.UnitTypes):
             if user_input in {'q', 'quit', 'cancel', 'exit'}:
                 print("Cancelling change wargear")
                 return False
-            user_input2 = set(re.findall(r'[0-9][a-zA-Z]?', user_input2))
+            user_input2 = re.findall(r'[0-9][a-zA-Z]?', user_input2)
 
             if len(user_input2) == 0: #no suitable regexes found
                 print('{} is not a valid option please input options in format <index><sub-index>'.format(user_input))
@@ -278,15 +292,19 @@ class Unit(init.UnitTypes):
         #######################################################################
 
 
-        wargear_to_add = get_user_options(user_input)
-        if not wargear_to_add:
+        wargear_to_add = get_user_options(user_input) #-> list of option_parser.Option
+        if not wargear_to_add: #user selected a quit option
             return
         for new_wargear in wargear_to_add:
             for i in new_wargear.items_involved:
                 if i in self.wargear:
                     self.wargear.remove(i)
 
-            self.wargear.append(new_wargear.selected)
+            if type(new_wargear.selected) == list:
+                for j in new_wargear.selected:
+                    self.wargear.append(j)
+            else:
+                self.wargear.append(new_wargear.selected)
 
         self.re_calc_points()
         return
@@ -375,11 +393,16 @@ class Model(Unit):
             return False
 
     def __hash__(self):
-        return hash(tuple(self.wargear)) + hash(self.name) + hash(self.label)
+        ret = hash(self.name) + hash(self.label)
+        if self.wargear is not None:
+            ret += hash(tuple(self.wargear))
+        return ret
 
 if __name__ == "__main__":
-    init.init("Necron")
-    dest = Unit("Destroyers", "Fast Attack", "5 2")
+    init.init("Tau")
+    dest = Unit("Pathfinder Team", "Fast Attack", "5/1/3")
     print(dest)
-    print(dest.check_validity())
+    dest.change_all_wargear()
+
+    print(dest)
 
