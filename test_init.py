@@ -6,18 +6,21 @@ Created on Sat Jul 14 17:55:37 2018
 """
 
 import init
+import option_parser
+import main
+
 import pandas as pd
 import pytest
-import main
-import unit_class
+import json
 
 def test_units_dict():
     """Checks the points calculations for the units dict"""
     detachments_dict, armoury_dict, units_dict = init.init("Necron", True)
-    units = pd.read_csv("Necron/Units/Elites.csv", index_col=0, header=0)
+    with open("Necron/Units.json", 'r') as file:
+        units = json.load(file)
 
     #check that points for wargear are being added
-    assert units.loc["Lychguard"]["Points per Model"] != units_dict["Elites"]["Lychguard"].pts
+    assert units["Elites"]["Lychguard"]["base_pts"] != units_dict["Elites"]["Lychguard"].pts
     return
 
 def test_units_dict_wargear():
@@ -25,12 +28,15 @@ def test_units_dict_wargear():
     Checks spelling of the options in the units_dict by creating a unit for
     each one.
     """
+    parser = option_parser.OptionParser()
+    parser.build()
     for faction in ["Tau", "Necron"]:
         detachments_dict, armoury_dict, units_dict = init.init(faction, True)
         for foc, units in units_dict.items():
-            for title, i in units.items():
-                squad = unit_class.Unit(title, foc)
-                squad.change_wargear(split_only=True)
+            for key, unit in units.items():
+                if unit.options is not None:
+                    for i in unit.options:
+                        parser.parse2(i)
     return
 
 def test_detachments_dict_selection():

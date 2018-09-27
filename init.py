@@ -5,9 +5,6 @@ Created on Sat Jul  7 13:06:29 2018
 @author: jones
 """
 
-import pandas as pd
-import numpy as np
-import glob
 import json
 
 def wargear_search_base(item):
@@ -39,11 +36,12 @@ class WargearItem():
         else:
             ret = str(self.no_of) + ' ' + self.item + 's'
 
-        ret = ret.ljust(24)
+        if tidy:
+            ret = ret.ljust(28)
         if comparison:
-            ret += " \t(net {}pts per model)".format(self.points-comparison.points)
+            ret += " (net {}pts per model)".format(self.points-comparison.points)
         elif self.points != 0:
-            ret += " \t({}pts per model)".format(self.points)
+            ret += " ({}pts)".format(self.points)
         return ret
 
     def __mul__(self, integer):
@@ -126,6 +124,11 @@ class UnitTypes():
             raise ValueError("Unable to load base_pts from {} for {}".format(props[1],self.name))
         self.pts = self.base_pts
         self.options = props["options"]
+        self.models = props["models"]
+        try:
+            self.limits = props["limits"]
+        except:
+            pass
 
         #if range of unit size, save as array, otherwise single number
         self.size = props["size"]
@@ -137,10 +140,10 @@ class UnitTypes():
                 try:
                     self.wargear.append(WargearItem(i))
                 except KeyError:
-    #                    try:
-                    self.wargear.append(MultipleItem(*i.split('/'), storage=True))
-    #                    except:
-    #                        raise KeyError("{} for {} not found in Armoury/*.csv file".format(i, self.name))
+                        try:
+                            self.wargear.append(MultipleItem(*i.split('/'), storage=True))
+                        except:
+                            raise KeyError("{} for {} not found in Armoury/*.csv file".format(i, self.name))
         else:
             self.wargear = None
         #find default wargear costs
@@ -175,16 +178,6 @@ class UnitTypes():
                 output += i.__repr__() +", "
         return output
 
-def extract_files(folder):
-    """Creates a dictionary of all the csv files in the given folder"""
-    files = glob.glob(folder + "/*.csv")
-    ret = {}
-    for file in files:
-        name = file.replace(folder + "\\", '')
-        name = name.replace(".csv", '')
-        ret[name] = pd.read_csv(file, index_col=0, header=0)
-    return ret
-
 def init(faction, return_out=False):
     """
     Initialises the global variables for the chosen faction
@@ -207,6 +200,10 @@ def init(faction, return_out=False):
         units_dict[key] = {}
         for index, rows in units[key].items():
             units_dict[key][index] = UnitTypes(rows)
+
+    global models_dict
+    with open("{}/Models.json".format(faction), 'r') as file:
+        models_dict = json.load(file)
 
     if return_out:
         return detachments_dict, armoury_dict, units_dict

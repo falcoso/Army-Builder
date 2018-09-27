@@ -10,8 +10,6 @@ import ply.yacc as yacc
 import init
 import string
 
-init.init("Necron")
-
 class Option():
     """
     Collect together the list of options so that the the programme can select
@@ -20,24 +18,29 @@ class Option():
     def __init__(self, items_involved):
         self.items_involved = items_involved
         self.no_required = 1
-        self.all_models  = True
         self.selected = None
         self.no_picks = 1
-        self.upto = -1
         self.repr = ''
+        self.header = ''
 
     def __getitem__(self, i):
         return self.items_involved[i]
 
-    def __repr__(self):
-        return self.repr
+    def __repr__(self, comparison=None):
+        ret = self.header
+        if len(self.items_involved) == 1:
+            return ret
+        for i, j in enumerate(self.items_involved):
+            ret += '\n\t' + string.ascii_lowercase[i] + ') ' + j.__repr__(tidy=True,
+                                                                          comparison=comparison)
+        return ret
 
     def select(self, index):
         self.selected = self.items_involved[index]
         return
 
 class OptionLexer():
-    tokens = ['ITEM', 'NUM', 'PLUS', 'MINUS', 'STAR', 'SLASH', 'HASH', 'LIST', 'CARET']
+    tokens = ['ITEM', 'NUM', 'PLUS', 'MINUS', 'STAR', 'SLASH', 'HASH', 'CARET']
 
     # these are the regexes that the lexer uses to recognise the tokens
     t_PLUS  = r'\+'
@@ -55,16 +58,6 @@ class OptionLexer():
     def t_ITEM(self, t):
         r'[a-zA-Z_][\w -]*[\w]+[\w]'
         t.value = init.WargearItem(t.value)
-        return t
-
-    def t_LIST(self, t):
-        r'\[.*\]'
-        key = t.value[1:-1].split('/')
-        options = []
-        for i in key:
-            options += init.armoury_dict[i]
-        options = list(map(init.WargearItem, options))
-        t.value = Option(options)
         return t
 
     def t_NUM(self,t):
@@ -86,9 +79,10 @@ class OptionLexer():
              print(tok)
 
 class OptionParser():
-    def __init__(self, current_wargear=None):
+    def __init__(self, current_wargear=None, unit=True):
         self.current_wargear = current_wargear #for checking if an exchange or addition option for '/' symbol
         self.run_count = -1                    #helps to add sub_index to parsing list
+        self.unit = unit
 
         #create lexer
         self.lexer = OptionLexer()
@@ -96,10 +90,29 @@ class OptionParser():
         self.options_list = [] #stores all available wargear in an options list
         return
 
+    def __repr__(self):
+        ret = ''
+        for index, i in enumerate(self.options_list):
+            ret += str(index+1) + ". "
+            pr = False
+            if i.no_picks == 1:
+                for j in i.items_involved:
+                    if j in self.current_wargear:
+                        ret += i.__repr__(comparison=j) + "\n"
+                        pr = True
+                        break
+                if pr:
+                    continue
+
+            ret += i.__repr__()
+            ret += "\n"
+        return ret
+
+
     def parse2(self, parse_string, **kwargs):
         """Wrapper for parser function to check the items being parsed"""
         self.swap_wargear = [] #saves all items being parsed
-        self.options_list.append(Option(self.swap_wargear))
+        self.options_list.append(Option(self.swap_wargear)) #changes to swap_wargear will change this item
         return self.parser.parse(parse_string, **kwargs)
 
     tokens = OptionLexer.tokens
@@ -107,7 +120,6 @@ class OptionParser():
     #operator precedence
     precedence = (
         ('left', 'HASH'),
-        ('left', 'LIST'),
         ('left', 'MINUS'),
         ('left', 'SLASH'),
         ('left', 'PLUS'),
@@ -152,13 +164,6 @@ class OptionParser():
         p[0] = p[1]
         return
 
-    def p_list(self, p):
-        '''
-        expression : LIST
-        '''
-        p[0] = p[1]
-        return
-
     def p_mult_item(self, p):
         '''
         option : NUM STAR ITEM
@@ -197,7 +202,6 @@ class OptionParser():
 
     def run(self, p, top_level=True):
 
-        index = string.ascii_lowercase #for sub lists
         if top_level:
             self.run_count = -1
             self.already_used = [False]
@@ -207,21 +211,15 @@ class OptionParser():
                 ret = ''
                 if top_level: #add header to listing
                     self.check_already_used()
+                    if self.unit:
+                        ret += "The whole unit may"
+                    else:
+                        ret += "You may"
 
                     if self.already_used[0]: #select header based on search above
-                        ret+="The whole unit may exchange {} with one of the following:\n".format(self.already_used[1].item)
+                        ret += " exchange {} with one of the following:".format(self.already_used[1].item)
                     else:
-                        ret += "The whole unit may take one of the following:\n"
-
-                if type(p[1]) == tuple: #stops double sub-indexing if there is more than 2 options
-                    ret += self.run(p[1], False)
-                else:
-                    self.run_count += 1
-                    ret += '\t' + index[self.run_count%len(index)] + ') ' + self.run(p[1], False)
-
-                #testing for tuple as above does not have the same problems if ommitted
-                self.run_count += 1
-                ret += '\t' + index[self.run_count%len(index)] + ') ' + self.run(p[2], False)
+                        ret += " take one of the following:"
 
             elif p[0] == '-':
                 if p[2] == None: #if just a tag to check its the whole unit
@@ -234,31 +232,22 @@ class OptionParser():
                     self.options_list[-1].no_required = p[2] #save the min amount requirement for access in main
                     self.check_already_used()
                     if self.already_used[0]:
-                        ret += "exchange {} for:\n".format(self.already_used[1].item) + self.run(p[1], False)
+                        ret += "exchange {} for:".format(self.already_used[1].item) + self.run(p[1], False)
                     else:
-                        ret += "take one of:\n" + self.run(p[1], False)
+                        ret += "take one of:" + self.run(p[1], False)
                 self.options_list[-1].all_models = False
 
             elif p[0] == '^':
                 if p[2] == 1:
-                    ret = '{} model may take one of:\n'.format(p[2])
+                    ret = '{} model may take one of:'.format(p[2])
                 else:
-                    ret = '{} models may take one of:\n'.format(p[2])
+                    ret = '{} models may take one of:'.format(p[2])
                 self.run(p[1], False)
 
             elif p[0] == '#':
                 self.options_list[-1].no_picks = p[1]
                 ret = self.run(p[2], True)
                 ret = ret.replace("take one", "take {}".format(p[1]))
-
-        elif type(p) == Option:
-            if top_level:
-                ret = "The whole unit may take one of:\n"
-            else:
-                ret = ''
-            for i, j in enumerate(p.items_involved):
-                ret+= '\t' + index[i%len(index)] +') ' + str(j) + '\n'
-
 
         else:
             if top_level: #just a single item that needs listing
@@ -271,12 +260,14 @@ class OptionParser():
             ret += '\n'
 
         if top_level: #if top level save the output to be manipulated
-                self.options_list[-1].repr = ret
+                self.options_list[-1].header = ret
         return ret
 
 if __name__ == "__main__":
+    init.init("Necron")
     parser = OptionParser()
     parser.build()
-    test_string = '2#[Range/Melee]'
-    parser.parse2(test_string)
-    print(parser.options_list[0])
+    test_string = 'Gauss flayer/Gauss blaster/Gauss cannon-3, Phylactery'
+    for i in test_string.split(', '):
+        parser.parse2(i)
+    print(parser.options_list)

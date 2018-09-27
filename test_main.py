@@ -64,7 +64,8 @@ def test_add_unit_prog_input():
     stalker = detach.units["Elites"][0]
     assert stalker.name == "Triarch Stalker"
     assert stalker.pts == 171
-    assert stalker.get_wargear() == [init.WargearItem("Heat ray"), init.WargearItem("Massive forelimbs")]
+    assert stalker.get_wargear() == set([init.WargearItem("Heat ray"),
+                                        init.WargearItem("Massive forelimbs")])
     return
 
 def test_invalid_input_handling():
@@ -81,7 +82,8 @@ def test_invalid_input_handling():
     stalker = detach.units["Elites"][0]
     assert stalker.name == "Triarch Stalker"
     assert stalker.pts == 171
-    assert stalker.get_wargear() == [init.WargearItem("Heat ray"), init.WargearItem("Massive forelimbs")]
+    assert stalker.get_wargear() == set([init.WargearItem("Heat ray"),
+                                         init.WargearItem("Massive forelimbs")])
     return
 
 def test_add_unit_user_input():

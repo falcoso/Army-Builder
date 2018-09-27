@@ -4,24 +4,28 @@
             "base_pts": 80,
             "options": ["2#Seeker missile"],
             "size": [1],
-            "wargear": ["Burst cannon"]}
+            "wargear": ["Burst cannon"],
+            "models": null,
+            "limits": null}
     },
-    "Tau/Units/Elites": {
+"Elites": {
         "XV8 Crisis Battlesuits": {
             "name": "XV8 Crisis Battlesuits",
             "base_pts": 42,
-            "options": ["3#Airbursting fragmentation projector/Burst cannon/Cyclic ion blaster/Flamer/Fusion blaster/Missile pod/Plasma rifle/Advanced targeting system/Counterfire defence system/Drone controller/Early warning override/Multi-tracker/Shield generator/Target lock/Velocity tracker-",
-                "XV8-02 Crisis Iridium Battlesuit-3"],
+            "options": null,
             "size": [3,9],
-            "wargear": null
+            "wargear": null,
+            "models": ["Crisis Shas'ui", "Crisis Shas'vre"],
+            "limits": {"XV8-02 Crisis Iridium Battlesuit": 3}
         },
         "XV8 Crisis Bodyguards": {
             "name": "XV8 Crisis Bodyguards",
             "base_pts": 45,
-            "options": ["3#Airbursting fragmentation projector/Burst cannon/Cyclic ion blaster/Flamer/Fusion blaster/Missile pod/Plasma rifle/Advanced targeting system/Counterfire defence system/Drone controller/Early warning override/Multi-tracker/Shield generator/Target lock/Velocity tracker-",
-                	"XV8-02 Crisis Iridium Battlesuit-3"],
+            "options": null,
             "size": [3,9],
-            "wargear": null
+            "wargear": null,
+            "models": ["Crisis Bodyguard Shas'ui", "Crisis Bodyguard Shas'vre"],
+            "limits": {"XV8-02 Crisis Iridium Battlesuit": 3}
         },
         "Firesight Marksman": {
             "name": "Firesight Marksman",
@@ -29,17 +33,21 @@
             "options": null,
             "size": [1],
             "wargear": ["Markerlight",
-                	"Pulse pistol"]
+                        "Pulse pistol"],
+            "models": null,
+            "limits": null
         },
         "XV95 Ghostkeel Battlesuit": {
             "name": "XV95 Ghostkeel Battlesuit",
             "base_pts": 82,
             "options": ["Fusion collider/Cyclic ion raker",
-                	"2*Flamer/2*Burst cannon/2*Fusion blaster",
-	                "2#Greater advanced targeting system/Counterfire defence system/Drone controller/Greater early warning override/Multi-tracker/Shield generator/Greater target lock/Greater velocity tracker"],
+                        "2*Flamer/2*Burst cannon/2*Fusion blaster",
+                        "2#Greater advanced targeting system/Counterfire defence system/Drone controller/Greater early warning override/Multi-tracker/Shield generator/Greater target lock/Greater velocity tracker"],
             "size": [1],
             "wargear": ["Fusion collider",
-        	        "2*Flamer"]
+                        "2*Flamer"],
+            "models": null,
+            "limits": null
         },
         "Krootox Riders": {
             "name": "Krootox Riders",
@@ -47,7 +55,9 @@
             "options": null,
             "size": [1,3],
             "wargear": ["Kroot gun",
-              	        "Krootox fists"]
+                          "Krootox fists"],
+            "models": null,
+            "limits": null
         },
         "Kroot Shaper": {
             "name": "Kroot Shaper",
@@ -55,7 +65,9 @@
             "options": null,
             "size": [1],
             "wargear": ["Kroot rifle",
-                        "Ritual blade"]
+                        "Ritual blade"],
+            "models": null,
+            "limits": null
         },
         "XV104 Riptide Battlesuit": {
             "name": "XV104 Riptide Battlesuit",
@@ -65,17 +77,18 @@
                         "2#Greater advanced targeting system/Counterfire defence system/Drone controller/Greater early warning override/Multi-tracker/Shield generator/Greater target lock/Greater velocity tracker"],
             "size": [1],
             "wargear": ["Heavy burst cannon",
-                        "2*Smart missile system"]
+                        "2*Smart missile system"],
+            "models": null,
+            "limits": null
         },
         "XV25 Stealth Battlesuit": {
             "name": "XV25 Stealth Battlesuit",
             "base_pts": 20,
-            "options": ["Advanced targeting system/Counterfire defence system/Drone controller/Early warning override/Multi-tracker/Shield generator/Target lock/Velocity tracker-",
-                        "Markerlight+Target lock^1",
-                        "Homing beacon^1",
-                        "Burst cannon/Fusion blaster-3"],
+            "options": null,
             "size": [3,6],
-            "wargear": ["Burst cannon"]
+            "wargear": ["Burst cannon"],
+            "models": ["Stealth Shas'ui", "Stealth Shas'vre"],
+            "limits": {"Fusion blaster": 3}
         }
     },
 "Fast Attack": {
@@ -84,17 +97,22 @@
             "base_pts": 4,
             "options": null,
             "size": [4,12],
-            "wargear": ["Ripping fangs"]
+            "wargear": ["Ripping fangs"],
+            "models": null,
+            "limits": null
         },
         "Pathfinder Team": {
             "name": "Pathfinder Team",
             "base_pts": 5,
-            "options": ["Pulse pistol^1",
-                "Pulse carbine/Ion rifle/Rail rifle^3 "],
+            "options": null,
             "size": [5,10],
             "wargear": ["Markerlight",
                         "Pulse carbine",
-                        "Photon grenades"]
+                        "Photon grenades"],
+            "models": ["Pathfinder Shas'ui",
+                       "Pathfinder Shas'el",
+                       "Pathfinder Specialist"],
+            "limits": null
         },
         "TX4 Piranhas": {
             "name": "TX4 Piranhas",
@@ -102,42 +120,49 @@
             "options": ["Burst cannon/Fusion blaster-",
                         "2#Seeker missile-"],
             "size": [1,5],
-            "wargear": ["Burst cannon"]
+            "wargear": ["Burst cannon"],
+            "models": null,
+            "limits": null
         },
         "Tactical Drones": {
             "name": "Tactical Drones",
             "base_pts": 12,
             "options": null,
             "size": [4,12],
-            "wargear": null
+            "wargear": null,
+            "models": null,
+            "limits": null
         },
         "Vespid Stingwings": {
             "name": "Vespid Stingwings",
             "base_pts": 14,
             "options": null,
             "size": [4,12],
-            "wargear": ["Neutron blaster"]
+            "wargear": ["Neutron blaster"],
+            "models": null,
+            "limits": null
         }
     },
 "Heavy Support": {
         "XV88 Broadside Battlesuit": {
             "name": "XV88 Broadside Battlesuit",
             "base_pts": 60,
-            "options": ["Heavy rail rifle/2*High-yield missile pod-",
-                        "2*Smart missile system/2*Plasma rifle-",
-                        "Seeker missile-",
-                        "Advanced targeting system/Counterfire defence system/Drone controller/Early warning override/Multi-tracker/Shield generator/Target lock/Velocity tracker-"],
+            "options": null,
             "size": [1,3],
             "wargear": ["Heavy rail rifle",
-                        "2*Smart missile system"]
+                        "2*Smart missile system"],
+            "models": ["Broadside Shas'ui", "Broadside Shas'vre"],
+            "limits": null
         },
         "TX7 Hammerhead Gunship": {
             "name": "TX7 Hammerhead Gunship",
             "base_pts": 100,
             "options": ["Railgun/Ion cannon",
                         "2#Seeker missile"],
-                        "size": [1],
-                        "wargear": ["Railgun"]
+            "size": [1],
+            "wargear": ["Railgun"],
+            "models": null,
+            "limits": null
         },
         "TX78 Sky Ray Gunship": {
             "name": "TX78 Sky Ray Gunship",
@@ -145,7 +170,9 @@
             "options": null,
             "size": [1],
             "wargear": ["2*Markerlight",
-                        "6*Seeker missile"]
+                        "6*Seeker missile"],
+            "models": null,
+            "limits": null
         }
     },
 "HQ": {
@@ -156,7 +183,9 @@
             "size": [1],
             "wargear": ["Markerlight",
                         "Pulse rifle",
-                        "Photon grenades"]
+                        "Photon grenades"],
+            "models": null,
+            "limits": null
         },
         "Commander in XV8 Crisis Battlesuit": {
             "name": "Commander in XV8 Crisis Battlesuit",
@@ -164,7 +193,9 @@
             "options": ["4#Airbursting fragmentation projector/Burst cannon/Cyclic ion blaster/Flamer/Fusion blaster/Missile pod/Plasma rifle/Advanced targeting system/Counterfire defence system/Drone controller/Early warning override/Multi-tracker/Shield generator/Target lock/Velocity tracker"],
             "size": [1],
             "wargear": ["Burst cannon",
-                        "Missile pod"]
+                        "Missile pod"],
+            "models": null,
+            "limits": null
         },
         "Commander in XV85 Enforcer Battlesuit": {
             "name": "Commander in XV85 Enforcer Battlesuit",
@@ -172,7 +203,9 @@
             "options": ["4#Airbursting fragmentation projector/Burst cannon/Cyclic ion blaster/Flamer/Fusion blaster/Missile pod/Plasma rifle/Advanced targeting system/Counterfire defence system/Drone controller/Early warning override/Multi-tracker/Shield generator/Target lock/Velocity tracker"],
             "size": [1],
             "wargear": ["Burst cannon",
-                        "Missile pod"]
+                        "Missile pod"],
+            "models": null,
+            "limits": null
         },
         "Commander in XV86 Coldstar Battlesuit": {
             "name": "Commander in XV86 Coldstar Battlesuit",
@@ -180,28 +213,36 @@
             "options": ["4#Airbursting fragmentation projector/Burst cannon/Flamer/Fusion blaster/Missile pod/Plasma rifle/Advanced targeting system/Counterfire defence system/Drone controller/Early warning override/Multi-tracker/Shield generator/Target lock/Velocity tracker"],
             "size": [1],
             "wargear": ["High-output burst cannon",
-                        "Missile pod"]
+                        "Missile pod"],
+            "models": null,
+            "limits": null
         },
         "Ethereal": {
             "name": "Ethereal",
             "base_pts": 45,
             "options": ["Honour blade/Equalizers"],
             "size": [1],
-            "wargear": ["Honour blade"]
+            "wargear": ["Honour blade"],
+            "models": null,
+            "limits": null
         },
         "Ethereal with Hover Drone": {
             "name": "Ethereal with Hover Drone",
             "base_pts": 50,
             "options": ["Honour blade/Equalizers"],
             "size": [1],
-            "wargear": ["Honour blade"]
+            "wargear": ["Honour blade"],
+            "models": null,
+            "limits": null
         },
         "Longstrike": {
             "name": "Longstrike",
             "base_pts": 137,
             "options": ["Railgun/Ion cannon"],
             "size": [1],
-            "wargear": ["Railgun"]
+            "wargear": ["Railgun"],
+            "models": null,
+            "limits": null
         }
     },
 "Named Characters": {
@@ -210,60 +251,76 @@
             "base_pts": 60,
             "options": null,
             "size": [1],
-            "wargear": null
+            "wargear": null,
+            "models": null,
+            "limits": null
         },
         "Aun'Va with Ethereal Guard": {
             "name": "Aun'Va with Ethereal Guard",
             "base_pts": 95,
             "options": null,
             "size": [1],
-            "wargear": null
+            "wargear": null,
+            "models": null,
+            "limits": null
         },
         "Commander Farsight": {
             "name": "Commander Farsight",
             "base_pts": 151,
             "options": null,
             "size": [1],
-            "wargear": null
+            "wargear": null,
+            "models": null,
+            "limits": null
         },
         "Commander Shadowsun": {
             "name": "Commander Shadowsun",
             "base_pts": 167,
             "options": null,
             "size": [1],
-            "wargear": null
+            "wargear": null,
+            "models": null,
+            "limits": null
         },
         "Darkstrider": {
             "name": "Darkstrider",
             "base_pts": 45,
             "options": null,
             "size": [1],
-            "wargear": null
+            "wargear": null,
+            "models": null,
+            "limits": null
         }
     },
 "Troops": {
         "Breacher Team": {
             "name": "Breacher Team",
             "base_pts": 7,
-            "options": ["Markerlight^1",
-                        "Pulse pistol-"],
+            "options": null,
             "size": [5,12],
             "wargear": ["Pulse blaster",
-                "Photon grenades"]
+                        "Photon grenades"],
+            "models": ["Breacher Shas'ui",
+                       "Breacher Shas'el"],
+            "limits": null
         },
         "Strike Team": {
             "name": "Strike Team",
             "base_pts": 7,
-            "options": ["Markerlight^1",
-                        "Pulse pistol-"],
-            "size": [5,
-                12],
+            "options": null,
+            "size": [5, 12],
             "wargear": ["Pulse rifle/Pulse carbine",
-                        "Photon grenades"]
+                        "Photon grenades"],
+            "models": ["Strike Shas'ui",
+                       "Strike Shas'el w/Pulse rifle",
+                       "Strike Shas'el w/Pulse carbine"],
+            "limits": null
         },
         "Kroot Carnivores": {
             "name": "Kroot Carnivores",
             "base_pts": 5,
             "options": null,
             "size": [10,20],
-            "wargear": ["Kroot rifle"]}}}
+            "wargear": ["Kroot rifle"],
+            "models": null,
+            "limits": null}}}
