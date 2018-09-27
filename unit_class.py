@@ -89,6 +89,39 @@ class Unit(init.UnitTypes):
                     ret.add(j)
         return ret
 
+    def check_validity(self):
+        """
+        Checks that the unit is legal by looking at the size of the unit and
+        the number of each type of model
+        """
+        #check sizes
+        size = self.get_size()
+        valid = True
+        if size < self.size_range[0] or size > self.size_range[1]:
+            valid = False
+            print("{} has invalid size:\nsize range:{}-{}\tcurrent size:{}".format(self.name,
+                                                                             *self.size_range,
+                                                                             size))
+        #count instances of each model
+        count_dict = {}
+        for i in self.models:
+            if i.label in count_dict.keys():
+                count_dict[i.label] += i.no_models
+            else:
+                count_dict[i.label] = i.no_models
+
+        print(count_dict)
+
+        #check model has a sufficient number
+        for name, no_of in count_dict.items():
+            if init.models_dict[name]["no_per_unit"] is not None:
+                if init.models_dict[name]["no_per_unit"] < no_of:
+                    valid = False
+                    print("{} has too many of {}:\nmax allowed:{}\tcurrent amount:{}".format(self.name,
+                                                                                      name,
+                                                                                      init.models_dict[name]["no_per_unit"],
+                                                                                      no_of))
+        return valid
 
     def re_size(self, size=None):
         """Changes the number of models in the unit"""
@@ -112,7 +145,7 @@ class Unit(init.UnitTypes):
                 size2 = get_user_size()
             if self.mod_str == None:
                 if len(size2) != 1 or size2[0] < self.size_range[0] or size2[0] > self.size_range[1]:
-                    print("{} is invalid, please enter a single number".format(size))
+                    print("{} is invalid, please enter a single number in the range {}-{}".format(size, *self.size_range))
                     if prog_call:
                         raise ValueError("{} is invalid, please enter a single number".format(size))
                     size2 = get_user_size()
@@ -190,6 +223,7 @@ class Unit(init.UnitTypes):
 
         self.parser.current_wargear = self.wargear
         def get_user_options(user_input=None):
+            """Helper function to validate and format user_input"""
             if user_input == None:
                 print(self)
                 print("Options:")
@@ -241,7 +275,7 @@ class Unit(init.UnitTypes):
                     print('{} is not a valid option please input options in format <index><sub-index>'.format(choice))
                     wargear_to_add = get_user_options()
             return wargear_to_add
-
+        #######################################################################
 
 
         wargear_to_add = get_user_options(user_input)
@@ -282,8 +316,8 @@ class Model(Unit):
         self.label = name
         if name == None:
             self.base_pts = base_pts
-            self.wargear = None
-            self.name = name
+            self.wargear  = None
+            self.name = None
             self.re_calc_points()
             return
 
@@ -345,10 +379,7 @@ class Model(Unit):
 
 if __name__ == "__main__":
     init.init("Necron")
-    dest = Unit("Immortals", "Troops")
-    dest2 = Unit("Immortals", "Troops")
+    dest = Unit("Destroyers", "Fast Attack", "5 2")
     print(dest)
-    dest.change_wargear()
-    print(dest)
-    print(dest2)
+    print(dest.check_validity())
 

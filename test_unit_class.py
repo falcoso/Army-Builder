@@ -103,3 +103,18 @@ def test_reset():
     unit.reset()
     assert unit_copy.get_size() == unit.get_size()
     assert unit_copy.wargear == unit.wargear
+
+def test_check_validity():
+    """
+    Checks the Unit.check_validty method highlights errors in the unit
+    """
+    mock_input = []
+    unit = unit_class.Unit("Destroyers", "Fast Attack", "5 5")
+    assert unit.check_validity() == False #initial state too big and too many Heavy Destroyers
+
+    unit.re_size("4 2") #right size too many Heavy Destroyers
+    assert unit.check_validity() == False
+
+    unit.re_size("5 1") #Valid unit
+    assert unit.check_validity() == True
+
