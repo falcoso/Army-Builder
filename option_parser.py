@@ -10,11 +10,13 @@ import ply.yacc as yacc
 import init
 import string
 
+
 class Option():
     """
     Collect together the list of options so that the the programme can select
     and validate any options
     """
+
     def __init__(self, items_involved):
         self.items_involved = items_involved
         self.no_required = 1
@@ -49,20 +51,22 @@ class Option():
                 self.selected.append(self.items_involved[index])
 
             if len(self.selected) > self.no_picks:
-                raise RuntimeError("Unable to select item as only {} picks are allowed for this option. Current selected:{}".format(self.no_picks, self.selected))
+                raise RuntimeError("Unable to select item as only {} picks are allowed for this option. Current selected:{}".format(
+                    self.no_picks, self.selected))
         else:
             self.selected = self.items_involved[index]
         return
+
 
 class OptionLexer():
     tokens = ['ITEM', 'NUM', 'PLUS', 'MINUS', 'STAR', 'SLASH', 'HASH', 'CARET']
 
     # these are the regexes that the lexer uses to recognise the tokens
-    t_PLUS  = r'\+'
+    t_PLUS = r'\+'
     t_MINUS = '-'
-    t_STAR  = r'\*'
+    t_STAR = r'\*'
     t_SLASH = '/'
-    t_HASH  = r'\#'
+    t_HASH = r'\#'
     t_CARET = r'\^'
     t_ignore = ' '
 
@@ -75,33 +79,34 @@ class OptionLexer():
         t.value = init.WargearItem(t.value)
         return t
 
-    def t_NUM(self,t):
+    def t_NUM(self, t):
         '0|[1-9][0-9]*'
         t.value = int(t.value)
         return t
 
     # Build the lexer
-    def build(self,**kwargs):
+    def build(self, **kwargs):
         self.lexer = lex.lex(module=self, **kwargs)
 
     # Test it output
-    def test(self,data):
+    def test(self, data):
         self.lexer.input(data)
         while True:
-             tok = self.lexer.token()
-             if not tok:
-                 break
-             print(tok)
+            tok = self.lexer.token()
+            if not tok:
+                break
+            print(tok)
+
 
 class OptionParser():
     def __init__(self, current_wargear=None, unit=True):
-        self.current_wargear = current_wargear #for checking if an exchange or addition option for '/' symbol
+        self.current_wargear = current_wargear  # for checking if an exchange or addition option for '/' symbol
         self.unit = unit
 
-        #create lexer
+        # create lexer
         self.lexer = OptionLexer()
         self.lexer.build()
-        self.options_list = [] #stores all available wargear in an options list
+        self.options_list = []  # stores all available wargear in an options list
         return
 
     def __repr__(self):
@@ -121,16 +126,16 @@ class OptionParser():
             ret += i.__repr__() + "\n\n"
         return ret
 
-
     def parse2(self, parse_string, **kwargs):
         """Wrapper for parser function to check the items being parsed"""
-        self.swap_wargear = [] #saves all items being parsed
-        self.options_list.append(Option(self.swap_wargear)) #changes to swap_wargear will change this item
+        self.swap_wargear = []  # saves all items being parsed
+        # changes to swap_wargear will change this item
+        self.options_list.append(Option(self.swap_wargear))
         return self.parser.parse(parse_string, **kwargs)
 
     tokens = OptionLexer.tokens
 
-    #operator precedence
+    # operator precedence
     precedence = (
         ('left', 'HASH'),
         ('left', 'MINUS'),
@@ -143,7 +148,7 @@ class OptionParser():
         self.parser = yacc.yacc(module=self, **kwargs)
         return
 
-    #define grammar tree
+    # define grammar tree
     def p_calc(self, p):
         '''
         calc : expression
@@ -164,7 +169,7 @@ class OptionParser():
                    | NUM HASH expression
                    | expression SLASH expression
         '''
-        p[0] = (p[2],p[1],p[3])
+        p[0] = (p[2], p[1], p[3])
         return
 
     def p_expression_name(self, p):
@@ -172,7 +177,7 @@ class OptionParser():
         expression : ITEM
                    | option
         '''
-        #save all items in the string to be accessed outside
+        # save all items in the string to be accessed outside
         self.swap_wargear.append(p[1])
         p[0] = p[1]
         return
@@ -203,14 +208,14 @@ class OptionParser():
 
     def check_already_used(self):
         """Helper function for run() to check if a wargear option is in use"""
-        #check if any wargear items are already in use in the unit
+        # check if any wargear items are already in use in the unit
         self.already_used = [False]
         if self.current_wargear != None:
             for i in self.swap_wargear:
                 if i in self.current_wargear:
                     self.already_used[0] = True
                     self.already_used.append(i)
-                    break #may cause errors but don't
+                    break  # may cause errors but don't
         return
 
     def run(self, p, top_level=True):
@@ -221,30 +226,33 @@ class OptionParser():
         if type(p) == tuple:
             if p[0] == '/':
                 ret = ''
-                if top_level: #add header to listing
+                if top_level:  # add header to listing
                     self.check_already_used()
                     if self.unit:
                         ret += "The whole unit may"
                     else:
                         ret += "You may"
 
-                    if self.already_used[0]: #select header based on search above
-                        ret += " exchange {} with one of the following:".format(self.already_used[1].item)
+                    if self.already_used[0]:  # select header based on search above
+                        ret += " exchange {} with one of the following:".format(
+                            self.already_used[1].item)
                     else:
                         ret += " take one of the following:"
 
             elif p[0] == '-':
-                if p[2] == None: #if just a tag to check its the whole unit
+                if p[2] == None:  # if just a tag to check its the whole unit
                     ret = "Any model"
                     ret += self.run(p[1], True)
                     ret = ret.replace("The whole unit", '')
 
-                else: #requires per X models to be taken
+                else:  # requires per X models to be taken
                     ret = "For every {} models, you may ".format(p[2])
-                    self.options_list[-1].no_required = p[2] #save the min amount requirement for access in main
+                    # save the min amount requirement for access in main
+                    self.options_list[-1].no_required = p[2]
                     self.check_already_used()
                     if self.already_used[0]:
-                        ret += "exchange {} for:".format(self.already_used[1].item) + self.run(p[1], False)
+                        ret += "exchange {} for:".format(
+                            self.already_used[1].item) + self.run(p[1], False)
                     else:
                         ret += "take one of:" + self.run(p[1], False)
                 self.options_list[-1].all_models = False
@@ -262,18 +270,19 @@ class OptionParser():
                 ret = ret.replace("take one", "take {}".format(p[1]))
 
         else:
-            if top_level: #just a single item that needs listing
+            if top_level:  # just a single item that needs listing
                 ret = "The whole unit may take " + str(p)
-            else: #sub level that needs to be appended to a listing
+            else:  # sub level that needs to be appended to a listing
                 if self.already_used[0]:
                     ret = p.__repr__(self.already_used[1])
                 else:
                     ret = str(p)
             ret += '\n'
 
-        if top_level: #if top level save the output to be manipulated
-                self.options_list[-1].header = ret
+        if top_level:  # if top level save the output to be manipulated
+            self.options_list[-1].header = ret
         return ret
+
 
 if __name__ == "__main__":
     init.init("Necron")

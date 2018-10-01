@@ -7,6 +7,7 @@ Created on Sat Jul  7 13:06:29 2018
 
 import json
 
+
 def wargear_search_base(item):
     """
     Searches for a given wargear item in the armoury dictionary
@@ -17,13 +18,14 @@ def wargear_search_base(item):
     raise KeyError("{} not found in Armoury/*.csv file".format(item))
     return
 
+
 class WargearItem():
     def __init__(self, item):
         self.item = item
         self.no_of = 1
         if '*' in item:
             self.no_of = int(item.split('*')[0])
-            self.item  = item.split('*')[1]
+            self.item = item.split('*')[1]
         self.points = self.no_of*self.wargear_search(self.item)
         return
 
@@ -51,7 +53,7 @@ class WargearItem():
 
     def __mul__(self, integer):
         self.points = self.points*integer
-        self.no_of  = self.no_of*integer
+        self.no_of = self.no_of*integer
         return self
 
     def __add__(self, other_item):
@@ -65,7 +67,8 @@ class WargearItem():
             return ret
 
         else:
-            raise TypeError("Addition between init.WargearItem and {} not defined".format(type(other_item)))
+            raise TypeError(
+                "Addition between init.WargearItem and {} not defined".format(type(other_item)))
 
     def __eq__(self, other):
         try:
@@ -76,7 +79,8 @@ class WargearItem():
             return False
 
     def __hash__(self):
-            return hash((tuple(self.item), self.no_of, self.points))
+        return hash((tuple(self.item), self.no_of, self.points))
+
 
 class MultipleItem(WargearItem):
     def __init__(self, *args, storage=False):
@@ -84,7 +88,7 @@ class MultipleItem(WargearItem):
             args = (WargearItem(i) for i in args)
         self.item = list(map(lambda s: s.item, args))
         self.points = 0
-        self.no_of  = 1
+        self.no_of = 1
         self.storage = storage
         for i in args:
             self.points += i.points
@@ -121,17 +125,19 @@ class MultipleItem(WargearItem):
             ret += " ({}pts)".format(self.points)
         return ret
 
+
 class UnitTypes():
     """
     Class to group together the properties and options of a unit available to a
     given faction in the army list
     """
+
     def __init__(self, props):
         self.name = props["name"]
         try:
             self.base_pts = props["base_pts"]
         except:
-            raise ValueError("Unable to load base_pts from {} for {}".format(props[1],self.name))
+            raise ValueError("Unable to load base_pts from {} for {}".format(props[1], self.name))
         self.pts = self.base_pts
         self.options = props["options"]
         self.models = props["models"]
@@ -140,7 +146,7 @@ class UnitTypes():
         except:
             pass
 
-        #if range of unit size, save as array, otherwise single number
+        # if range of unit size, save as array, otherwise single number
         self.size = props["size"]
 
         if props["wargear"] != None:
@@ -150,20 +156,21 @@ class UnitTypes():
                 try:
                     self.wargear.append(WargearItem(i))
                 except KeyError:
-                        try:
-                            self.wargear.append(MultipleItem(*i.split('/'), storage=True))
-                        except:
-                            raise KeyError("{} for {} not found in Armoury/*.csv file".format(i, self.name))
+                    try:
+                        self.wargear.append(MultipleItem(*i.split('/'), storage=True))
+                    except:
+                        raise KeyError(
+                            "{} for {} not found in Armoury/*.csv file".format(i, self.name))
         else:
             self.wargear = None
-        #find default wargear costs
+        # find default wargear costs
         self.wargear_pts = 0
         if self.wargear == None:
             return
         else:
             for i in self.wargear:
                 if type(i) == MultipleItem:
-                    self.wargear_pts +=  i.wargear_search(i.item[0])
+                    self.wargear_pts += i.wargear_search(i.item[0])
                 else:
                     self.wargear_pts += i.points
 
@@ -185,19 +192,20 @@ class UnitTypes():
         output = self.name + "\t" + str(self.pts) + "pts per model\t"
         if self.wargear != None:
             for i in self.wargear:
-                output += i.__repr__() +", "
+                output += i.__repr__() + ", "
         return output
+
 
 def init(faction, return_out=False):
     """
     Initialises the global variables for the chosen faction
     """
-    #Open list of possible detachments and generate object for each one
+    # Open list of possible detachments and generate object for each one
     global detachments_dict
     with open('./Detachments.json', 'r') as file:
         detachments_dict = json.load(file)
 
-    #determine faction of armylist and open units and wargear data
+    # determine faction of armylist and open units and wargear data
     global armoury_dict
     with open("{}/Armoury.json".format(faction), 'r') as file:
         armoury_dict = json.load(file)
@@ -218,6 +226,7 @@ def init(faction, return_out=False):
     if return_out:
         return detachments_dict, armoury_dict, units_dict
     return
+
 
 if __name__ == '__main__':
     init('Tau')
