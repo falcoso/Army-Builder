@@ -99,8 +99,11 @@ class ArmyList():
         ret = self.faction + '\n'
         for i in self.detachments:
             ret += i.__repr__()
-
         return ret
+
+    def print_army(self):
+        print(self)
+        return
 
 class Detachment():
     """
@@ -257,8 +260,26 @@ class Detachment():
 
 if __name__ == "__main__":
     print("Army Builder Version 1.0")
-    faction = "Tau"
+    print("Please enter the faction of the army you are creating:")
+    faction = input(">> ")
     init.init(faction)
-    detac = Detachment("Brigade")
-    print(detac)
-#    print(immortals.options)
+    army = ArmyList(faction)
+    user_input = ''
+    commands = {"add unit": army.add_unit,
+                "add detachment": army.add_detachment,
+                "print army": army.print_army}
+
+    while user_input not in {'quit', 'exit'}:
+        user_input = input(">> ")
+        try:
+            user_command = re.findall(r'[a-z][a-z ]*[a-z]', user_input)[0]
+        except IndexError:
+            continue
+
+        tags = [i[1:] for i in re.findall(r'\-[A-Za-z0-9]*', user_input)]
+        try:
+            commands[user_command](*tags)
+        except KeyError:
+            print("{} command not found, try:".format(user_command))
+            for i in commands:
+                print('\t' + i)

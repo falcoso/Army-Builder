@@ -96,7 +96,6 @@ class OptionLexer():
 class OptionParser():
     def __init__(self, current_wargear=None, unit=True):
         self.current_wargear = current_wargear #for checking if an exchange or addition option for '/' symbol
-        self.run_count = -1                    #helps to add sub_index to parsing list
         self.unit = unit
 
         #create lexer
@@ -217,7 +216,6 @@ class OptionParser():
     def run(self, p, top_level=True):
 
         if top_level:
-            self.run_count = -1
             self.already_used = [False]
 
         if type(p) == tuple:

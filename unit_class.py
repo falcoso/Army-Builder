@@ -64,7 +64,7 @@ class Unit(init.UnitTypes):
         """
         if user_call:
             print("Are you sure you wish to return {} back to default? [y]/n".format(self.name))
-            user_input = input(">>")
+            user_input = input(">> ")
             if user_input != 'y' or '':
                 return
         self.__init__(self.type, self.battlefield_role)
@@ -135,7 +135,7 @@ class Unit(init.UnitTypes):
                     print("How many of each model would you like to add? ({}-{})".format(*self.size_range))
                     for index, i in enumerate(self.mod_str):
                         print(str(index+1) + '. ' + i)
-                size = input(">>")
+                size = input(">> ")
 
             size2 = [int(i) for i in re.findall(r'[1-9][0-9]*|0', size)] #find all input numbers
             if size2 == []:
@@ -249,7 +249,7 @@ class Unit(init.UnitTypes):
                 print(self.parser)
 
             if user_input == None:
-                user_input = input(">>")
+                user_input = input(">> ")
 
             #santise and create list of options
             user_input2 = user_input.lower()
@@ -316,8 +316,10 @@ class Unit(init.UnitTypes):
             size = self.get_size()
             if size != 1:
                 ret = str(size) + ' ' + ret
-            for i in self.wargear:
-                ret += '\n\t' + i.__repr__()
+
+            if self.wargear is not None:
+                for i in self.wargear:
+                    ret += '\n\t' + i.__repr__()
             return ret
 
         for models, no_of in Counter(self.models).items():
@@ -399,8 +401,8 @@ class Model(Unit):
         return ret
 
 if __name__ == "__main__":
-    init.init("Tau")
-    dest = Unit("Pathfinder Team", "Fast Attack", "5/1/3")
+    init.init("Necron")
+    dest = Unit("Anrakyr the Traveller", "HQ")
     print(dest)
     dest.change_all_wargear()
 
