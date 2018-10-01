@@ -9,9 +9,9 @@ import init
 import option_parser
 import main
 
-import pandas as pd
 import pytest
 import json
+
 
 def test_units_dict():
     """Checks the points calculations for the units dict"""
@@ -19,9 +19,10 @@ def test_units_dict():
     with open("Necron/Units.json", 'r') as file:
         units = json.load(file)
 
-    #check that points for wargear are being added
+    # check that points for wargear are being added
     assert units["Elites"]["Lychguard"]["base_pts"] != units_dict["Elites"]["Lychguard"].pts
     return
+
 
 def test_units_dict_wargear():
     """
@@ -39,12 +40,14 @@ def test_units_dict_wargear():
                         parser.parse2(i)
     return
 
+
 def test_detachments_dict_selection():
     """Makes sure all detachments in detachments_dict can be made"""
     for key in init.detachments_dict:
-        main.input = lambda s: (['a1','a1','1','1']*20).pop(0)
+        main.input = lambda s: (['a1', 'a1', '1', '1'] * 20).pop(0)
         detach = main.Detachment(key)
     return
+
 
 def test_WargearItem():
     """Checks that items can be created properly"""

@@ -9,13 +9,14 @@ import pytest
 import init
 import option_parser
 
+
 def test_units_dict_options():
     """
     Parses all the options in the units pict to check that they run without
     error. Similar to the test_units_dict() in test_init but parses the option strings
     directly rather than through the main module.
     """
-    #create parser
+    # create parser
     parser = option_parser.OptionParser()
     parser.build()
 
@@ -23,15 +24,16 @@ def test_units_dict_options():
         detachments_dict, armoury_dict, units_dict = init.init(faction, True)
         for foc, units in units_dict.items():
             for title, i in units.items():
-                if i.options == None:
+                if i.options is None:
                     continue
 
                 for option in i.options:
                     try:
                         parser.parse2(option)
                     except Exception as e:
-                        raise ValueError('Error in {}:{}'.format(i.name,str(e)))
+                        raise ValueError('Error in {}:{}'.format(i.name, str(e)))
     return
+
 
 def test_Option_class():
     """
@@ -44,7 +46,5 @@ def test_Option_class():
                  init.WargearItem("Gauss blaster")]
     option = option_parser.Option(item_list)
     assert item_list[1] == option[1]
-    for i,j in enumerate(option):
+    for i, j in enumerate(option):
         assert j == item_list[i]
-
-

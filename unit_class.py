@@ -31,7 +31,7 @@ class Unit(init.UnitTypes):
         self.mod_str = base_unit.models
         self.wargear = copy.deepcopy(base_unit.wargear)
         self.models = []
-        if self.mod_str == None:
+        if self.mod_str is None:
             self.models = [Model(no_models=self.size_range[0], base_pts=base_unit.base_pts)]
         else:
             self.re_size(size)
@@ -51,11 +51,11 @@ class Unit(init.UnitTypes):
             except AttributeError:
                 continue
 
-        if self.wargear != None:
+        if self.wargear is not None:
             self.wargear_pts = 0
             for i in self.wargear:
                 self.wargear_pts += i.points
-            self.pts += self.wargear_pts*self.get_size()
+            self.pts += self.wargear_pts * self.get_size()
         return self.pts
 
     def reset(self, user_call=True):
@@ -135,7 +135,7 @@ class Unit(init.UnitTypes):
                 else:
                     print("How many of each model would you like to add? ({}-{})".format(*self.size_range))
                     for index, i in enumerate(self.mod_str):
-                        print(str(index+1) + '. ' + i)
+                        print(str(index + 1) + '. ' + i)
                 size = input(">> ")
 
             size2 = [int(i) for i in re.findall(r'[1-9][0-9]*|0', size)]  # find all input numbers
@@ -144,7 +144,7 @@ class Unit(init.UnitTypes):
                 if prog_call:
                     raise ValueError("{} is invalid, please enter a number".format(size))
                 size2 = get_user_size()
-            if self.mod_str == None:
+            if self.mod_str is None:
                 if len(size2) != 1 or size2[0] < self.size_range[0] or size2[0] > self.size_range[1]:
                     print(
                         "{} is invalid, please enter a single number in the range {}-{}".format(size, *self.size_range))
@@ -169,7 +169,7 @@ class Unit(init.UnitTypes):
         else:
             size = get_user_size()
 
-        if self.mod_str == None:
+        if self.mod_str is None:
             self.models[0].no_models = size[0]
             self.re_calc_points()
             return
@@ -196,7 +196,7 @@ class Unit(init.UnitTypes):
                         print("Unable to remove models as each is independant")
                         continue
                     else:
-                        for i in range(no_of-counter):
+                        for i in range(no_of - counter):
                             self.models.append(Model(model))
 
                 else:
@@ -218,10 +218,10 @@ class Unit(init.UnitTypes):
         Calls change_wargear on all models in the unit and the unit as a whole
         """
         if user_input is None:
-            user_input = [None]*(len(self.models)+1)
+            user_input = [None] * (len(self.models) + 1)
 
         self.change_wargear(user_input=user_input.pop(0))
-        if self.mod_str != None:
+        if self.mod_str is not None:
             for i in self.models:
                 i.change_wargear(user_input=user_input.pop(0))
 
@@ -234,7 +234,7 @@ class Unit(init.UnitTypes):
         parse the option strings and a user_input can be submitted by
         programmer or left up to the user.
         """
-        if self.options == None:
+        if self.options is None:
             print("{} has no options".format(self.name))
             return
 
@@ -242,17 +242,17 @@ class Unit(init.UnitTypes):
 
         def get_user_options(user_input=None):
             """Helper function to validate and format user_input"""
-            if user_input == None:
+            if user_input is None:
                 print(self)
                 print("Options:")
             self.parser.options_list = []
             for index, option in enumerate(self.options):
                 self.parser.parse2(option)
 
-            if user_input == None:
+            if user_input is None:
                 print(self.parser)
 
-            if user_input == None:
+            if user_input is None:
                 user_input = input(">> ")
 
             # santise and create list of options
@@ -339,7 +339,7 @@ class Model(Unit):
     def __init__(self, name=None, no_models=1, base_pts=None):
         self.no_models = no_models
         self.label = name
-        if name == None:
+        if name is None:
             self.base_pts = base_pts
             self.wargear = None
             self.name = None
@@ -348,7 +348,7 @@ class Model(Unit):
 
         root_data = init.models_dict[name]
 
-        if root_data["wargear"] != None:
+        if root_data["wargear"] is not None:
             self.wargear = list(map(lambda s: init.WargearItem(s), root_data["wargear"]))
         else:
             self.wargear = None
@@ -356,7 +356,7 @@ class Model(Unit):
         self.options = root_data["options"]
         self.base_pts = root_data["pts"]
         self.no_per_unit = root_data["no_per_unit"]
-        if root_data["name"] == None:
+        if root_data["name"] is None:
             self.name = self.label
         else:
             self.name = root_data["name"]
@@ -375,7 +375,7 @@ class Model(Unit):
             for i in self.wargear:
                 self.wargear_pts += i.points
         self.pts_per_model = self.base_pts + self.wargear_pts
-        self.pts = self.pts_per_model*self.no_models
+        self.pts = self.pts_per_model * self.no_models
         return
 
     def __repr__(self, indent=''):

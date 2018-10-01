@@ -40,11 +40,11 @@ class ArmyList():
     def add_detachment(self, user_input=None):
         """Adds a detachment to the army list"""
 
-        if user_input == None:
+        if user_input is None:
 
             print("Which detachment would you like to add?")
             for index, keys in enumerate(init.detachments_dict.keys()):
-                print(str(index + 1)+'. ' + keys)
+                print(str(index + 1) + '. ' + keys)
 
             # get input to decide which detachments to add
             user_input = input(">> ")
@@ -53,7 +53,7 @@ class ArmyList():
         user_input = re.findall(r'[0-9]+|[a-zA-Z]+', user_input)
         for i in user_input:
             if i.isdigit():
-                i = list(init.detachments_dict.keys())[int(i)-1]
+                i = list(init.detachments_dict.keys())[int(i) - 1]
             print("Adding {} to army".format(i))
             self.detachments.append(Detachment(i))
             self.detachment_names.append(i)
@@ -75,13 +75,13 @@ class ArmyList():
         def get_user_input():
             print("Which Detachment would you like to add the unit to?")
             for index, i in self.detachments:
-                print("{}. {}".format(index+1, i.name))
+                print("{}. {}".format(index + 1, i.name))
 
             user_input = input(">> ")
             # FILTER OUT ANY PUNCTUATION
             if user_input.isdigit():
                 if int(user_input) < len(self.detachments):
-                    return user_input-1
+                    return user_input - 1
                 else:
                     print("{} is an invalid index".format(user_input))
             else:
@@ -126,7 +126,7 @@ class Detachment():
                       "Fast Attack": [],
                       "Heavy Support": []}
 
-        if instance_no != None:
+        if instance_no is not None:
             self.name += ' ' + str(instance_no)
 
         # populate compulsory slots
@@ -134,10 +134,10 @@ class Detachment():
             while len(values) < self.foc[keys][0]:
                 print("***Adding compulsory units from " + keys + "***")
                 success = self.add_unit(keys)
-                if success == False:
+                if success is False:
                     print("Exiting addition of compulsory units, note detachment may not be legal")
                     break
-            if success == False:
+            if success is False:
                 break
         self.re_calc_points()
         return
@@ -180,13 +180,13 @@ class Detachment():
             roles = ["HQ", "Troops", "Elites", "Fast Attack", "Heavy Support"]
             print("Which Battlefield Role would you like to add?")
             for index, role in enumerate(roles):
-                print(str(index+1)+'. '+role)
+                print(str(index + 1) + '. ' + role)
             battlefield_role = input(">> ")
             battlefield_role = battlefield_role.replace(' ', '')
 
             if battlefield_role.isdigit():
                 try:
-                    battlefield_role = roles[int(battlefield_role)-1]
+                    battlefield_role = roles[int(battlefield_role) - 1]
                 except IndexError:
                     print("{} is invalid, please enter the index or name of the battlefield role you wish to add".format(
                         battlefield_role))
@@ -219,14 +219,14 @@ class Detachment():
                 keys = list(init.units_dict["Named Characters"].keys())
                 top_len = len(max(keys, key=len))
                 for index, [keys, value] in enumerate(init.units_dict["Named Characters"].items()):
-                    print("A" + str(index+1)+". " + keys.ljust(top_len) + "\t({}pts)".format(value.pts))
+                    print("A" + str(index + 1) + ". " + keys.ljust(top_len) + "\t({}pts)".format(value.pts))
                 print('')  # create space between set of options
 
                 print("Other Characters (Including base Wargear):")
                 units = list(init.units_dict[battlefield_role].keys())
                 top_len = len(max(units, key=len))
                 for index, [keys, value] in enumerate(init.units_dict[battlefield_role].items()):
-                    print("B" + str(index+1) + ". " + keys.ljust(top_len) +
+                    print("B" + str(index + 1) + ". " + keys.ljust(top_len) +
                           "\t({}pts)".format(value.pts))
             else:
                 # print available models and their points with the points value
@@ -235,8 +235,8 @@ class Detachment():
                 units = list(init.units_dict[battlefield_role].keys())
                 top_len = len(max(units, key=len))
                 for index, [keys, value] in enumerate(init.units_dict[battlefield_role].items()):
-                    print(str(index+1) + ". " + keys.ljust(top_len) +
-                          "\t({}pts for {} models)".format(value.pts*value.size[0], value.size[0]))
+                    print(str(index + 1) + ". " + keys.ljust(top_len) +
+                          "\t({}pts for {} models)".format(value.pts * value.size[0], value.size[0]))
 
             user_input = input(">> ")
             try:
@@ -245,12 +245,12 @@ class Detachment():
                 elif len(user_input) < 4:
                     if user_input[0].isdigit():
                         user_input = list(init.units_dict[battlefield_role].keys())[
-                            int(user_input)-1]
+                            int(user_input) - 1]
                     elif user_input[0] in {'A', 'a'}:
                         user_input = list(init.units_dict["Named Characters"].keys())[
-                            int(user_input[1:])-1]
+                            int(user_input[1:]) - 1]
                     elif user_input[0] in {'B', 'b'}:
-                        user_input = list(init.units_dict["HQ"].keys())[int(user_input[1:])-1]
+                        user_input = list(init.units_dict["HQ"].keys())[int(user_input[1:]) - 1]
 
                 self.units[battlefield_role].append(unit_class.Unit(user_input, battlefield_role))
             except (KeyError, IndexError):
@@ -259,7 +259,7 @@ class Detachment():
                 get_unit(battlefield_role)
             return
 
-        if battlefield_role == None:
+        if battlefield_role is None:
             battlefield_role = get_battlefield_role()
 
         # in case user chooses to exit

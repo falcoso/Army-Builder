@@ -26,12 +26,12 @@ class WargearItem():
         if '*' in item:
             self.no_of = int(item.split('*')[0])
             self.item = item.split('*')[1]
-        self.points = self.no_of*self.wargear_search(self.item)
+        self.points = self.no_of * self.wargear_search(self.item)
         return
 
     def set_no_of(self, no_of):
         self.no_of = no_of
-        self.points = self.no_of*self.wargear_search(self.item)
+        self.points = self.no_of * self.wargear_search(self.item)
         return
 
     def wargear_search(self, item):
@@ -46,14 +46,14 @@ class WargearItem():
         if tidy:
             ret = ret.ljust(28)
         if comparison:
-            ret += " (net {}pts per model)".format(self.points-comparison.points)
+            ret += " (net {}pts per model)".format(self.points - comparison.points)
         elif self.points != 0:
             ret += " ({}pts)".format(self.points)
         return ret
 
     def __mul__(self, integer):
-        self.points = self.points*integer
-        self.no_of = self.no_of*integer
+        self.points = self.points * integer
+        self.no_of = self.no_of * integer
         return self
 
     def __add__(self, other_item):
@@ -120,7 +120,7 @@ class MultipleItem(WargearItem):
         if tidy:
             ret = ret.ljust(28)
         if comparison:
-            ret += " \t(net {}pts per model)".format(self.points-comparison.points)
+            ret += " \t(net {}pts per model)".format(self.points - comparison.points)
         else:
             ret += " ({}pts)".format(self.points)
         return ret
@@ -149,7 +149,7 @@ class UnitTypes():
         # if range of unit size, save as array, otherwise single number
         self.size = props["size"]
 
-        if props["wargear"] != None:
+        if props["wargear"] is not None:
             wargear_temp = props["wargear"]
             self.wargear = []
             for i in wargear_temp:
@@ -165,7 +165,7 @@ class UnitTypes():
             self.wargear = None
         # find default wargear costs
         self.wargear_pts = 0
-        if self.wargear == None:
+        if self.wargear is None:
             return
         else:
             for i in self.wargear:
@@ -179,7 +179,7 @@ class UnitTypes():
 
     def multiple_option(self, option):
         no_of, wargear = option.split('*')
-        return "{} {}s".format(no_of, wargear), self.wargear_search(wargear)*int(no_of)
+        return "{} {}s".format(no_of, wargear), self.wargear_search(wargear) * int(no_of)
 
     def wargear_search(self, item):
         try:
@@ -190,7 +190,7 @@ class UnitTypes():
 
     def __repr__(self):
         output = self.name + "\t" + str(self.pts) + "pts per model\t"
-        if self.wargear != None:
+        if self.wargear is not None:
             for i in self.wargear:
                 output += i.__repr__() + ", "
         return output

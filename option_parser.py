@@ -46,7 +46,7 @@ class Option():
             elif self.items_involved[index] in self.selected:
                 for i in self.selected:
                     if i == self.items_involved[index]:
-                        i.set_no_of(i.no_of+1)
+                        i.set_no_of(i.no_of + 1)
             else:
                 self.selected.append(self.items_involved[index])
 
@@ -112,7 +112,7 @@ class OptionParser():
     def __repr__(self):
         ret = ''
         for index, i in enumerate(self.options_list):
-            ret += str(index+1) + ". "
+            ret += str(index + 1) + ". "
             pr = False
             if i.no_picks == 1:
                 for j in i.items_involved:
@@ -210,7 +210,7 @@ class OptionParser():
         """Helper function for run() to check if a wargear option is in use"""
         # check if any wargear items are already in use in the unit
         self.already_used = [False]
-        if self.current_wargear != None:
+        if self.current_wargear is not None:
             for i in self.swap_wargear:
                 if i in self.current_wargear:
                     self.already_used[0] = True
@@ -240,7 +240,7 @@ class OptionParser():
                         ret += " take one of the following:"
 
             elif p[0] == '-':
-                if p[2] == None:  # if just a tag to check its the whole unit
+                if p[2] is None:  # if just a tag to check its the whole unit
                     ret = "Any model"
                     ret += self.run(p[1], True)
                     ret = ret.replace("The whole unit", '')
