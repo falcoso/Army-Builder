@@ -70,7 +70,7 @@ class ArmyList():
                         counter += 1
         return
 
-    def add_unit(self):
+    def add_unit(self, battlefield_role=None):
         """Wrapper to add unit to detachment in the army list"""
         def get_user_input():
             print("Which Detachment would you like to add the unit to?")
@@ -93,9 +93,9 @@ class ArmyList():
             return get_user_input()
 
         if len(self.detachments) == 1:
-            self.detachments[0].add_unit()
+            self.detachments[0].add_unit(battlefield_role)
         else:
-            self.detachments[get_user_input].add_unit()
+            self.detachments[get_user_input].add_unit(battlefield_role)
 
     def __repr__(self):
         ret = self.faction + '\n'
@@ -219,7 +219,8 @@ class Detachment():
                 keys = list(init.units_dict["Named Characters"].keys())
                 top_len = len(max(keys, key=len))
                 for index, [keys, value] in enumerate(init.units_dict["Named Characters"].items()):
-                    print("A" + str(index + 1) + ". " + keys.ljust(top_len) + "\t({}pts)".format(value.pts))
+                    print("A" + str(index + 1) + ". " +
+                          keys.ljust(top_len) + "\t({}pts)".format(value.pts))
                 print('')  # create space between set of options
 
                 print("Other Characters (Including base Wargear):")
@@ -291,6 +292,12 @@ if __name__ == "__main__":
         try:
             commands[user_command](*tags)
         except KeyError:
-            print("{} command not found, try:".format(user_command))
-            for i in commands:
-                print('\t' + i)
+            if user_command not in {'quit', 'exit'}:
+                print("{} command not found, try:".format(user_command))
+                for i in commands:
+                    print('\t' + i)
+        except TypeError as e:
+            if "positional argument" in str(e):
+                print(e)
+            else:
+                raise e
