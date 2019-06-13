@@ -15,7 +15,7 @@ from collections import Counter
 
 
 class Unit(init.UnitTypes):
-    def __init__(self, unit_type, battlefield_role, size=None):
+    def __init__(self, unit_type, battlefield_role):
         self.type = unit_type
         self.name = self.type
         self.battlefield_role = battlefield_role
@@ -31,14 +31,16 @@ class Unit(init.UnitTypes):
         self.mod_str = base_unit.models
         self.wargear = copy.deepcopy(base_unit.wargear)
         self.models = []
-        if self.mod_str is None:
-            self.models = [Model(no_models=self.size_range[0], base_pts=base_unit.base_pts)]
-        else:
-            self.re_size(size)
-
-        self.re_calc_points()
         self.parser = option_parser.OptionParser(current_wargear=self.wargear)
         self.parser.build()
+        if self.mod_str is None:
+            self.models = [Model(no_models=self.size_range[0], base_pts=base_unit.base_pts)]
+            self.need_sizing = False
+        else:
+            self.need_sizing = True
+            return
+
+        self.re_calc_points()
         return
 
     def re_calc_points(self):
@@ -58,16 +60,11 @@ class Unit(init.UnitTypes):
             self.pts += self.wargear_pts * self.get_size()
         return self.pts
 
-    def reset(self, user_call=True):
+    def reset(self):
         """
         Returns the unit back to its initialised state. This may be useful if
         there are a lot of changes that need to be undone at once.
         """
-        if user_call:
-            print("Are you sure you wish to return {} back to default? [y]/n".format(self.name))
-            user_input = input(">> ")
-            if user_input != 'y' or '':
-                return
         self.__init__(self.type, self.battlefield_role)
         return
 
@@ -124,56 +121,18 @@ class Unit(init.UnitTypes):
                                                                                              no_of))
         return valid
 
-    def re_size(self, size=None):
-        """Changes the number of models in the unit"""
-        def get_user_size(size=None, prog_call=False):
-            """Helper function to validate size input"""
-            # print options if no user input
-            if size is None:
-                if self.mod_str is None:
-                    print("Enter size of unit ({}-{}):".format(*self.size_range))
-                else:
-                    print("How many of each model would you like to add? ({}-{})".format(*self.size_range))
-                    for index, i in enumerate(self.mod_str):
-                        print(str(index + 1) + '. ' + i)
-                size = input(">> ")
-
-            size2 = [int(i) for i in re.findall(r'[1-9][0-9]*|0', size)]  # find all input numbers
-            if size2 == []:
-                print("{} is invalid, please enter a number".format(size))
-                if prog_call:
-                    raise ValueError("{} is invalid, please enter a number".format(size))
-                size2 = get_user_size()
-            if self.mod_str is None:
-                if len(size2) != 1 or size2[0] < self.size_range[0] or size2[0] > self.size_range[1]:
-                    print(
-                        "{} is invalid, please enter a single number in the range {}-{}".format(size, *self.size_range))
-                    if prog_call:
-                        raise ValueError("{} is invalid, please enter a single number".format(size))
-                    size2 = get_user_size()
-            else:
-                if len(size2) != len(self.mod_str):
-                    print("{} is invalid, please enter a number for each available model".format(size))
-                    if prog_call:
-                        raise ValueError(
-                            "{} is invalid, please enter a number for each available model. size2={}".format(size, size2))
-                    size2 = get_user_size()
-            return size2
-
-        # initialising the unit
-        if type(size) == int:
-            size = str(size)  # so that int does not raise error in the findall
-
-        if size is not None:
-            size = get_user_size(size, prog_call=True)
-        else:
-            size = get_user_size()
-
+    def re_size(self, size):
+        #if unit is only one kind of model
         if self.mod_str is None:
-            self.models[0].no_models = size[0]
+            if not isinstance(size, int):
+                print("Error: size is not correct format for single model unit:")
+                print(size)
+                return False
+            self.models[0].no_models = size
             self.re_calc_points()
-            return
+            return True
 
+        #if unit currently has no models
         if self.models == []:
             for model, no_of in zip(self.mod_str, size):
                 if init.models_dict[model]["indep"]:
@@ -185,7 +144,6 @@ class Unit(init.UnitTypes):
         else:
             # check if the model is already in the list
             for model, no_of in zip(self.mod_str, size):
-                no_of = int(no_of)
                 if init.models_dict[model]["indep"]:
                     counter = 0
                     for i in self.models:
@@ -228,77 +186,12 @@ class Unit(init.UnitTypes):
         self.re_calc_points()
         return
 
-    def change_wargear(self, user_input=None):
+    def change_wargear(self, wargear_to_add):
         """
         Change the wargear options for the unit. split_only=True will only
         parse the option strings and a user_input can be submitted by
         programmer or left up to the user.
         """
-        if self.options is None:
-            print("{} has no options".format(self.name))
-            return
-
-        self.parser.current_wargear = self.wargear
-
-        def get_user_options(user_input=None):
-            """Helper function to validate and format user_input"""
-            if user_input is None:
-                print(self)
-                print("Options:")
-            self.parser.options_list = []
-            for index, option in enumerate(self.options):
-                self.parser.parse2(option)
-
-            if user_input is None:
-                print(self.parser)
-
-            if user_input is None:
-                user_input = input(">> ")
-
-            # santise and create list of options
-            user_input2 = user_input.lower()
-            user_input2 = user_input2.translate(str.maketrans('', '', string.punctuation))
-            if user_input in {'q', 'quit', 'cancel', 'exit'}:
-                print("Cancelling change wargear")
-                return False
-            user_input2 = re.findall(r'[0-9][a-zA-Z]?', user_input2)
-
-            if len(user_input2) == 0:  # no suitable regexes found
-                print(
-                    '{} is not a valid option please input options in format <index><sub-index>'.format(user_input))
-                wargear_to_add = get_user_options()
-                return wargear_to_add
-
-            wargear_to_add = []
-
-            for choice in user_input2:
-                try:
-                    # convert the choice number into the index to select the item
-                    index = np.zeros(2, dtype=np.int8)
-                    index[0] = int(choice[0]) - 1
-                    sel_option = self.parser.options_list[index[0]]
-
-                    if len(choice) == 2:
-                        # find the index corresponding to the lowercase letter
-                        for index[1], i in enumerate(string.ascii_lowercase):
-                            if i == choice[1]:
-                                break  # index[1] will save as the last enumerate
-                        sel_option.select(index[1])
-
-                    elif len(choice) == 1:
-                        sel_option.select(0)  # there will only eveer be one item to select
-                    else:
-                        raise IndexError(
-                            "{} is not valid, input should be of format <index><sub-index>".format(choice))
-                    wargear_to_add.append(sel_option)
-                except IndexError:
-                    print(
-                        '{} is not a valid option please input options in format <index><sub-index>'.format(choice))
-                    wargear_to_add = get_user_options()
-            return wargear_to_add
-        #######################################################################
-
-        wargear_to_add = get_user_options(user_input)  # -> list of option_parser.Option
         if not wargear_to_add:  # user selected a quit option
             return
         for new_wargear in wargear_to_add:
@@ -404,12 +297,3 @@ class Model(Unit):
         if self.wargear is not None:
             ret += hash(tuple(self.wargear))
         return ret
-
-
-if __name__ == "__main__":
-    init.init("Necron")
-    dest = Unit("Anrakyr the Traveller", "HQ")
-    print(dest)
-    dest.change_all_wargear()
-
-    print(dest)

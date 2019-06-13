@@ -226,7 +226,3 @@ def init(faction, return_out=False):
     if return_out:
         return detachments_dict, armoury_dict, units_dict
     return
-
-
-if __name__ == '__main__':
-    init('Tau')
