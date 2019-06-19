@@ -16,8 +16,6 @@ class UI:
         self.army = ArmyList(faction)  # create empty army list
         self.add_detachment()
         print(self.army)
-        self.add_unit()
-        print(self.army)
         return
 
     def add_detachment(self):

@@ -1,12 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Sep  6 17:52:37 2018
-
-@author: jones
-"""
-import string
-import re
-import numpy as np
 import copy
 
 import init
@@ -227,6 +218,24 @@ class Unit(init.UnitTypes):
             ret += models.__repr__(indent='\t')
         return ret
 
+    def __eq__(self, other):
+        if not isinstance(other, Unit):
+            return False
+
+        try:
+            if self.name == other.name and set(self.wargear) == set(other.wargear) and self.models == other.models:
+                return True
+            else:
+                return False
+        except TypeError:
+            if self.wargear is None and other.wargear is None:
+                return True
+            else:
+                return False
+
+        except:
+            return False
+
 
 class Model(Unit):
     def __init__(self, name=None, no_models=1, base_pts=None):
@@ -272,7 +281,7 @@ class Model(Unit):
         return
 
     def __repr__(self, indent=''):
-        if self.no_models == 0:
+        if self.no_models == 0 or self.name is None:
             return ''
         elif self.no_models == 1:
             ret = self.name
@@ -286,6 +295,11 @@ class Model(Unit):
     def __eq__(self, other):
         try:
             if self.name == other.name and set(self.wargear) == set(other.wargear):
+                return True
+            else:
+                return False
+        except TypeError:
+            if self.wargear is None and other.wargear is None:
                 return True
             else:
                 return False
