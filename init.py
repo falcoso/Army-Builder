@@ -15,7 +15,7 @@ def wargear_search_base(item):
     for key, obj in armoury_dict.items():
         if item in obj:
             return obj[item]
-    raise KeyError("{} not found in Armoury/*.csv file".format(item))
+    raise KeyError("{} not found in Armoury.json file".format(item))
     return
 
 
@@ -160,7 +160,7 @@ class UnitTypes():
                         self.wargear.append(MultipleItem(*i.split('/'), storage=True))
                     except:
                         raise KeyError(
-                            "{} for {} not found in Armoury/*.csv file".format(i, self.name))
+                            "{} for {} not found in Armoury.json file".format(i, self.name))
         else:
             self.wargear = None
         # find default wargear costs
@@ -185,7 +185,7 @@ class UnitTypes():
         try:
             return wargear_search_base(item)
         except KeyError:
-            raise KeyError("{} for {} not found in _armoury.xlsx file".format(item, self.name))
+            raise KeyError("{} for {} not found in Armoury.json file".format(item, self.name))
         return
 
     def __repr__(self):

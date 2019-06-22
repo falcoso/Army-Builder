@@ -43,7 +43,7 @@ class UI:
                         unit.re_size(size)
                     self._add_unit(detach, unit)
 
-        self.army.add_detachment(detach)
+            self.army.add_detachment(detach)
         return
 
     def add_unit(self):
@@ -122,7 +122,7 @@ class UI:
     def _get_user_size(self, unit):
         """Helper function to validate size input"""
         # print options if no user input
-        if unit.mod_str is None: #only one type of model in the unit
+        if unit.mod_str is None:  # only one type of model in the unit
             print("Enter size of unit ({}-{}):".format(*unit.size_range))
         else:
             print("How many of each model would you like to add? ({}-{})".format(*unit.size_range))
@@ -131,10 +131,10 @@ class UI:
         size = input(">> ")
 
         size2 = [int(i) for i in re.findall(r'[1-9][0-9]*|0', size)]  # find all input numbers
-        if size2 == []: #no user input
+        if size2 == []:  # no user input
             print("{} is invalid, please enter a number".format(size))
             size2 = self._get_user_size(unit)
-        if unit.mod_str is None: # more than one number or not in unit size range
+        if unit.mod_str is None:  # more than one number or not in unit size range
             if len(size2) != 1 or size2[0] < unit.size_range[0] or size2[0] > unit.size_range[1]:
                 print(
                     "{} is invalid, please enter a single number in the range {}-{}".format(size, *unit.size_range))
@@ -155,16 +155,23 @@ class UI:
     def _get_user_unit(self, detach, battlefield_role):
         print("Which unit would you like to edit?")
         for index, i in enumerate(detach.units_dict[battlefield_role]):
-            print("{}. {}".format(index, i))
+            print("{}. {}".format(index+1, i))
 
         user_input = input(">> ")
         # FILTER OUT ANY PUNCTUATION
-        if int(user_input) <= len(detach.units_dict[battlefield_role]):
-            return int(user_input) - 1
-        else:
-            print("{} is an invalid index".format(user_input))
+        if user_input.isdigit():
+            if int(user_input) <= len(detach.units_dict[battlefield_role]) and int(user_input) > 0:
+                return detach.units_dict[battlefield_role][int(user_input) - 1]
+            else:
+                print("{} is an invalid index".format(user_input))
 
-        return self._get_user_unit()
+        else:
+            for index, i in enumerate(detach.units_dict[battlefield_role]):
+                if i.name == user_input:
+                    return index
+            print("{} is not a valid option".format(user_input))
+
+        return self._get_user_unit(detach, battlefield_role)
 
     def _get_user_detachment(self):
         """Gets the detachment the user wishes to edit and returns its index"""
@@ -175,7 +182,7 @@ class UI:
         user_input = input(">> ")
         # FILTER OUT ANY PUNCTUATION
         if user_input.isdigit():
-            if int(user_input) <= len(self.army.detachments):
+            if int(user_input) <= len(self.army.detachments) and int(user_input) > 0:
                 return int(user_input) - 1
             else:
                 print("{} is an invalid index".format(user_input))
@@ -189,7 +196,7 @@ class UI:
 
     def _create_user_unit(self, battlefield_role):
         """Gets a choice of units from the given battlefield_role"""
-        print("\nWhich {} unit would you like to add? (IN UI)".format(battlefield_role))
+        print("\nWhich {} unit would you like to add?".format(battlefield_role))
         # if HQ add named characters as well
         if battlefield_role == "HQ":
             print("Named Characters (Including Wargear):")
@@ -220,27 +227,27 @@ class UI:
         try:
             if user_input.lower() in {'q', 'exit', 'cancel', 'quit', 'return'}:
                 return False
-            elif len(user_input) < 4:
-                if user_input[0].isdigit():
-                    user_input = list(init.units_dict[battlefield_role].keys())[
-                        int(user_input) - 1]
-                elif user_input[0] in {'A', 'a'}:
-                    user_input = list(init.units_dict["Named Characters"].keys())[
-                        int(user_input[1:]) - 1]
-                elif user_input[0] in {'B', 'b'}:
-                    user_input = list(init.units_dict["HQ"].keys())[int(user_input[1:]) - 1]
+            elif re.match('([aAbB][1-9][0-9]*)|([1-9][0-9]*)', user_input):
+                if battlefield_role == "HQ":
+                    if user_input[0] in {'A', 'a'}:
+                        user_input = list(init.units_dict["Named Characters"].keys())[
+                            int(user_input[1:]) - 1]
+                    elif user_input[0] in {'B', 'b'}:
+                        user_input = list(init.units_dict["HQ"].keys())[int(user_input[1:]) - 1]
+                elif user_input[0].isdigit():
+                    user_input = list(init.units_dict[battlefield_role].keys())[int(user_input) - 1]
 
             return unit_class.Unit(user_input, battlefield_role)
         except (KeyError, IndexError):
             print("{} is not a valid option, please select the unit by name or input".format(user_input))
             print("To quit please enter 'q'")
-            self._get_user_unit(battlefield_role)
-        return
+            unit = self._create_user_unit(battlefield_role)
+            return unit
 
     def _get_user_battlefield_role(self):
         """Helper function to get battlefield role as user input"""
         roles = ["HQ", "Troops", "Elites", "Fast Attack", "Heavy Support"]
-        print("Which Battlefield Role would you like to add? (IN UI)")
+        print("Which Battlefield Role would you like to add?")
         for index, role in enumerate(roles):
             print(str(index + 1) + '. ' + role)
         battlefield_role = input(">> ")
@@ -248,6 +255,8 @@ class UI:
 
         if battlefield_role.isdigit():
             try:
+                if battlefield_role <= 0:
+                    raise IndexError("Not valid index for battlefield role")
                 battlefield_role = roles[int(battlefield_role) - 1]
             except IndexError:
                 print("{} is invalid, please enter the index or name of the battlefield role you wish to add".format(

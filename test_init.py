@@ -1,13 +1,5 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Sat Jul 14 17:55:37 2018
-
-@author: jones
-"""
-
 import init
 import option_parser
-import main
 
 import pytest
 import json
@@ -38,14 +30,6 @@ def test_units_dict_wargear():
                 if unit.options is not None:
                     for i in unit.options:
                         parser.parse2(i)
-    return
-
-
-def test_detachments_dict_selection():
-    """Makes sure all detachments in detachments_dict can be made"""
-    for key in init.detachments_dict:
-        main.input = lambda s: (['a1', 'a1', '1', '1'] * 20).pop(0)
-        detach = main.Detachment(key)
     return
 
 
