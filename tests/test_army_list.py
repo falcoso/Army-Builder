@@ -65,15 +65,3 @@ def test_add_unit_prog_input():
     assert stalker.get_wargear() == set([init.WargearItem("Heat ray"),
                                          init.WargearItem("Massive forelimbs")])
     return
-
-
-# def test_detachment_rename():
-#     """Checks renaming method for detachment"""
-#     mock_input = ["A1", "1"]
-#     army_list.input = lambda s: mock_input.pop(0)
-#     detach = army_list.Detachment("Patrol")
-#     detach.rename("Test Name", True)
-#     assert detach.name != detach.type
-#     assert detach.default_name is False
-#     assert detach.name == "Test Name"
-#     return
