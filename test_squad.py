@@ -1,20 +1,13 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Fri Sep 14 14:43:36 2018
-
-@author: jones
-"""
-
-import unit_class
+import squad
 import init
 import pytest
 
 init.init('Necron')
 
 
-def test_unit_class():
+def test_squad():
     """Checks the attributes of the units class"""
-    warriors = unit_class.Unit("Necron Warriors", "Troops")
+    warriors = squad.Unit("Necron Warriors", "Troops")
     assert warriors.pts == 120
     assert warriors.wargear == [init.WargearItem("Gauss flayer")]
     return
@@ -24,7 +17,7 @@ def test_re_size_mono_model():
     """
     Checks the Unit.re_size() method for unit containing one type of model
     """
-    warriors = unit_class.Unit("Necron Warriors", "Troops")
+    warriors = squad.Unit("Necron Warriors", "Troops")
     warriors.re_size(15)
     # check valid input modifies the unit points
     assert warriors.pts == (warriors.models[0].pts_per_model + warriors.wargear_pts) * 15
@@ -41,7 +34,7 @@ def test_re_size_poly_model():
     Checks the Unit.test_resize() method for unist containing multiple models
     """
     # check that changes no applied to the whole unit creates a new model
-    unit = unit_class.Unit("Destroyers", "Fast Attack")
+    unit = squad.Unit("Destroyers", "Fast Attack")
     unit.re_size((2,1))
     assert unit.get_size() == 3
     assert unit.models[0].no_models == 2
@@ -57,7 +50,7 @@ def test_re_size_poly_model():
 
 def test_change_wargear():
     """Checks the Unit.change_wargear() method"""
-    unit = unit_class.Unit("Catacomb Command Barge", "HQ")
+    unit = squad.Unit("Catacomb Command Barge", "HQ")
     unit.parser.options_list = []
     for option in unit.options:
         unit.parser.parse2(option)
@@ -82,9 +75,9 @@ def test_reset():
     Checks the Unit.reset() method returns the Unit back to its initial state
     """
     mock_input = ["1b", 'no', 'y']
-    unit_class.input = lambda s: mock_input.pop(0)
-    unit = unit_class.Unit("Immortals", "Troops")
-    unit_copy = unit_class.Unit("Immortals", "Troops")
+    squad.input = lambda s: mock_input.pop(0)
+    unit = squad.Unit("Immortals", "Troops")
+    unit_copy = squad.Unit("Immortals", "Troops")
 
     unit.parser.options_list = []
     for option in unit.options:
@@ -108,7 +101,7 @@ def test_check_validity():
     """
     Checks the Unit.check_validty method highlights errors in the unit
     """
-    unit = unit_class.Unit("Destroyers", "Fast Attack")
+    unit = squad.Unit("Destroyers", "Fast Attack")
     unit.re_size((5,5))
     assert unit.check_validity() is False  # initial state too big and too many Heavy Destroyers
 

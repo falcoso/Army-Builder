@@ -1,7 +1,7 @@
 import pytest
 
 import userint
-import unit_class
+import squad
 import init
 
 
@@ -18,8 +18,8 @@ def test_ui_init(ui_setup):
     interface = ui_setup
     detach = interface.army.detachments[0]
     assert detach.type == "Patrol"
-    breachers = unit_class.Unit("Breacher Team", "Troops")
-    assert detach.units_dict["HQ"][0] == unit_class.Unit("Aun'Shi", "HQ")
+    breachers = squad.Unit("Breacher Team", "Troops")
+    assert detach.units_dict["HQ"][0] == squad.Unit("Aun'Shi", "HQ")
     breachers.re_size((1, 5))
     assert detach.units_dict["Troops"][0] == breachers
 
@@ -43,15 +43,15 @@ def test_add_detachment(ui_setup):
     userint.input = lambda x: mock_input.pop(0)
     interface.add_detachment()
     detach = interface.army.detachments[1]
-    assert detach.units_dict["HQ"][0] == unit_class.Unit("Longstrike", "HQ")
-    assert detach.units_dict["HQ"][1] == unit_class.Unit("Commander in XV8 Crisis Battlesuit", "HQ")
-    breachers = unit_class.Unit("Strike Team", "Troops")
+    assert detach.units_dict["HQ"][0] == squad.Unit("Longstrike", "HQ")
+    assert detach.units_dict["HQ"][1] == squad.Unit("Commander in XV8 Crisis Battlesuit", "HQ")
+    breachers = squad.Unit("Strike Team", "Troops")
     breachers.re_size((1, 9, 0))
     assert detach.units_dict["Troops"][0] == breachers
-    breachers = unit_class.Unit("Breacher Team", "Troops")
+    breachers = squad.Unit("Breacher Team", "Troops")
     breachers.re_size((1, 5))
     assert detach.units_dict["Troops"][1] == breachers
-    breachers = unit_class.Unit("Kroot Carnivores", "Troops")
+    breachers = squad.Unit("Kroot Carnivores", "Troops")
     assert detach.units_dict["Troops"][2] == breachers
     return
 
@@ -75,21 +75,21 @@ def test_add_multiplte_detachments(ui_setup):
     interface.add_detachment()
     print(interface.army)
     detach = interface.army.detachments[1]
-    assert detach.units_dict["HQ"][0] == unit_class.Unit("Longstrike", "HQ")
-    assert detach.units_dict["HQ"][1] == unit_class.Unit("Commander in XV8 Crisis Battlesuit", "HQ")
-    breachers = unit_class.Unit("Strike Team", "Troops")
+    assert detach.units_dict["HQ"][0] == squad.Unit("Longstrike", "HQ")
+    assert detach.units_dict["HQ"][1] == squad.Unit("Commander in XV8 Crisis Battlesuit", "HQ")
+    breachers = squad.Unit("Strike Team", "Troops")
     breachers.re_size((1, 9, 0))
     assert detach.units_dict["Troops"][0] == breachers
-    breachers = unit_class.Unit("Breacher Team", "Troops")
+    breachers = squad.Unit("Breacher Team", "Troops")
     breachers.re_size((1, 5))
     assert detach.units_dict["Troops"][1] == breachers
-    breachers = unit_class.Unit("Kroot Carnivores", "Troops")
+    breachers = squad.Unit("Kroot Carnivores", "Troops")
     assert detach.units_dict["Troops"][2] == breachers
 
     detach = interface.army.detachments[2]
-    assert detach.units_dict["HQ"][0] == unit_class.Unit(
+    assert detach.units_dict["HQ"][0] == squad.Unit(
         "Commander in XV85 Enforcer Battlesuit", "HQ")
-    assert detach.units_dict["Troops"] == [unit_class.Unit("Kroot Carnivores", "Troops")]
+    assert detach.units_dict["Troops"] == [squad.Unit("Kroot Carnivores", "Troops")]
     return
 
 
@@ -104,7 +104,7 @@ def test_add_unit(ui_setup):
                   "1.3"]  # Size Stealth Suits
     userint.input = lambda x: mock_input.pop(0)
     interface.add_unit()
-    suits = unit_class.Unit("XV25 Stealth Battlesuit", "Elites")
+    suits = squad.Unit("XV25 Stealth Battlesuit", "Elites")
     suits.re_size((1, 3))
     assert interface.army.detachments[0].units_dict["Elites"][0] == suits
     return

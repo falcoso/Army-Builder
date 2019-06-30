@@ -1,8 +1,8 @@
 import init
-import unit_class
+import squad
 
 
-class ArmyList():
+class ArmyList:
     """
     Overarching class to collect together all the detachments and keep track
     of the army's factions and properties
@@ -60,7 +60,7 @@ class ArmyList():
         return
 
 
-class Detachment():
+class Detachment:
     """
     Collects together all the units within a detachment, making sure that
     minimum requirements are met and keeping track of points.
@@ -112,7 +112,7 @@ class Detachment():
             self.default_name = False
 
     def add_unit(self, unit):
-        if not isinstance(unit, unit_class.Unit):
+        if not isinstance(unit, squad.Unit):
             raise ValueError("Invalid unit input")
 
         self.units_dict[unit.battlefield_role].append(unit)

@@ -3,8 +3,8 @@ import string
 import numpy as np
 
 import init
-from main import ArmyList, Detachment
-import unit_class
+from army_list import ArmyList, Detachment
+import squad
 
 
 class UI:
@@ -237,7 +237,7 @@ class UI:
                 elif user_input[0].isdigit():
                     user_input = list(init.units_dict[battlefield_role].keys())[int(user_input) - 1]
 
-            return unit_class.Unit(user_input, battlefield_role)
+            return squad.Unit(user_input, battlefield_role)
         except (KeyError, IndexError):
             print("{} is not a valid option, please select the unit by name or input".format(user_input))
             print("To quit please enter 'q'")
