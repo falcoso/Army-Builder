@@ -1,3 +1,11 @@
+"""
+All Text-based UI functionality.
+
+Classes:
+--------
+UI: Text-based user interface for the Army Builder.
+"""
+
 import re
 import string
 import numpy as np
@@ -8,6 +16,27 @@ import squad
 
 
 class UI:
+    """
+    Text-based user interface for the Army Builder.
+
+    Public Attributes
+    ----------
+    army : army_list.ArmyList
+        Overarching army list to be built.
+
+    Public Methods
+    --------------
+    add_detachment(self):
+        Gets the user choice of detchment, adds it to the army list and
+        populates it with the minimum unit requirements.
+
+    add_unit(self):
+        Gets the user choice of unit and adds it to a user-chosen detachment.
+
+    change_unit_wargear(self): Changes the wargear for a user-chosen unit.
+
+    re_size_unit(self): Re-sizes the user-chosen unit to the desired size.
+    """
     def __init__(self):
         print("Army Builder Version 1.0")
         print("Please enter the faction of the army you are creating:")
@@ -19,6 +48,10 @@ class UI:
         return
 
     def add_detachment(self):
+        """
+        Gets the user choice of detchment, adds it to the army list and
+        populates it with the minimum unit requirements.
+        """
         print("Which detachment would you like to add?")
         for index, keys in enumerate(init.detachments_dict.keys()):
             print(str(index + 1) + '. ' + keys)
@@ -47,6 +80,9 @@ class UI:
         return
 
     def add_unit(self):
+        """
+        Gets the user choice of unit and adds it to a user-chosen detachment.
+        """
         detach = self.army.detachments[self._get_user_detachment()]
         battlefield_role = self._get_user_battlefield_role()
         unit = self._create_user_unit(battlefield_role)
@@ -57,6 +93,7 @@ class UI:
         return
 
     def change_unit_wargear(self):
+        """Changes the wargear for a user-chosen unit."""
         detach = self.army.detachments[self._get_user_detachment()]
         battlefield_role = self._get_user_battlefield_role()
         unit = self._get_user_unit(detach, battlefield_role)
@@ -67,8 +104,17 @@ class UI:
         unit.change_wargear(wargear_to_add)
         return
 
+    def re_size_unit(self):
+        """Re-sizes the user-chosen unit to the desired size."""
+        detach = self.army.detachments[self._get_user_detachment()]
+        battlefield_role = self._get_user_battlefield_role()
+        unit = self._get_user_unit(detach, battlefield_role)
+        size = self._get_user_size(unit)
+        unit.re_size(size)
+        return
+
     def _get_user_options(self, unit):
-        """Helper function to validate and format user_input"""
+        """Gets the user-chosen option for a supplied unit."""
         print(unit)
         print("Options:")
         unit.parser.options_list = []
@@ -120,7 +166,7 @@ class UI:
         return wargear_to_add
 
     def _get_user_size(self, unit):
-        """Helper function to validate size input"""
+        """Gets and validates the used-chosen size"""
         # print options if no user input
         if unit.mod_str is None:  # only one type of model in the unit
             print("Enter size of unit ({}-{}):".format(*unit.size_range))
@@ -145,14 +191,10 @@ class UI:
                 size2 = self._get_user_size(unit)
         return size2
 
-    def re_size_unit(self):
-        detach = self.army.detachments[self._get_user_detachment()]
-        battlefield_role = self._get_user_battlefield_role()
-        unit = self._get_user_unit(detach, battlefield_role)
-        size = self._get_user_size(unit)
-        unit.re_size(size)
+
 
     def _get_user_unit(self, detach, battlefield_role):
+        """Gets the user-chosen unit."""
         print("Which unit would you like to edit?")
         for index, i in enumerate(detach.units_dict[battlefield_role]):
             print("{}. {}".format(index+1, i))
@@ -174,7 +216,7 @@ class UI:
         return self._get_user_unit(detach, battlefield_role)
 
     def _get_user_detachment(self):
-        """Gets the detachment the user wishes to edit and returns its index"""
+        """Gets the user-chosen detachment to edit and returns its index"""
         print("Which Detachment would you like to add the unit to?")
         for index, i in enumerate(self.army.detachments):
             print("{}. {}".format(index + 1, i.name))
@@ -195,7 +237,7 @@ class UI:
         return self._get_user_detachment()
 
     def _create_user_unit(self, battlefield_role):
-        """Gets a choice of units from the given battlefield_role"""
+        """Gets the user-chosen unit to create for the given battlefield_role"""
         print("\nWhich {} unit would you like to add?".format(battlefield_role))
         # if HQ add named characters as well
         if battlefield_role == "HQ":
@@ -245,7 +287,7 @@ class UI:
             return unit
 
     def _get_user_battlefield_role(self):
-        """Helper function to get battlefield role as user input"""
+        """Gets the user-chosen battlefield_role"""
         roles = ["HQ", "Troops", "Elites", "Fast Attack", "Heavy Support"]
         print("Which Battlefield Role would you like to add?")
         for index, role in enumerate(roles):

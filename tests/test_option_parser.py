@@ -1,10 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Jul 24 14:48:16 2018
-
-@author: jones
-"""
-
 import pytest
 import init
 import option_parser
@@ -21,7 +14,7 @@ def test_units_dict_options():
     parser.build()
 
     for faction in ["Tau", "Necron"]:
-        detachments_dict, armoury_dict, units_dict = init.init(faction, True)
+        detachments_dict, armoury_dict, units_dict = init.init(faction)
         for foc, units in units_dict.items():
             for title, i in units.items():
                 if i.options is None:

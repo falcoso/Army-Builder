@@ -1,3 +1,16 @@
+"""
+Implements the Unit level objects for the army builder.
+
+Classes
+-------
+Unit(init.UnitTypes):
+    Keeps track of the attributes of an individual unit in an army list.
+    
+Model(Unit):
+    Used to keep track of the attributes of individual groups of models within
+    the same unit.
+"""
+
 import copy
 
 import init
@@ -6,6 +19,57 @@ from collections import Counter
 
 
 class Unit(init.UnitTypes):
+    """
+    Keeps track of the attributes of an individual unit in an army list.
+
+    Parameters
+    ----------
+    unit_type : str
+        Name of the unit template to be created.
+    battlefield_role : str
+        Battlefield role of the unit that is being created.
+
+    Public Attributes
+    -----------------
+    type : str
+        Name of unit template.
+    name : str
+        Name of the unit.
+    default_name : bool
+        True if the unit name has not been changed by the user.
+    battlefield_role : str
+        Battlefield role of the unit that is being created.
+    size_range: tuple (int)
+        The upper and lower limits to the number of models in the unit.
+    options: list (str)
+        List of strings that contains each option available to the unit.
+    mod_str: list (str)
+        List of strings naming the model types that can be in the unit. If
+        mod_str is None then there is only one type of model in the unit.
+    wargear: list (init.WargearItem)
+        List of base wargear that every model in the unit has.
+    models: list (Model)
+        List of models that are in the unit.
+    parser: option_parser.OptionParser
+        Parser for all the options available to the unit.
+    pts: int
+        Total points for the group of models
+
+    Public Methods
+    --------------
+    reset(self): Returns the unit back to its initialised state.
+
+    get_size(self): Returns the current number of models in the unit.
+
+    re_size(self, size):
+        Re-sizes the unit. If multiple types of models in the unit, size must be
+        a tuple, and each element corresponds to the model type in order of
+        self.models. If there is only one type of model, size is an integer.
+
+    change_wargear(self, wargear_to_add):
+        Changes the wargear options for the unit. wargear_to_add is a list of
+        option_parser.Option with an init.WargearItem selected for each item.
+    """
     def __init__(self, unit_type, battlefield_role):
         self.type = unit_type
         self.name = self.type
@@ -38,17 +102,17 @@ class Unit(init.UnitTypes):
         """Updates any points values after changes to the unit"""
         self.pts = 0
         for i in self.models:
-            i.re_calc_points()
+            i.re_calc_points() # may be possible to remove this
             try:
                 self.pts += i.pts
             except AttributeError:
                 continue
 
         if self.wargear is not None:
-            self.wargear_pts = 0
+            wargear_pts = 0
             for i in self.wargear:
-                self.wargear_pts += i.points
-            self.pts += self.wargear_pts * self.get_size()
+                wargear_pts += i.points
+            self.pts += wargear_pts * self.get_size()
         return self.pts
 
     def reset(self):
@@ -60,7 +124,7 @@ class Unit(init.UnitTypes):
         return
 
     def get_size(self):
-        """Get function to sum all the model sizes in the unit"""
+        """Returns the current number of models in the unit"""
         size = 0
         for i in self.models:
             size += i.no_models
@@ -113,6 +177,11 @@ class Unit(init.UnitTypes):
         return valid
 
     def re_size(self, size):
+        """
+        Re-sizes the unit. If multiple types of models in the unit, size must be
+        a tuple, and each element corresponds to the model type in order of
+        self.models. If there is only one type of model, size is an integer.
+        """
         #if unit is only one kind of model
         if self.mod_str is None:
             if not isinstance(size, int):
@@ -162,26 +231,10 @@ class Unit(init.UnitTypes):
         self.re_calc_points()
         return
 
-    def change_all_wargear(self, user_input=None):
-        """
-        Calls change_wargear on all models in the unit and the unit as a whole
-        """
-        if user_input is None:
-            user_input = [None] * (len(self.models) + 1)
-
-        self.change_wargear(user_input=user_input.pop(0))
-        if self.mod_str is not None:
-            for i in self.models:
-                i.change_wargear(user_input=user_input.pop(0))
-
-        self.re_calc_points()
-        return
-
     def change_wargear(self, wargear_to_add):
         """
-        Change the wargear options for the unit. split_only=True will only
-        parse the option strings and a user_input can be submitted by
-        programmer or left up to the user.
+        Changes the wargear options for the unit. wargear_to_add is a list of
+        option_parser.Option with an init.WargearItem selected for each item.
         """
         if not wargear_to_add:  # user selected a quit option
             return
@@ -238,6 +291,45 @@ class Unit(init.UnitTypes):
 
 
 class Model(Unit):
+    """
+    Inherits from Unit. Used to keep track of the attributes of individual
+    groups of models within the same unit.
+
+    Parameters
+    ----------
+    name : str
+        Type of model to be initialised.
+    no_models : int (default=1)
+        Number of that type of model.
+    base_pts : int
+        Points value per model. Only used when a unit has all models of the same
+        type.
+
+    Public Attributes
+    -----------------
+    no_models : int
+        Number of the type of model.
+    label : str
+        Type of model.
+    wargear : list (init.WargearItem)
+        List of base wargear that every model in the unit has.
+    options : type
+        Description of attribute `options`.
+    no_per_unit : int
+        Limit to the number of this type of model allowed in the unit
+    parser: option_parser.OptionParser
+        Parser for all the options available to the unit.
+    base_pts : int
+        Points value per model without changeable wargear.
+    pts_per_model : int
+        Points value per model with all current wargear.
+    pts: int
+        Total points for the group of models
+
+    Public Methods
+    --------------
+    get_size(self): Returns self.no_models
+    """
     def __init__(self, name=None, no_models=1, base_pts=None):
         self.no_models = no_models
         self.label = name
@@ -272,11 +364,11 @@ class Model(Unit):
 
     def re_calc_points(self):
         """Updates any points values after changes to the unit"""
-        self.wargear_pts = 0
+        wargear_pts = 0
         if self.wargear is not None:
             for i in self.wargear:
-                self.wargear_pts += i.points
-        self.pts_per_model = self.base_pts + self.wargear_pts
+                wargear_pts += i.points
+        self.pts_per_model = self.base_pts + wargear_pts
         self.pts = self.pts_per_model * self.no_models
         return
 

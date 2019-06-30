@@ -7,7 +7,7 @@ import json
 
 def test_units_dict():
     """Checks the points calculations for the units dict"""
-    detachments_dict, armoury_dict, units_dict = init.init("Necron", True)
+    detachments_dict, armoury_dict, units_dict = init.init("Necron")
     with open("Necron/Units.json", 'r') as file:
         units = json.load(file)
 
@@ -24,7 +24,7 @@ def test_units_dict_wargear():
     parser = option_parser.OptionParser()
     parser.build()
     for faction in ["Tau", "Necron"]:
-        detachments_dict, armoury_dict, units_dict = init.init(faction, True)
+        detachments_dict, armoury_dict, units_dict = init.init(faction)
         for foc, units in units_dict.items():
             for key, unit in units.items():
                 if unit.options is not None:

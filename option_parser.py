@@ -1,20 +1,51 @@
-# -*- coding: utf-8 -*-
 """
-Created on Sat Jul 21 22:13:21 2018
+Parsing classes to process the options strings for each unit.
 
-@author: jones
+Classes:
+--------
+Option:
+    Collects together the list of wargear so that the the programme can select
+    and validate any options.
+
+OptionLexer: Container class for yacc Lexer.
+
+OptionParser:
+    Container class to parse option strings and contextually create options
+    based on the current set of wargear in use on the unit/model.
 """
-
 import ply.lex as lex
 import ply.yacc as yacc
 import init
 import string
 
 
-class Option():
+class Option:
     """
-    Collect together the list of options so that the the programme can select
-    and validate any options
+    Collects together the list of wargear so that the the programme can select
+    and validate any options.
+
+    Parameters
+    ----------
+    items_involved : list (init.WargearItem)
+        List of all the Wargear that could be selected within the option.
+
+    Public Attributes
+    ----------
+    items_involved : list (init.WargearItem)
+        List of all the Wargear that could be selected within the option.
+    selected : list (init.WargearItem)
+        List of any Wargear that has been chosen to be added.
+    no_required : int
+        Number of models required in a unit before this option can be taken.
+    no_picks : int
+        Number of Wargear that can be chosen in the option.
+    header : str
+        Heading given when displaying the options.
+
+    Public Methods
+    --------------
+    select(self, index):
+        Chooses the index option in items_involved to be added to selected.
     """
 
     def __init__(self, items_involved):
@@ -40,6 +71,9 @@ class Option():
         return ret
 
     def select(self, index):
+        """
+        Chooses the index option in items_involved to be added to selected.
+        """
         if self.no_picks > 1:
             if self.selected is None:
                 self.selected = [self.items_involved[index]]
@@ -58,7 +92,8 @@ class Option():
         return
 
 
-class OptionLexer():
+class OptionLexer:
+    """Container class for yacc Lexer."""
     tokens = ['ITEM', 'NUM', 'PLUS', 'MINUS', 'STAR', 'SLASH', 'HASH', 'CARET']
 
     # these are the regexes that the lexer uses to recognise the tokens
@@ -98,7 +133,37 @@ class OptionLexer():
             print(tok)
 
 
-class OptionParser():
+class OptionParser:
+    """
+    Container class to parse option strings and contextually create options
+    based on the current set of wargear in use on the unit/model.
+
+    Parameters
+    ----------
+    current_wargear : list (init.WargearItem)
+        List of wargear currently in the unit to add context to any Options that
+        are generated.
+    unit : bool
+        True if the parser is attached to a unit, False if attached to a model.
+
+    Public Attributes
+    ----------
+    current_wargear : list (init.WargearItem)
+        List of wargear currently in the unit to add context to any Options that
+        are generated.
+    unit : bool
+        True if the parser is attached to a unit, False if attached to a model.
+    lexer : OptionLexer
+        Lexer to generate tokens for the scanner
+    options_list : list (Option)
+        List of fully parsed options.
+
+    Public Methods
+    --------------
+    parse2(self, parse_string, **kwargs):
+        Wrapper for parser function to check the items being parsed
+    """
+
     def __init__(self, current_wargear=None, unit=True):
         self.current_wargear = current_wargear  # for checking if an exchange or addition option for '/' symbol
         self.unit = unit
@@ -206,7 +271,7 @@ class OptionParser():
         p[0] = None
         return
 
-    def check_already_used(self):
+    def __check_already_used(self):
         """Helper function for run() to check if a wargear option is in use"""
         # check if any wargear items are already in use in the unit
         self.already_used = [False]
@@ -227,7 +292,7 @@ class OptionParser():
             if p[0] == '/':
                 ret = ''
                 if top_level:  # add header to listing
-                    self.check_already_used()
+                    self.__check_already_used()
                     if self.unit:
                         ret += "The whole unit may"
                     else:
@@ -249,7 +314,7 @@ class OptionParser():
                     ret = "For every {} models, you may ".format(p[2])
                     # save the min amount requirement for access in main
                     self.options_list[-1].no_required = p[2]
-                    self.check_already_used()
+                    self.__check_already_used()
                     if self.already_used[0]:
                         ret += "exchange {} for:".format(
                             self.already_used[1].item) + self.run(p[1], False)

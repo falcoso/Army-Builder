@@ -6,7 +6,7 @@ class HomeFrame(wx.Frame):
         # begin wxGlade: HomeFrame.__init__
         kwds["style"] = kwds.get("style", 0) | wx.DEFAULT_FRAME_STYLE
         wx.Frame.__init__(self, *args, **kwds)
-        self.SetSize((631, 559))
+        self.SetSize((630, 560))
 
         # Menu Bar
         self.menuBar = wx.MenuBar()
@@ -23,7 +23,6 @@ class HomeFrame(wx.Frame):
         # Tool Bar end
         self.splitWindow = wx.SplitterWindow(self, wx.ID_ANY)
         self.treePane = wx.Panel(self.splitWindow, wx.ID_ANY)
-        self.ArmyTree = wx.TreeCtrl(self.treePane, wx.ID_ANY)
         self.editPane = wx.Panel(self.splitWindow, wx.ID_ANY)
 
         self.__set_properties()
@@ -50,9 +49,6 @@ class HomeFrame(wx.Frame):
         mainSizer.Add(self.splitWindow, 1, wx.EXPAND, 0)
         self.SetSizer(mainSizer)
         self.Layout()
-        # end wxGlade
-
-# end of class HomeFrame
 
 class MyApp(wx.App):
     def OnInit(self):
@@ -61,7 +57,6 @@ class MyApp(wx.App):
         self.frame.Show()
         return True
 
-# end of class MyApp
 
 if __name__ == "__main__":
     app = MyApp(0)

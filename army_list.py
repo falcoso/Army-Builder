@@ -1,3 +1,16 @@
+"""
+Implements the top level collections of units for the army builder.
+
+Classes:
+--------
+ArmyList:
+    Overarching class to collect together all the detachments and keep track
+    of the army's factions and properties.
+Detachment:
+    Collects together all the units within a detachment, making sure that
+    minimum requirements are met and keeping track of points.
+"""
+
 import init
 import squad
 
@@ -5,7 +18,29 @@ import squad
 class ArmyList:
     """
     Overarching class to collect together all the detachments and keep track
-    of the army's factions and properties
+    of the army's factions and properties.
+
+    Parameters
+    ----------
+    faction : str
+        The faction of the Army list being made
+
+    Public Attributes
+    -----------------
+    detachments : list (Detachment)
+        List of all the detachments in the army.
+    detachment_names: list (str)
+        List of names of each of the detachments for quick reference.
+    cp : int
+        Total number of command points in the army.
+    faction : str
+        The faction of the Army list being made
+
+    Public Methods
+    --------------
+    add_detachment(self, detach): Adds a detachment to the army list.
+
+    get_pts(self): Calculates the total points of the army.
     """
 
     def __init__(self, faction):
@@ -18,16 +53,11 @@ class ArmyList:
         return
 
     def get_pts(self):
-        """Calculates the total poins of the army"""
+        """Calculates the total points of the army"""
         pts = 0
         for i in self.detachments:
             pts += i.pts
         return pts
-
-    def re_calc_cp(self):
-        self.cp = 0
-        for i in self.detachments:
-            self.cp += i.cp
 
     def add_detachment(self, detach):
         """Adds a detachment to the army list"""
@@ -49,6 +79,11 @@ class ArmyList:
                     self.detachment_names[i] = detachment.name
         return
 
+    def __re_calc_cp(self):
+        self.cp = 0
+        for i in self.detachments:
+            self.cp += i.cp
+
     def __repr__(self):
         ret = self.faction + '\n'
         for i in self.detachments:
@@ -64,6 +99,32 @@ class Detachment:
     """
     Collects together all the units within a detachment, making sure that
     minimum requirements are met and keeping track of points.
+
+    Parameters
+    ----------
+    detachment_type : str
+        Type of detachment to be created
+
+
+    Public Attributes
+    -----------------
+    foc : dict
+        Force organisation chart for the detachment.
+    cp : int
+        Command points of the detachment.
+    type : str
+        Type of detachment.
+    name : str
+        Name of the detachment.
+    default_name : bool
+        True if the name has not been changed by the user.
+
+    Public Methods
+    --------------
+    rename(self, new_name):
+        Changes the name of the detachment to the given new_name string.
+
+    add_unit(self, unit): Adds the given unit to the detachment.
     """
 
     def __init__(self, detachment_type):
@@ -78,7 +139,7 @@ class Detachment:
                            "Fast Attack": [],
                            "Heavy Support": []}
 
-        self.re_calc_points()
+        self.__re_calc_points()
         return
 
     def __repr__(self):
@@ -92,7 +153,7 @@ class Detachment:
 
         return output
 
-    def re_calc_points(self):
+    def __re_calc_points(self):
         """Updates any points values after changes to the unit"""
         self.pts = 0
         for key, unit in self.units_dict.items():
@@ -100,21 +161,18 @@ class Detachment:
                 self.pts += i.pts
         return
 
-    def rename(self, new_name, user_given=False):
+    def rename(self, new_name):
         """
-        Changes the name of the detachment to the given new_name string,
-        user_given should only be True if the name change is from the user, and
-        not the addition of numbers to disambiguiate between multiple
-        detachments of the same type
+        Changes the name of the detachment to the given new_name string.
         """
         self.name = new_name
-        if user_given:
-            self.default_name = False
+        self.default_name = False
 
     def add_unit(self, unit):
+        """Adds the given unit to the detachment."""
         if not isinstance(unit, squad.Unit):
             raise ValueError("Invalid unit input")
 
         self.units_dict[unit.battlefield_role].append(unit)
-        self.re_calc_points()
+        self.__re_calc_points()
         return

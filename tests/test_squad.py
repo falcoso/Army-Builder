@@ -20,7 +20,7 @@ def test_re_size_mono_model():
     warriors = squad.Unit("Necron Warriors", "Troops")
     warriors.re_size(15)
     # check valid input modifies the unit points
-    assert warriors.pts == (warriors.models[0].pts_per_model + warriors.wargear_pts) * 15
+    assert warriors.pts == 180
     assert warriors.models[0].no_models == 15
 
     # check programmer input raises the correct errors
