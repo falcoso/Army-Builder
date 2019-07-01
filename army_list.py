@@ -118,6 +118,9 @@ class Detachment:
         Name of the detachment.
     default_name : bool
         True if the name has not been changed by the user.
+    units_dict : dict
+        Dictionary split up intol battlefield roles containing lists of
+        squad.Unit.
 
     Public Methods
     --------------
