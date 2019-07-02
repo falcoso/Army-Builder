@@ -56,7 +56,7 @@ class ArmyList:
         """Calculates the total points of the army"""
         pts = 0
         for i in self.detachments:
-            pts += i.pts
+            pts += i.get_pts()
         return pts
 
     def add_detachment(self, detach):
@@ -128,6 +128,8 @@ class Detachment:
         Changes the name of the detachment to the given new_name string.
 
     add_unit(self, unit): Adds the given unit to the detachment.
+
+    get_pts(self): Calculates the total points of the detachment.
     """
 
     def __init__(self, detachment_type):
@@ -163,6 +165,11 @@ class Detachment:
             for i in unit:
                 self.pts += i.pts
         return
+
+    def get_pts(self):
+        """Calculates the total points of the army"""
+        self.__re_calc_points()
+        return self.pts
 
     def rename(self, new_name):
         """
