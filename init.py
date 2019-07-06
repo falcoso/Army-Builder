@@ -48,17 +48,17 @@ def init(faction):
     """
     # Open list of possible detachments and generate object for each one
     global detachments_dict
-    with open('./Detachments.json', 'r') as file:
+    with open('./resources/Detachments.json', 'r') as file:
         detachments_dict = json.load(file)
 
     # determine faction of armylist and open units and wargear data
     global armoury_dict
-    with open("{}/Armoury.json".format(faction), 'r') as file:
+    with open("./resources/{}/Armoury.json".format(faction), 'r') as file:
         armoury_dict = json.load(file)
 
     global units_dict
     units_dict = {}
-    with open("{}/Units.json".format(faction), 'r') as file:
+    with open("./resources/{}/Units.json".format(faction), 'r') as file:
         units = json.load(file)
     for key in units.keys():
         units_dict[key] = {}
@@ -66,7 +66,7 @@ def init(faction):
             units_dict[key][index] = UnitTypes(rows)
 
     global models_dict
-    with open("{}/Models.json".format(faction), 'r') as file:
+    with open("./resources/{}/Models.json".format(faction), 'r') as file:
         models_dict = json.load(file)
 
     return detachments_dict, armoury_dict, units_dict

@@ -40,8 +40,10 @@ class TreePane(wx.Panel):
 
     def on_selection(self, evt):
         # changes to the unit will change the reference in the whole army
-        unit = self.tree.GetPyData(evt.GetItem())
+        unit = self.tree.GetItemData(evt.GetItem())
         if not isinstance(unit, squad.Unit):
             return
         print(unit)
+        main_window = self.GetParent()
+        main_window.reset_edit(unit)
         return

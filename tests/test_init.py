@@ -8,7 +8,7 @@ import json
 def test_units_dict():
     """Checks the points calculations for the units dict"""
     detachments_dict, armoury_dict, units_dict = init.init("Necron")
-    with open("Necron/Units.json", 'r') as file:
+    with open("./resources/Necron/Units.json", 'r') as file:
         units = json.load(file)
 
     # check that points for wargear are being added

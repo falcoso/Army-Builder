@@ -1,5 +1,5 @@
 import wx
-from . import gui_armytree
+from . import gui_armytree, gui_editpanel
 
 
 class HomeFrame(wx.Frame):
@@ -24,9 +24,8 @@ class HomeFrame(wx.Frame):
         self.SetToolBar(self.toolBar)
 
         # Main panels
-        self.splitWindow = wx.SplitterWindow(self, wx.ID_ANY)
-        self.treePane = gui_armytree.TreePane(self.army, self.splitWindow, wx.ID_ANY)
-        self.editPane = wx.Panel(self.splitWindow, wx.ID_ANY)
+        self.treePane = gui_armytree.TreePane(self.army, self, wx.ID_ANY)
+        self.editPane = gui_editpanel.EditPanel(self, wx.ID_ANY)
 
         self.__set_properties()
         self.__do_layout()
@@ -34,14 +33,17 @@ class HomeFrame(wx.Frame):
     def __set_properties(self):
         self.SetTitle("Army Builder v1.0")
         self.toolBar.Realize()
-        self.splitWindow.SetMinimumPaneSize(20)
 
     def __do_layout(self):
-        mainSizer = wx.BoxSizer(wx.HORIZONTAL)
-        sizer_3 = wx.BoxSizer(wx.VERTICAL)
-        sizer_3.Add((0, 0), 0, 0, 0)
-        self.editPane.SetSizer(sizer_3)
-        self.splitWindow.SplitVertically(self.treePane, self.editPane)
-        mainSizer.Add(self.splitWindow, 1, wx.EXPAND, 0)
-        self.SetSizer(mainSizer)
+        self.mainSizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.mainSizer.Add(self.treePane, 1, wx.EXPAND, 0)
+        self.mainSizer.Add(self.editPane, 1, wx.EXPAND, 0)
+        self.SetSizer(self.mainSizer)
+        self.Layout()
+
+    def reset_edit(self, unit):
+        self.editPane.Destroy()
+        self.editPane = gui_editpanel.EditPanel(self, wx.ID_ANY)
+        self.mainSizer.Add(self.editPane, 1, wx.EXPAND, 0)
+        self.editPane.set_unit(unit)
         self.Layout()
