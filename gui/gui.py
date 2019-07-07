@@ -37,13 +37,13 @@ class HomeFrame(wx.Frame):
     def __do_layout(self):
         self.mainSizer = wx.BoxSizer(wx.HORIZONTAL)
         self.mainSizer.Add(self.treePane, 1, wx.EXPAND, 0)
-        self.mainSizer.Add(self.editPane, 1, wx.EXPAND, 0)
+        self.mainSizer.Add(self.editPane, 0, wx.EXPAND, 0)
         self.SetSizer(self.mainSizer)
         self.Layout()
 
     def reset_edit(self, unit):
         self.editPane.Destroy()
         self.editPane = gui_editpanel.EditPanel(self, wx.ID_ANY)
-        self.mainSizer.Add(self.editPane, 1, wx.EXPAND, 0)
+        self.mainSizer.Add(self.editPane, 0, wx.EXPAND, 0)
         self.editPane.set_unit(unit)
         self.Layout()

@@ -36,6 +36,8 @@ class UI:
     change_unit_wargear(self): Changes the wargear for a user-chosen unit.
 
     re_size_unit(self): Re-sizes the user-chosen unit to the desired size.
+
+    print_army(self): Prints the current army.
     """
     def __init__(self):
         print("Army Builder Version 1.0")
@@ -112,6 +114,10 @@ class UI:
         size = self._get_user_size(unit)
         unit.re_size(size)
         return
+
+    def print_army(self):
+        """Prints the current army."""
+        print(self.army)
 
     def _get_user_options(self, unit):
         """Gets the user-chosen option for a supplied unit."""
@@ -297,7 +303,7 @@ class UI:
 
         if battlefield_role.isdigit():
             try:
-                if battlefield_role <= 0:
+                if int(battlefield_role) <= 0:
                     raise IndexError("Not valid index for battlefield role")
                 battlefield_role = roles[int(battlefield_role) - 1]
             except IndexError:
@@ -330,33 +336,29 @@ class UI:
 
 if __name__ == "__main__":
     interface = UI()
-    # print("Army Builder Version 1.0")
-    # print("Please enter the faction of the army you are creating:")
-    # faction = input(">> ")
-    # init.init(faction)
-    # army = ArmyList(faction)
-    # user_input = ''
-    # commands = {"add unit": army.add_unit,
-    #             "add detachment": army.add_detachment,
-    #             "print army": army.print_army}
-    #
-    # while user_input not in {'quit', 'exit'}:
-    #     user_input = input(">> ")
-    #     try:
-    #         user_command = re.findall(r'[a-z][a-z ]*[a-z]', user_input)[0]
-    #     except IndexError:
-    #         continue
-    #
-    #     tags = [i[1:] for i in re.findall(r'\-[A-Za-z0-9]*', user_input)]
-    #     try:
-    #         commands[user_command](*tags)
-    #     except KeyError:
-    #         if user_command not in {'quit', 'exit'}:
-    #             print("{} command not found, try:".format(user_command))
-    #             for i in commands:
-    #                 print('\t' + i)
-    #     except TypeError as e:
-    #         if "positional argument" in str(e):
-    #             print(e)
-    #         else:
-    #             raise e
+    user_input = ''
+    commands = {"add unit": interface.add_unit,
+                "add detachment": interface.add_detachment,
+                "print army": interface.print_army,
+                "change wargear": interface.change_unit_wargear}
+
+    while user_input not in {'quit', 'exit'}:
+        user_input = input(">> ")
+        try:
+            user_command = re.findall(r'[a-z][a-z ]*[a-z]', user_input)[0]
+        except IndexError:
+            continue
+
+        tags = [i[1:] for i in re.findall(r'\-[A-Za-z0-9]*', user_input)]
+        try:
+            commands[user_command](*tags)
+        except KeyError:
+            if user_command not in {'quit', 'exit'}:
+                print("{} command not found, try:".format(user_command))
+                for i in commands:
+                    print('\t' + i)
+        except TypeError as e:
+            if "positional argument" in str(e):
+                print(e)
+            else:
+                raise e

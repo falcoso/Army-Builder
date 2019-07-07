@@ -138,6 +138,12 @@ class OptionParser:
     Container class to parse option strings and contextually create options
     based on the current set of wargear in use on the unit/model.
 
+    <NUM>#<List of wargear> : May take <NUM> choices from the list
+    <List of wargear>-: Option applies on model by model basis rather than whole
+                        unit
+    <List of wargear>-<NUM> : Option can be take once per <NUM> models
+    <wargear1>/<wargear2>... : List of wargear containing <wargear1>, <wargear2>
+
     Parameters
     ----------
     current_wargear : list (init.WargearItem)

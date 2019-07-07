@@ -16,6 +16,8 @@ if __name__ == "__main__":
     detach.add_unit(unit)
     unit1 = squad.Unit("Immortals", "Troops")
     detach.add_unit(unit1)
+    unit2 = squad.Unit("Overlord", "HQ")
+    detach.add_unit(unit2)
     army.add_detachment(detach)
     print(army)
 
