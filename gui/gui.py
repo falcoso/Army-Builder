@@ -29,6 +29,7 @@ class HomeFrame(wx.Frame):
 
         self.__set_properties()
         self.__do_layout()
+        self.Bind(wx.EVT_CHECKLISTBOX, self.on_choice)
 
     def __set_properties(self):
         self.SetTitle("Army Builder v1.0")
@@ -47,3 +48,9 @@ class HomeFrame(wx.Frame):
         self.mainSizer.Add(self.editPane, 0, wx.EXPAND, 0)
         self.editPane.set_unit(unit)
         self.Layout()
+
+    def on_choice(self, evt):
+        changed_unit = self.editPane.unit
+        self.treePane.tree.DeleteChildren(changed_unit.treeid)
+        self.treePane.update_unit(changed_unit)
+        return

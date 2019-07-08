@@ -5,7 +5,7 @@ Classes
 -------
 Unit(init.UnitTypes):
     Keeps track of the attributes of an individual unit in an army list.
-    
+
 Model(Unit):
     Used to keep track of the attributes of individual groups of models within
     the same unit.
@@ -31,6 +31,10 @@ class Unit(init.UnitTypes):
 
     Public Attributes
     -----------------
+    parent: army_list.Detachment
+        Detachment to which the unit belongs.
+    treeid: wx.TreeItemID
+        ID for wx.TreeCtrl in GUI
     type : str
         Name of unit template.
     name : str
@@ -57,6 +61,8 @@ class Unit(init.UnitTypes):
 
     Public Methods
     --------------
+    set_parent(self, parent): Sets the parent detachment of the unit.
+
     reset(self): Returns the unit back to its initialised state.
 
     get_size(self): Returns the current number of models in the unit.
@@ -71,6 +77,8 @@ class Unit(init.UnitTypes):
         option_parser.Option with an init.WargearItem selected for each item.
     """
     def __init__(self, unit_type, battlefield_role):
+        self.parent = None
+        self.treeid = None
         self.type = unit_type
         self.name = self.type
         self.battlefield_role = battlefield_role
@@ -89,13 +97,24 @@ class Unit(init.UnitTypes):
         self.parser = option_parser.OptionParser(current_wargear=self.wargear)
         self.parser.build()
         if self.mod_str is None:
-            self.models = [Model(no_models=self.size_range[0], base_pts=base_unit.base_pts)]
+            self.models = [Model(self, no_models=self.size_range[0],
+                                 base_pts=base_unit.base_pts)]
             self.need_sizing = False
         else:
             self.need_sizing = True
             return
 
         self.re_calc_points()
+        return
+
+    def set_parent(self, parent):
+        """Sets the parent detachment of the unit."""
+        self.parent = parent
+        return
+
+    def set_treeid(self, id):
+        """Sets the treeid from the GUI for this unit."""
+        self.treeid = id
         return
 
     def re_calc_points(self):
@@ -197,9 +216,9 @@ class Unit(init.UnitTypes):
             for model, no_of in zip(self.mod_str, size):
                 if init.models_dict[model]["indep"]:
                     for i in range(no_of):
-                        self.models.append(Model(model))
+                        self.models.append(Model(self, model))
                 else:
-                    self.models.append(Model(model, no_of))
+                    self.models.append(Model(self, model, no_of))
 
         else:
             # check if the model is already in the list
@@ -215,7 +234,7 @@ class Unit(init.UnitTypes):
                         continue
                     else:
                         for i in range(no_of - counter):
-                            self.models.append(Model(model))
+                            self.models.append(Model(self, model))
 
                 else:
                     # check to see if model exitsts already
@@ -227,7 +246,7 @@ class Unit(init.UnitTypes):
                             break
                     # otherwise append to models list
                     if flag:
-                        self.models.append(Model(model, no_of))
+                        self.models.append(Model(self, model, no_of))
         self.re_calc_points()
         return
 
@@ -307,6 +326,8 @@ class Model(Unit):
 
     Public Attributes
     -----------------
+    parent: Unit
+        Unit to which the model belongs.
     no_models : int
         Number of the type of model.
     label : str
@@ -330,7 +351,8 @@ class Model(Unit):
     --------------
     get_size(self): Returns self.no_models
     """
-    def __init__(self, name=None, no_models=1, base_pts=None):
+    def __init__(self, parent, name=None, no_models=1, base_pts=None):
+        self.parent = parent
         self.no_models = no_models
         self.label = name
         if name is None:

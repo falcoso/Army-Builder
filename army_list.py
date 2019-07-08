@@ -64,6 +64,7 @@ class ArmyList:
         if not isinstance(detach, Detachment):
             raise ValueError("Invalid unit input")
 
+        detach.set_parent(self)
         self.detachments.append(detach)
         self.detachment_names.append(detach.name)
         self.cp += self.detachments[-1].cp
@@ -102,8 +103,10 @@ class Detachment:
 
     Parameters
     ----------
+    parent: ArmyList
+        ArmyList to which the detachment belongs.
     detachment_type : str
-        Type of detachment to be created
+        Type of detachment to be created.
 
 
     Public Attributes
@@ -133,6 +136,7 @@ class Detachment:
     """
 
     def __init__(self, detachment_type):
+        self.parent = None
         self.foc = init.detachments_dict[detachment_type]["foc"]
         self.cp = init.detachments_dict[detachment_type]["cp"]
         self.type = detachment_type
@@ -166,6 +170,11 @@ class Detachment:
                 self.pts += i.pts
         return
 
+    def set_parent(self, parent):
+        """Sets the parent detachment of the unit."""
+        self.parent = parent
+        return
+
     def get_pts(self):
         """Calculates the total points of the army"""
         self.__re_calc_points()
@@ -183,6 +192,7 @@ class Detachment:
         if not isinstance(unit, squad.Unit):
             raise ValueError("Invalid unit input")
 
+        unit.set_parent(self)
         self.units_dict[unit.battlefield_role].append(unit)
         self.__re_calc_points()
         return
