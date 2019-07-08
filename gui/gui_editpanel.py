@@ -91,12 +91,12 @@ class EditPanel(ScrolledPanel):
                                            "Pick {} from:".format(option.no_picks))
                 option_chkbx = OptionCheckBox(option, self.unit.wargear, self,
                                               name=str(name))
-                self.options_box.Add(option_txt, 0, wx.ALL, 0)
-                self.options_box.Add(option_chkbx, 0, wx.FIXED_MINSIZE, 0)
+                self.options_box.Add(option_txt, 0, wx.ALL, 5)
+                self.options_box.Add(option_chkbx, 0, wx.EXPAND, 5)
                 self.Bind(wx.EVT_CHECKLISTBOX, self.on_choice)
                 name += 1
 
-            self.sizer.Add(self.options_box, 0, wx.EXPAND, 0)
+            self.sizer.Add(self.options_box, 0, wx.EXPAND, 5)
         self.Fit()
         self.Layout()
         return
