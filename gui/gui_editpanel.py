@@ -11,9 +11,6 @@ class EditPanel(ScrolledPanel):
     Class inherited from wx.lib.scrolledpanel.ScrolledPanel to generate all
     parameters and options associated with a selected unit.
 
-    *args : wx.Panel arguments
-    **kw : wx.Panel keyword arguments
-
     Parameters
     ----------
     *args : wx.lib.scrolledpanel.ScrolledPanel arguments
@@ -112,12 +109,7 @@ class EditPanel(ScrolledPanel):
 
     def on_choice(self, evt):
         """Event handler for wx.CheckBoxList choice."""
-        option = int(evt.GetEventObject().GetName())
-        option = self.unit.parser.options_list[option]
-        selections = evt.GetEventObject().GetCheckedItems()
-
-        for i in selections:
-            option.select(i)
+        option = evt.GetEventObject().option
         self.unit.change_wargear([option])
         print(self.unit)
         evt.Skip()
@@ -144,8 +136,6 @@ class OptionCheckBox(wx.CheckListBox):
 
     Attributes
     ----------
-    selected : List (int)
-        List of currently selected item indexes.
     option : option_parser.Option
         Option for which the CheckBox has been created
     """
@@ -155,7 +145,20 @@ class OptionCheckBox(wx.CheckListBox):
         super(OptionCheckBox, self).__init__(*args, choices=chk_list, **kw)
         self.option = option
         self.Bind(wx.EVT_CHECKLISTBOX, self.__on_choice)
-        self.selected = []
+        self.SetCheckedOptions(wargear)
+        return
+
+    def SetCheckedStrings(self, strings):
+        super().SetCheckedStrings(strings)
+        self.option.select_list(list(super().GetCheckedItems()))
+        return
+
+    def SetCheckedItems(self, items):
+        super().SetCheckedItems(items)
+        self.option.select_list(list(super().GetCheckedItems()))
+        return
+
+    def SetCheckedOptions(self, wargear):
         chkd_str = []
         for item in wargear:
             if item in self.option.items_involved:
@@ -163,25 +166,23 @@ class OptionCheckBox(wx.CheckListBox):
         self.__handle_evt = False
         self.SetCheckedStrings(chkd_str)
         self.__handle_evt = True
-        return
-
-    def SetCheckedStrings(self, strings):
-        super().SetCheckedStrings(strings)
-        self.selected = list(super().GetCheckedItems())
-        return
-
-    def SetCheckedItems(self, items):
-        super().SetCheckedItems(items)
-        self.selected = list(super().GetCheckedItems())
-        return
 
     def __on_choice(self, evt):
         if self.__handle_evt:
+            self.__handle_evt = False
             new_selection = super().GetCheckedItems()
-            if len(new_selection) > len(self.selected) and len(new_selection) > self.option.no_picks:
-                added = list(set(new_selection) - set(self.selected))
-                self.selected.pop()
-                self.selected += added
-                self.SetCheckedItems(self.selected)
+            new_selection = [self.option.items_involved[i] for i in new_selection]
+
+            # more than allowed choices chosen
+            if len(new_selection) > self.option.no_picks:
+                new_selection = list(set(new_selection) - set(self.option.selected))
+                # remove oldest added and add new one
+                self.option.selected.pop(0)
+                self.option.select(new_selection[0])
+                # update selections to max number of choices
+                self.SetCheckedOptions(self.option.selected)
+            else:
+                self.SetCheckedOptions(new_selection)
+            self.__handle_evt = True
             evt.Skip()
         return

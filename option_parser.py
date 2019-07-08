@@ -46,12 +46,14 @@ class Option:
     --------------
     select(self, index):
         Chooses the index option in items_involved to be added to selected.
+    select_list(self, index):
+        Resets self.selected and replaces it with the supplied list.
     """
 
     def __init__(self, items_involved):
         self.items_involved = items_involved
         self.no_required = 1
-        self.selected = None
+        self.selected = []
         self.no_picks = 1
         self.header = ''
 
@@ -74,21 +76,28 @@ class Option:
         """
         Chooses the index option in items_involved to be added to selected.
         """
-        if self.no_picks > 1:
-            if self.selected is None:
-                self.selected = [self.items_involved[index]]
-            elif self.items_involved[index] in self.selected:
-                for i in self.selected:
-                    if i == self.items_involved[index]:
-                        i.set_no_of(i.no_of + 1)
-            else:
-                self.selected.append(self.items_involved[index])
+        if isinstance(index, int):
+            index = self.items_involved[index]
+        if self.selected == []:
+            self.selected = [index]
 
-            if len(self.selected) > self.no_picks:
-                raise RuntimeError("Unable to select item as only {} picks are allowed for this option. Current selected:{}".format(
-                    self.no_picks, self.selected))
+        # if choice is chosen again have more than one
+        elif index in self.selected:
+            for i in self.selected:
+                if i == index:
+                    i.set_no_of(i.no_of + 1)
+        # append to selected items
         else:
-            self.selected = self.items_involved[index]
+            self.selected.append(index)
+
+        if len(self.selected) > self.no_picks:
+            raise RuntimeError("Unable to select item as only {} picks are allowed for this option. Current selected:{}".format(
+                self.no_picks, self.selected))
+        return
+
+    def select_list(self, index):
+        """Resets self.selected and replaces it with the supplied list."""
+        self.selected = [self.items_involved[i] for i in index]
         return
 
 
@@ -207,13 +216,11 @@ class OptionParser:
     tokens = OptionLexer.tokens
 
     # operator precedence
-    precedence = (
-        ('left', 'HASH'),
-        ('left', 'MINUS'),
-        ('left', 'SLASH'),
-        ('left', 'PLUS'),
-        ('left', 'STAR')
-    )
+    precedence = (('left', 'HASH'),
+                  ('left', 'MINUS'),
+                  ('left', 'SLASH'),
+                  ('left', 'PLUS'),
+                  ('left', 'STAR'))
 
     def build(self, **kwargs):
         self.parser = yacc.yacc(module=self, **kwargs)
@@ -353,13 +360,3 @@ class OptionParser:
         if top_level:  # if top level save the output to be manipulated
             self.options_list[-1].header = ret
         return ret
-
-
-if __name__ == "__main__":
-    init.init("Necron")
-    parser = OptionParser()
-    parser.build()
-    test_string = 'Gauss flayer/Gauss blaster/Gauss cannon-3, Phylactery'
-    for i in test_string.split(', '):
-        parser.parse2(i)
-    print(parser.options_list)

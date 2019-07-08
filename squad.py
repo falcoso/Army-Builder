@@ -262,12 +262,7 @@ class Unit(init.UnitTypes):
                 if i in self.wargear:
                     self.wargear.remove(i)
 
-            if type(new_wargear.selected) == list:
-                for j in new_wargear.selected:
-                    self.wargear.append(j)
-            else:
-                self.wargear.append(new_wargear.selected)
-
+            self.wargear += new_wargear.selected
         self.re_calc_points()
         return
 
