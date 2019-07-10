@@ -69,6 +69,8 @@ class Unit(init.UnitTypes):
 
     get_size(self): Returns the current number of models in the unit.
 
+    get_pts(self): Returns the points of the unit.
+
     re_size(self, *args):
         Re-sizes the unit. An int must be provided for every possible type of
         model.
@@ -127,7 +129,7 @@ class Unit(init.UnitTypes):
         for i in self.models:
             i.re_calc_points()  # may be possible to remove this
             try:
-                self.pts += i.pts
+                self.pts += i.get_pts()
             except AttributeError:
                 continue
 
@@ -147,11 +149,15 @@ class Unit(init.UnitTypes):
         return
 
     def get_size(self):
-        """Returns the current number of models in the unit"""
+        """Returns the current number of models in the unit."""
         size = 0
         for i in self.models:
             size += i.no_models
         return size
+
+    def get_pts(self):
+        """Returns the points of the unit."""
+        return self.pts
 
     def get_wargear(self):
         """

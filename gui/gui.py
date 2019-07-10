@@ -5,6 +5,7 @@ from . import gui_armytree, gui_editpanel
 sys.path.append('../')
 import init
 import squad
+import army_list
 
 
 class HomeFrame(wx.Frame):
@@ -33,9 +34,8 @@ class HomeFrame(wx.Frame):
     reset_edit(self, unit): Re-loads the edit panel when a new item is selected.
     on_edit(self, evt): Event Handler for when selected item is editted.
     add_unit(self, evt): Event Handler for when a new unit is added.
-    del_unit(self, evt): Event Handler for when a unit is deleted.
     add_detach(self, evt): Event Handler for when a new detachment is added.
-    del_detach(self, evt): Event Handler for when a detachment is deleted.
+    delete(self, evt): Event Handler for when a detachment or unit is deleted.
     """
 
     def __init__(self, army, *args, **kwds):
@@ -59,19 +59,19 @@ class HomeFrame(wx.Frame):
         self.toolbar = self.CreateToolBar()
         add_unit_icon = wx.Bitmap("./gui/icons/add_unit.png")
         add_unit = self.toolbar.AddTool(wx.ID_ANY, 'Add Unit', add_unit_icon)
-        del_unit_icon = wx.Bitmap("./gui/icons/del_unit.png")
-        del_unit = self.toolbar.AddTool(wx.ID_ANY, 'Delete Unit', del_unit_icon)
-
         add_detach_icon = wx.Bitmap("./gui/icons/add_detach.png")
         add_detach = self.toolbar.AddTool(wx.ID_ANY, 'Add Detachment',
                                           add_detach_icon)
-        del_detach_icon = wx.Bitmap("./gui/icons/del_detach.png")
-        del_detach = self.toolbar.AddTool(wx.ID_ANY, 'Delete Detachment',
-                                          del_detach_icon)
+        delete_icon = wx.Bitmap("./gui/icons/delete.png")
+        delete = self.toolbar.AddTool(wx.ID_ANY, 'Delete',
+                                      delete_icon)
+        copy_icon = wx.Bitmap("./gui/icons/copy.png")
+        copy = self.toolbar.AddTool(wx.ID_ANY, 'Copy',
+                                      copy_icon)
         self.Bind(wx.EVT_TOOL, self.add_unit, add_unit)
-        self.Bind(wx.EVT_TOOL, self.del_unit, del_unit)
         self.Bind(wx.EVT_TOOL, self.add_detach, add_detach)
-        self.Bind(wx.EVT_TOOL, self.del_detach, del_detach)
+        self.Bind(wx.EVT_TOOL, self.delete, delete)
+        self.Bind(wx.EVT_TOOL, self.copy, copy)
         self.toolbar.Realize()
 
         # Main panels
@@ -90,12 +90,13 @@ class HomeFrame(wx.Frame):
         self.SetSizer(self.mainSizer)
         self.Layout()
 
-    def reset_edit(self, unit):
+    def reset_edit(self, unit=None):
         """Re-loads the edit panel when a new item is selected."""
         self.editPane.Destroy()
         self.editPane = gui_editpanel.EditPanel(self, wx.ID_ANY)
         self.mainSizer.Add(self.editPane, 0, wx.EXPAND, 0)
-        self.editPane.set_unit(unit)
+        if unit is not None:
+            self.editPane.set_unit(unit)
         self.Layout()
 
     def on_edit(self, evt):
@@ -106,7 +107,7 @@ class HomeFrame(wx.Frame):
         return
 
     def add_unit(self, evt):
-        """Event Handler for when a new unit is added"""
+        """Event Handler for when a new unit is added."""
         cdDialog = AddUnitDialog(self.army, parent=self, title='Create Unit')
         cdDialog.ShowModal()
 
@@ -115,17 +116,38 @@ class HomeFrame(wx.Frame):
         self.treePane.add_unit(unit)
         return
 
-    def del_unit(self, evt):
-        """Event Handler for when a unit is deleted"""
-        print("Delete unit")
-
     def add_detach(self, evt):
-        """Event Handler for when a new detachment is added"""
+        """Event Handler for when a new detachment is added."""
         print("Add detachment")
 
-    def del_detach(self, evt):
-        """Event Handler for when a detachment is deleted"""
+    def delete(self, evt):
+        """Event Handler for when a detachment or unit is deleted."""
         print("Delete detachment")
+        selected = self.treePane.tree.GetFocusedItem()
+        item = self.treePane.tree.GetItemData(selected)
+        print(item)
+        if isinstance(item, squad.Unit):
+            try:
+                if self.editPane.unit == item:
+                    self.reset_edit()
+            except:
+                pass
+            detach = item.parent
+            detach.del_unit(item)
+
+        elif isinstance(item, army_list.Detachment):
+            army = item.parent
+            army.del_detachment(item.name)
+
+        self.treePane.update_headers(selected)
+        self.treePane.tree.Delete(selected)
+        print(self.army)
+        return
+
+    def copy(self, evt):
+        """Event Handler for when a detachment or unit is copied."""
+        print("Copy")
+        return
 
 
 class AddUnitDialog(wx.Dialog):

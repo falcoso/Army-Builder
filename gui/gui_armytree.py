@@ -39,6 +39,9 @@ class TreePane(wx.Panel):
         Refreshes the wargear on the unit and the pts displayed on itself and
         all parents of the unit.
 
+    update_headers(self, treeid):
+        Updates the points values on the item's parent's headers.
+
     add_unit(self, unit): Adds the given unit to the tree.
 
     on_selection(self, evt):
@@ -120,6 +123,24 @@ class TreePane(wx.Panel):
                         self.tree.AppendItem(model_id, wargear.__repr__())
 
         self.tree.ExpandAllChildren(unit.treeid)
+        return
+
+    def update_headers(self, treeid):
+        """Updates the points values on the item's parent's headers."""
+        treeid = self.tree.GetItemParent(treeid)
+        while treeid.IsOk():
+            if treeid == self.root:
+                self.tree.SetItemText(self.root,
+                                      "Army ({}pts)".format(self.army.get_pts()))
+                break
+            try:
+                item = self.tree.GetItemData(treeid)
+                self.tree.SetItemText(item.treeid,
+                                      "{} ({}pts)".format(item.name, item.get_pts()))
+            except AttributeError:
+                pass
+            treeid = self.tree.GetItemParent(treeid)
+        return
 
     def add_unit(self, unit):
         """Adds the given unit to the tree."""

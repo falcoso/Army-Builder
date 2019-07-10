@@ -40,6 +40,8 @@ class ArmyList:
     --------------
     add_detachment(self, detach): Adds a detachment to the army list.
 
+    del_detachment(self, name): Deletes the detachment with the supplied name.
+
     get_pts(self): Calculates the total points of the army.
     """
 
@@ -79,6 +81,20 @@ class ArmyList:
                     detachment.name = detachment.type + ' ' + str(counter)
                     self.detachment_names[i] = detachment.name
         return
+
+    def del_detachment(self, name):
+        """Deletes the detachment with the supplied name"""
+        if name not in self.detachment_names:
+            raise ValueError("Detachment name {} doesn't exist.".format(name))
+
+        for detach in self.detachment_names:
+            if detach == name:
+                self.detachments.pop(self.detachment_names.index(detach))
+                self.detachment_names.remove(detach)
+                break
+        self.__re_calc_cp()
+        return
+
 
     def __re_calc_cp(self):
         self.cp = 0
@@ -136,6 +152,8 @@ class Detachment:
 
     add_unit(self, unit): Adds the given unit to the detachment.
 
+    del_unit(self, unit): Deletes the given unit from the detachment.
+
     get_pts(self): Calculates the total points of the detachment.
     """
 
@@ -171,7 +189,7 @@ class Detachment:
         self.pts = 0
         for key, unit in self.units_dict.items():
             for i in unit:
-                self.pts += i.pts
+                self.pts += i.get_pts()
         return
 
     def set_parent(self, parent):
@@ -203,5 +221,11 @@ class Detachment:
 
         unit.set_parent(self)
         self.units_dict[unit.battlefield_role].append(unit)
+        self.__re_calc_points()
+        return
+
+    def del_unit(self, unit):
+        """Deletes the given unit from the detachment."""
+        self.units_dict[unit.battlefield_role].remove(unit)
         self.__re_calc_points()
         return
