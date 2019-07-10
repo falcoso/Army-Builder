@@ -25,14 +25,12 @@ class EditPanel(ScrolledPanel):
     --------------
     set_unit(self, unit): Sets the unit for the panel and re-generates widgets.
     on_choice(self, evt): Event handler for wx.CheckBoxList choice.
-    on_size(self, evt): Event handler for wx.SpinCtrl change.
     """
 
     def __init__(self, *args, **kw):
         super().__init__(*args, **kw)
         self.sizer = wx.BoxSizer(wx.VERTICAL)
         self.unit = None
-        self.__InitUI()
         self.SetScrollRate(0, 10)
         self.SetSizer(self.sizer)
         self.Fit()
@@ -46,37 +44,8 @@ class EditPanel(ScrolledPanel):
 
         # create sizing box
         if len(self.unit.size_range) != 1:
-            self.models_box = wx.StaticBoxSizer(wx.VERTICAL, self, "Models")
-            if self.unit.mod_str is not None:
-                self.modList = wx.FlexGridSizer(cols=2, vgap=5, hgap=5)
-                for model in self.unit.mod_str:
-                    txt = wx.StaticText(self, wx.ID_any, model)
-                    size = 0
-                    for i in self.unit.models:
-                        if i.label == model:
-                            size = i.no_models
-                            break
-
-                    size_ctrl = wx.SpinCtrl(self, wx.ID_ANY, str(size),
-                                            name=model)
-
-                    self.modList.Add(txt, 1, wx.ALL, 1)
-                    self.modList.Add(size_ctrl, 1, wx.ALL, 1)
-
-            elif self.unit.mod_str is None:
-                self.models_box = wx.StaticBoxSizer(wx.VERTICAL, self, "Models")
-                self.modList = wx.BoxSizer(wx.HORIZONTAL)
-                model_txt = wx.StaticText(self, wx.ID_ANY, self.unit.type)
-                size_ctrl = wx.SpinCtrl(self, wx.ID_ANY,
-                                        str(self.unit.get_size()),
-                                        name=self.unit.type)
-                size_ctrl.SetRange(*self.unit.size_range)
-                self.modList.Add(model_txt, 1, wx.ALL, 1)
-                self.modList.Add(size_ctrl, 1, wx.ALL, 1)
-
-            self.Bind(wx.EVT_SPINCTRL, self.on_size)
-            self.models_box.Add(self.modList)
-            self.sizer.Add(self.models_box)
+            self.sizing_box = SizingBox(self.unit, parent=self)
+            self.sizer.Add(self.sizing_box)
 
         # create options box
         if self.unit.options is not None:
@@ -113,13 +82,6 @@ class EditPanel(ScrolledPanel):
         self.unit.change_wargear([option])
         evt.Skip()
 
-    def on_size(self, evt):
-        """Event handler for wx.SpinCtrl change."""
-        size = evt.GetEventObject().GetValue()
-        self.unit.re_size(size)  # will need updating when multiple models are available
-        evt.Skip()
-        return
-
 
 class OptionCheckBox(wx.CheckListBox):
     """
@@ -137,6 +99,7 @@ class OptionCheckBox(wx.CheckListBox):
     option : option_parser.Option
         Option for which the CheckBox has been created
     """
+
     def __init__(self, option, wargear, *args, **kw):
         chk_list = [i.__repr__(tidy=True) for i in option.items_involved]
 
@@ -183,4 +146,51 @@ class OptionCheckBox(wx.CheckListBox):
                 self.SetCheckedOptions(new_selection)
             self.__handle_evt = True
             evt.Skip()
+        return
+
+
+class SizingBox(wx.Panel):
+    def __init__(self, unit, *args, **kw):
+        super(SizingBox, self).__init__(*args, **kw)
+        self.unit = unit
+        self.model_ctrls = {}
+
+        self.models_box = wx.StaticBoxSizer(wx.VERTICAL, self, "Models")
+        if self.unit.mod_str is not None:
+            self.modList = wx.FlexGridSizer(cols=2, vgap=5, hgap=5)
+            for model in self.unit.mod_str:
+                txt = wx.StaticText(self, wx.ID_ANY, model)
+                size = 0
+                for i in self.unit.models:
+                    if i.label == model:
+                        size = i.no_models
+                        break
+
+                size_ctrl = wx.SpinCtrl(self, wx.ID_ANY, str(size),
+                                        name=model)
+
+                self.modList.Add(txt, 1, wx.ALL, 1)
+                self.modList.Add(size_ctrl, 1, wx.ALL, 1)
+
+        elif self.unit.mod_str is None:
+            self.models_box = wx.StaticBoxSizer(wx.VERTICAL, self, "Models")
+            self.modList = wx.BoxSizer(wx.HORIZONTAL)
+            model_txt = wx.StaticText(self, wx.ID_ANY, self.unit.type)
+            size_ctrl = wx.SpinCtrl(self, wx.ID_ANY,
+                                    str(self.unit.get_size()),
+                                    name=self.unit.type)
+            size_ctrl.SetRange(*self.unit.size_range)
+            self.modList.Add(model_txt, 1, wx.ALL, 1)
+            self.modList.Add(size_ctrl, 1, wx.ALL, 1)
+
+        self.Bind(wx.EVT_SPINCTRL, self.on_size)
+        self.models_box.Add(self.modList)
+        self.SetSizer(self.models_box)
+        self.Fit()
+
+    def on_size(self, evt):
+        """Event handler for wx.SpinCtrl change."""
+        size = evt.GetEventObject().GetValue()
+        self.unit.re_size(size)  # will need updating when multiple models are available
+        evt.Skip()
         return

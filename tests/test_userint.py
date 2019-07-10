@@ -132,7 +132,7 @@ def test_re_size(ui_setup):
                   "1,5"]  # Brecher Team
     userint.input = lambda x: mock_input.pop(0)
     breachers = squad.Unit("Breacher Team", "Troops")
-    breachers.re_size((1,5))
+    breachers.re_size(1,5)
     interface.re_size_unit()
     detach = interface.army.detachments[0]
     assert detach.units_dict["Troops"][0] == breachers

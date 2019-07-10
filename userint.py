@@ -109,7 +109,7 @@ class UI:
         battlefield_role = self._get_user_battlefield_role()
         unit = self._get_user_unit(detach, battlefield_role)
         size = self._get_user_size(unit)
-        unit.re_size(size)
+        unit.re_size(*size)
         return
 
     def print_army(self):
@@ -185,8 +185,8 @@ class UI:
             size2 = self._get_user_size(unit)
         if unit.mod_str is None:  # more than one number or not in unit size range
             if len(size2) != 1 or size2[0] < unit.size_range[0] or size2[0] > unit.size_range[1]:
-                print(
-                    "{} is invalid, please enter a single number in the range {}-{}".format(size, *unit.size_range))
+                print("{} is invalid, please enter a single number in the range {}-{}".format(size,
+                                                                                              *unit.size_range))
                 size2 = self._get_user_size(unit)
         else:
             if len(size2) != len(unit.mod_str):

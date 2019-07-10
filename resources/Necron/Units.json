@@ -71,7 +71,7 @@
         "Destroyers": {
             "name": "Destroyers",
             "base_pts": 30,
-            "options": ["Gauss cannon/Heavy gauss cannon-3"],
+            "options": null,
             "size": [1,6],
             "wargear": ["Gauss cannon"],
             "models": ["Destroyer", "Heavy Destroyer"]

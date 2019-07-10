@@ -35,13 +35,14 @@ def test_re_size_poly_model():
     """
     # check that changes no applied to the whole unit creates a new model
     unit = squad.Unit("Destroyers", "Fast Attack")
-    unit.re_size((2,1))
+    unit.re_size(2, 1)
     assert unit.get_size() == 3
     assert unit.models[0].no_models == 2
     assert unit.models[1].wargear == [init.WargearItem("Heavy gauss cannon")]
 
     # check that when re-sizing and repeating the existing extra model is modified
-    unit.re_size((5,1))
+    size = (5, 1)
+    unit.re_size(*size)
     assert unit.get_size() == 6
     assert unit.models[0].no_models == 5
     assert unit.models[1].wargear == [init.WargearItem("Heavy gauss cannon")]
@@ -55,7 +56,7 @@ def test_change_wargear():
     for option in unit.options:
         unit.parser.parse2(option)
 
-    choices = [(0,1), (1,2), (2,0), (3,0)]
+    choices = [(0, 1), (1, 2), (2, 0), (3, 0)]
     wargear_to_add = []
     for choice in choices:
         sel_option = unit.parser.options_list[choice[0]]
@@ -86,12 +87,11 @@ def test_reset():
     unit.re_size(10)
     sel_option = unit.parser.options_list[0]
     sel_option.select(1)
-    unit.change_wargear([sel_option])  # input = '1b'
+    unit.change_wargear([sel_option])
 
     assert unit_copy.get_size() != unit.get_size()
     assert unit_copy.wargear != unit.wargear
 
-    # input = 'y'
     unit.reset()
     assert unit_copy.get_size() == unit.get_size()
     assert unit_copy.wargear == unit.wargear
@@ -102,11 +102,11 @@ def test_check_validity():
     Checks the Unit.check_validty method highlights errors in the unit
     """
     unit = squad.Unit("Destroyers", "Fast Attack")
-    unit.re_size((5,5))
+    unit.re_size(5, 5)
     assert unit.check_validity() is False  # initial state too big and too many Heavy Destroyers
 
-    unit.re_size((4,2))  # right size too many Heavy Destroyers
+    unit.re_size(4, 2)  # right size too many Heavy Destroyers
     assert unit.check_validity() is False
 
-    unit.re_size((5, 1))  # Valid unit
+    unit.re_size(5, 1)  # Valid unit
     assert unit.check_validity() is True

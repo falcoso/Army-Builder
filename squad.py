@@ -69,15 +69,15 @@ class Unit(init.UnitTypes):
 
     get_size(self): Returns the current number of models in the unit.
 
-    re_size(self, size):
-        Re-sizes the unit. If multiple types of models in the unit, size must be
-        a tuple, and each element corresponds to the model type in order of
-        self.models. If there is only one type of model, size is an integer.
+    re_size(self, *args):
+        Re-sizes the unit. An int must be provided for every possible type of
+        model.
 
     change_wargear(self, wargear_to_add):
         Changes the wargear options for the unit. wargear_to_add is a list of
         option_parser.Option with an init.WargearItem selected for each item.
     """
+
     def __init__(self, unit_type, battlefield_role):
         self.parent = None
         self.treeid = None
@@ -101,6 +101,7 @@ class Unit(init.UnitTypes):
         if self.mod_str is None:
             self.models = [Model(self, no_models=self.size_range[0],
                                  base_pts=base_unit.base_pts)]
+            self.mod_str = [self.type]
         else:
             # get first model without size-limits
             for model in self.mod_str:
@@ -124,7 +125,7 @@ class Unit(init.UnitTypes):
         """Updates any points values after changes to the unit"""
         self.pts = 0
         for i in self.models:
-            i.re_calc_points() # may be possible to remove this
+            i.re_calc_points()  # may be possible to remove this
             try:
                 self.pts += i.pts
             except AttributeError:
@@ -198,58 +199,42 @@ class Unit(init.UnitTypes):
                                                                                              no_of))
         return valid
 
-    def re_size(self, size):
+    def re_size(self, *args):
         """
-        Re-sizes the unit. If multiple types of models in the unit, size must be
-        a tuple, and each element corresponds to the model type in order of
-        self.models. If there is only one type of model, size is an integer.
+        Re-sizes the unit. An int must be provided for every possible type of
+        model in the unit.
         """
-        #if unit is only one kind of model
-        if self.mod_str is None:
-            if not isinstance(size, int):
-                print("Error: size is not correct format for single model unit:")
-                print(size)
-                return False
-            self.models[0].no_models = size
-            self.re_calc_points()
-            return True
-
-        #if unit currently has no models
-        if self.models == []:
-            for model, no_of in zip(self.mod_str, size):
-                if init.models_dict[model]["indep"]:
-                    for i in range(no_of):
+        # check if the model is already in the list
+        if len(args) != len(self.mod_str):
+            raise TypeError("Got {} sizes for {} models".format(len(args),
+                                                                len(self.mod_str)))
+        for model, no_of in zip(self.mod_str, args):
+            try:
+                if not init.models_dict[model]["indep"]:
+                    raise KeyError("Model not independant, skip to except")
+                counter = 0
+                for i in self.models:
+                    # count how many instances of model and add difference
+                    if i.label == model:
+                        counter += 1
+                if no_of - counter < 0:
+                    print("Unable to remove models as each is independant")
+                    continue
+                else:
+                    for i in range(no_of - counter):
                         self.models.append(Model(self, model))
-                else:
+
+            except KeyError:
+                # check to see if model exists already
+                flag = True
+                for i in self.models:
+                    if i.label == model:
+                        i.no_models = no_of
+                        flag = False
+                        break
+                # otherwise append to models list
+                if flag:
                     self.models.append(Model(self, model, no_of))
-
-        else:
-            # check if the model is already in the list
-            for model, no_of in zip(self.mod_str, size):
-                if init.models_dict[model]["indep"]:
-                    counter = 0
-                    for i in self.models:
-                        # count how many instances of model and add difference
-                        if i.label == model:
-                            counter += 1
-                    if no_of - counter < 0:
-                        print("Unable to remove models as each is independant")
-                        continue
-                    else:
-                        for i in range(no_of - counter):
-                            self.models.append(Model(self, model))
-
-                else:
-                    # check to see if model exitsts already
-                    flag = True
-                    for i in self.models:
-                        if i.label == model:
-                            i.no_models = no_of
-                            flag = False
-                            break
-                    # otherwise append to models list
-                    if flag:
-                        self.models.append(Model(self, model, no_of))
         self.re_calc_points()
         return
 
@@ -266,7 +251,6 @@ class Unit(init.UnitTypes):
                     self.wargear.remove(i)
 
             self.wargear += new_wargear.selected
-        print(self)
         return
 
     def __repr__(self):
@@ -314,7 +298,7 @@ class Model(Unit):
 
     Parameters
     ----------
-    name : str
+    label : str
         Type of model to be initialised.
     no_models : int (default=1)
         Number of that type of model.
@@ -330,6 +314,9 @@ class Model(Unit):
         Number of the type of model.
     label : str
         Type of model.
+    name : str
+        String that will be displayed in GUI, may be the same as models with
+        different labels.
     wargear : list (init.WargearItem)
         List of base wargear that every model in the unit has.
     options : type
@@ -349,18 +336,20 @@ class Model(Unit):
     --------------
     get_size(self): Returns self.no_models
     """
-    def __init__(self, parent, name=None, no_models=1, base_pts=None):
+
+    def __init__(self, parent, label=None, no_models=1, base_pts=None):
         self.parent = parent
         self.no_models = no_models
-        self.label = name
-        if name is None:
+        self.label = label
+        if label is None:
             self.base_pts = base_pts
             self.wargear = None
-            self.name = None
+            self.name = parent.type
+            self.label = parent.type
             self.re_calc_points()
             return
 
-        root_data = init.models_dict[name]
+        root_data = init.models_dict[label]
 
         if root_data["wargear"] is not None:
             self.wargear = list(map(lambda s: init.WargearItem(s), root_data["wargear"]))
@@ -393,7 +382,7 @@ class Model(Unit):
         return
 
     def __repr__(self, indent=''):
-        if self.no_models == 0 or self.name is None:
+        if self.no_models == 0 or self.name == self.parent.type:
             return ''
         elif self.no_models == 1:
             ret = self.name
