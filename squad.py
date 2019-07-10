@@ -63,6 +63,8 @@ class Unit(init.UnitTypes):
     --------------
     set_parent(self, parent): Sets the parent detachment of the unit.
 
+    set_treeid(self, id): Sets the treeid from the GUI for this unit.
+
     reset(self): Returns the unit back to its initialised state.
 
     get_size(self): Returns the current number of models in the unit.

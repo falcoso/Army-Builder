@@ -127,6 +127,10 @@ class Detachment:
 
     Public Methods
     --------------
+    set_parent(self, parent): Sets the parent army of the detachment.
+
+    set_treeid(self, id): Sets the treeid from the GUI for this detachment.
+
     rename(self, new_name):
         Changes the name of the detachment to the given new_name string.
 
@@ -171,8 +175,13 @@ class Detachment:
         return
 
     def set_parent(self, parent):
-        """Sets the parent detachment of the unit."""
+        """Sets the parent army of the detachment."""
         self.parent = parent
+        return
+
+    def set_treeid(self, id):
+        """Sets the treeid from the GUI for this detachment."""
+        self.treeid = id
         return
 
     def get_pts(self):

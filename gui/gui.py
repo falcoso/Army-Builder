@@ -4,6 +4,7 @@ from . import gui_armytree, gui_editpanel
 
 sys.path.append('../')
 import init
+import squad
 
 
 class HomeFrame(wx.Frame):
@@ -36,6 +37,7 @@ class HomeFrame(wx.Frame):
     add_detach(self, evt): Event Handler for when a new detachment is added.
     del_detach(self, evt): Event Handler for when a detachment is deleted.
     """
+
     def __init__(self, army, *args, **kwds):
         self.army = army
 
@@ -103,9 +105,13 @@ class HomeFrame(wx.Frame):
 
     def add_unit(self, evt):
         """Event Handler for when a new unit is added"""
-        print("Add unit")
         cdDialog = AddUnitDialog(self.army, parent=self, title='Create Unit')
         cdDialog.ShowModal()
+
+    def close_add_unit(self, unit):
+        """Event handler when the AddUnitDialog is closed"""
+        self.treePane.add_unit(unit)
+        return
 
     def del_unit(self, evt):
         """Event Handler for when a unit is deleted"""
@@ -171,6 +177,8 @@ class AddUnitDialog(wx.Dialog):
         vbox1.Add(txt2, border=5)
         vbox1.Add(self.foc_combo, 0, wx.EXPAND | wx.ALL, 5)
 
+        self.warntxt = wx.StaticText(self, wx.ID_ANY, '')
+
         # add box for close buttom
         hbox2 = wx.BoxSizer(wx.HORIZONTAL)
         createButton = wx.Button(self, label='Add')
@@ -181,6 +189,7 @@ class AddUnitDialog(wx.Dialog):
         vbox.Add(vbox1, flag=wx.EXPAND, border=5)
         vbox.Add(txt3, border=5)
         vbox.Add(self.unit_choice, 1, wx.EXPAND | wx.ALL, 5)
+        vbox.Add(self.warntxt, flag=wx.ALIGN_CENTER | wx.TOP | wx.BOTTOM, border=5)
         vbox.Add(hbox2, flag=wx.ALIGN_CENTER | wx.TOP | wx.BOTTOM, border=5)
 
         self.SetSizer(vbox)
@@ -211,5 +220,17 @@ class AddUnitDialog(wx.Dialog):
         """
         evt = event.GetEventObject().GetLabel()
         if evt == "Add":
-            pass
+            if wx.NOT_FOUND in {self.detach_combo.GetSelection(),
+                                self.foc_combo.GetSelection(),
+                                self.unit_choice.GetSelection()}:
+
+                self.warntxt.SetLabel("Fill in all the fields")
+                self.Layout()
+                return
+            detachment = self.army.detachments[self.detach_combo.GetSelection()]
+            battlefield_role = self.foc[self.foc_combo.GetSelection()]
+            unit_string = self.unit_choice.GetString(self.unit_choice.GetSelection())
+            unit = squad.Unit(unit_string, battlefield_role)
+            detachment.add_unit(unit)
+            self.GetParent().close_add_unit(unit)
         self.Destroy()
