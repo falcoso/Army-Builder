@@ -87,6 +87,7 @@ class TreePane(wx.Panel):
         Refreshes the wargear on the unit and the pts displayed on itself and
         all parents of the unit.
         """
+        # update points labels on all parent nodes
         self.tree.SetItemText(unit.treeid,
                               "{} ({}pts)".format(unit.name, unit.pts))
         detach = unit.parent
@@ -94,15 +95,38 @@ class TreePane(wx.Panel):
                               "{} ({}pts)".format(detach.name, detach.get_pts()))
         self.tree.SetItemText(self.root,
                               "Army ({}pts)".format(self.army.get_pts()))
-        for wargear in unit.wargear:
-            self.tree.AppendItem(unit.treeid, wargear.__repr__())
+
+        # if only single model just list all wargear
+        if unit.get_size() == 1:
+            model = unit.models[0]
+            if unit.wargear is not None:
+                for wargear in unit.wargear:
+                    self.tree.AppendItem(unit.treeid, wargear.__repr__())
+            if model.wargear is not None:
+                for wargear in model.wargear:
+                    self.tree.AppendItem(unit.treeid, wargear.__repr__())
+
+        # create node for each model and list individual wargear
+        else:
+            for model in unit.models:
+                model_id = self.tree.AppendItem(unit.treeid,
+                                                model.__repr__().split("\n")[0])
+                model.set_treeid(model_id)
+                if unit.wargear is not None:
+                    for wargear in unit.wargear:
+                        self.tree.AppendItem(model_id, wargear.__repr__())
+                if model.wargear is not None:
+                    for wargear in model.wargear:
+                        self.tree.AppendItem(model_id, wargear.__repr__())
+
+        self.tree.ExpandAllChildren(unit.treeid)
 
     def add_unit(self, unit):
         """Adds the given unit to the tree."""
         parent_node = unit.parent.treeid
         try:
             foc_node = self.foc_node[parent_node][unit.battlefield_role]
-        except KeyError:
+        except KeyError: #foc role is not yet on the tree
             foc_node = self.tree.AppendItem(parent_node, unit.battlefield_role)
             self.foc_node[parent_node][unit.battlefield_role] = foc_node
 

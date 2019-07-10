@@ -73,7 +73,7 @@
             "base_pts": 30,
             "options": null,
             "size": [1,6],
-            "wargear": ["Gauss cannon"],
+            "wargear": null,
             "models": ["Destroyer", "Heavy Destroyer"]
         },
         "Tomb Blades": {

@@ -57,7 +57,7 @@ class Unit(init.UnitTypes):
     parser: option_parser.OptionParser
         Parser for all the options available to the unit.
     pts: int
-        Total points for the group of models
+        Total points for the group of models.
 
     Public Methods
     --------------
@@ -209,9 +209,7 @@ class Unit(init.UnitTypes):
             raise TypeError("Got {} sizes for {} models".format(len(args),
                                                                 len(self.mod_str)))
         for model, no_of in zip(self.mod_str, args):
-            try:
-                if not init.models_dict[model]["indep"]:
-                    raise KeyError("Model not independant, skip to except")
+            if init.models_dict[model]["indep"]:
                 counter = 0
                 for i in self.models:
                     # count how many instances of model and add difference
@@ -224,16 +222,18 @@ class Unit(init.UnitTypes):
                     for i in range(no_of - counter):
                         self.models.append(Model(self, model))
 
-            except KeyError:
+            else:
                 # check to see if model exists already
                 flag = True
                 for i in self.models:
                     if i.label == model:
                         i.no_models = no_of
+                        if no_of == 0:
+                            self.models.remove(i)
                         flag = False
                         break
                 # otherwise append to models list
-                if flag:
+                if flag and no_of != 0:
                     self.models.append(Model(self, model, no_of))
         self.re_calc_points()
         return
@@ -347,6 +347,14 @@ class Model(Unit):
             self.name = parent.type
             self.label = parent.type
             self.re_calc_points()
+
+            # add default model to the models_dict
+            init.models_dict[self.label] = {"name": None,
+                                            "no_per_unit": None,
+                                            "wargear": None,
+                                            "options": None,
+                                            "indep": False,
+                                            "pts": self.base_pts}
             return
 
         root_data = init.models_dict[label]
@@ -382,12 +390,12 @@ class Model(Unit):
         return
 
     def __repr__(self, indent=''):
-        if self.no_models == 0 or self.name == self.parent.type:
-            return ''
-        elif self.no_models == 1:
+        if self.no_models == 1:
             ret = self.name
         else:
-            ret = '{} {}s'.format(self.no_models, self.name)
+            ret = '{} {}'.format(self.no_models, self.name)
+            if self.name[-1] != 's':
+                ret += 's'
         if self.wargear is not None:
             for i in self.wargear:
                 ret += '\n\t' + indent + i.__repr__()

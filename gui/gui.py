@@ -81,6 +81,7 @@ class HomeFrame(wx.Frame):
         self.__do_layout()
         self.Bind(wx.EVT_CHECKLISTBOX, self.on_edit)
         self.Bind(wx.EVT_SPINCTRL, self.on_edit)
+        self.Bind(wx.EVT_CHECKBOX, self.on_edit)
 
     def __do_layout(self):
         self.mainSizer = wx.BoxSizer(wx.HORIZONTAL)

@@ -1,9 +1,10 @@
 import wx
 import sys
+import numpy as np
 from wx.lib.scrolledpanel import ScrolledPanel
 
 sys.path.append('../')
-import squad
+import init
 
 
 class EditPanel(ScrolledPanel):
@@ -150,39 +151,72 @@ class OptionCheckBox(wx.CheckListBox):
 
 
 class SizingBox(wx.Panel):
+    """
+    Class inherited from wx.Panel to generate all sizing options for the given
+    unit.
+
+    Parameters
+    ----------
+    unit : squad.Unit
+        Unit for which the panel is generated.
+
+    *args : wx.Panel arguments
+    **kw : wx.Panel keyword arguments
+
+    Attributes
+    ----------
+    unit : squad.Unit
+        Unit for which the panel is generated.
+    model_ctrls : list (wx.<>Ctrl)
+        List of controls for each model in the unit
+    models_box : wx.StaticBoxSizer
+        Main sizer for the Panel
+    modList : wx.FlexGridSizer
+
+    Public Methods
+    --------------
+    on_size(self, evt): Event handler for wx.SpinCtrl change.
+    """
     def __init__(self, unit, *args, **kw):
         super(SizingBox, self).__init__(*args, **kw)
         self.unit = unit
-        self.model_ctrls = {}
+        self.model_ctrls = []
 
         self.models_box = wx.StaticBoxSizer(wx.VERTICAL, self, "Models")
-        if self.unit.mod_str is not None:
-            self.modList = wx.FlexGridSizer(cols=2, vgap=5, hgap=5)
-            for model in self.unit.mod_str:
-                txt = wx.StaticText(self, wx.ID_ANY, model)
-                size = 0
-                for i in self.unit.models:
-                    if i.label == model:
-                        size = i.no_models
-                        break
+        self.modList = wx.FlexGridSizer(cols=2, vgap=5, hgap=5)
 
+        # create widgets for each possible model
+        for model in self.unit.mod_str:
+            txt = wx.StaticText(self, wx.ID_ANY, model)
+
+            # get the no of models if the exist in the unit already
+            size = 0
+            for i in self.unit.models:
+                # search through the models for the size if they exist
+                if i.label == model:
+                    size = i.get_size()
+                    break
+
+            # if only 1 allowed per unit, make a checkbox, otherwise spinctrl
+            if init.models_dict[model]["no_per_unit"] == 1:
+                size_ctrl = wx.CheckBox(self)
+                size_ctrl.SetValue(size)
+            else:
                 size_ctrl = wx.SpinCtrl(self, wx.ID_ANY, str(size),
                                         name=model)
 
-                self.modList.Add(txt, 1, wx.ALL, 1)
-                self.modList.Add(size_ctrl, 1, wx.ALL, 1)
+                # set limits on spinctrl
+                if init.models_dict[model]["no_per_unit"] is None:
+                    size_ctrl.SetRange(*self.unit.size_range)
+                else:
+                    size_ctrl.SetRange(0, init.models_dict[model]["no_per_unit"])
 
-        elif self.unit.mod_str is None:
-            self.models_box = wx.StaticBoxSizer(wx.VERTICAL, self, "Models")
-            self.modList = wx.BoxSizer(wx.HORIZONTAL)
-            model_txt = wx.StaticText(self, wx.ID_ANY, self.unit.type)
-            size_ctrl = wx.SpinCtrl(self, wx.ID_ANY,
-                                    str(self.unit.get_size()),
-                                    name=self.unit.type)
-            size_ctrl.SetRange(*self.unit.size_range)
-            self.modList.Add(model_txt, 1, wx.ALL, 1)
+            self.model_ctrls.append(size_ctrl)
+
+            self.modList.Add(txt, 1, wx.ALL, 1)
             self.modList.Add(size_ctrl, 1, wx.ALL, 1)
 
+        self.Bind(wx.EVT_CHECKBOX, self.on_size)
         self.Bind(wx.EVT_SPINCTRL, self.on_size)
         self.models_box.Add(self.modList)
         self.SetSizer(self.models_box)
@@ -190,7 +224,13 @@ class SizingBox(wx.Panel):
 
     def on_size(self, evt):
         """Event handler for wx.SpinCtrl change."""
-        size = evt.GetEventObject().GetValue()
-        self.unit.re_size(size)  # will need updating when multiple models are available
+        changed_ctrl = evt.GetEventObject()
+        size = np.array([int(i.GetValue()) for i in self.model_ctrls])
+
+        # change the spin limits on the default model
+        self.model_ctrls[0].SetMax(self.unit.size_range[1]-size[1:].sum())
+        self.model_ctrls[0].SetMin(self.unit.size_range[0]-size[1:].sum())
+
+        self.unit.re_size(*size)  # will need updating when multiple models are available
         evt.Skip()
         return
