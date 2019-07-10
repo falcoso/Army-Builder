@@ -111,14 +111,12 @@ class EditPanel(ScrolledPanel):
         """Event handler for wx.CheckBoxList choice."""
         option = evt.GetEventObject().option
         self.unit.change_wargear([option])
-        print(self.unit)
         evt.Skip()
 
     def on_size(self, evt):
         """Event handler for wx.SpinCtrl change."""
         size = evt.GetEventObject().GetValue()
         self.unit.re_size(size)  # will need updating when multiple models are available
-        print(self.unit)
         evt.Skip()
         return
 

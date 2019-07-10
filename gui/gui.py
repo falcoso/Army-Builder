@@ -80,6 +80,7 @@ class HomeFrame(wx.Frame):
 
         self.__do_layout()
         self.Bind(wx.EVT_CHECKLISTBOX, self.on_edit)
+        self.Bind(wx.EVT_SPINCTRL, self.on_edit)
 
     def __do_layout(self):
         self.mainSizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -97,7 +98,7 @@ class HomeFrame(wx.Frame):
         self.Layout()
 
     def on_edit(self, evt):
-        """Event Handler for when selected item is editted"""
+        """Event Handler for when selected item is edited."""
         changed_unit = self.editPane.unit
         self.treePane.tree.DeleteChildren(changed_unit.treeid)
         self.treePane.update_unit(changed_unit)

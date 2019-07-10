@@ -101,11 +101,12 @@ class Unit(init.UnitTypes):
         if self.mod_str is None:
             self.models = [Model(self, no_models=self.size_range[0],
                                  base_pts=base_unit.base_pts)]
-            self.need_sizing = False
         else:
-            self.need_sizing = True
-            return
-
+            # get first model without size-limits
+            for model in self.mod_str:
+                if init.models_dict[model]["no_per_unit"] is None:
+                    self.models.append(Model(self, model, self.size_range[0]))
+                    break
         self.re_calc_points()
         return
 
@@ -265,7 +266,7 @@ class Unit(init.UnitTypes):
                     self.wargear.remove(i)
 
             self.wargear += new_wargear.selected
-        self.re_calc_points()
+        print(self)
         return
 
     def __repr__(self):

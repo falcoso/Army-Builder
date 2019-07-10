@@ -73,9 +73,6 @@ class UI:
                 while len(values) < detach.foc[keys][0]:
                     print("***Adding compulsory units from " + keys + "***")
                     unit = self._create_user_unit(keys)
-                    if unit.need_sizing:
-                        size = self._get_user_size(unit)
-                        unit.re_size(size)
                     self._add_unit(detach, unit)
 
             self.army.add_detachment(detach)
@@ -88,9 +85,6 @@ class UI:
         detach = self.army.detachments[self._get_user_detachment()]
         battlefield_role = self._get_user_battlefield_role()
         unit = self._create_user_unit(battlefield_role)
-        if unit.need_sizing:
-            size = self._get_user_size(unit)
-            unit.re_size(size)
         self._add_unit(detach, unit)
         return
 
@@ -103,6 +97,9 @@ class UI:
             print("{} has no options".format(self.name))
             return
         wargear_to_add = self._get_user_options(unit)
+        for i in wargear_to_add:
+            print(i)
+            print(i.selected)
         unit.change_wargear(wargear_to_add)
         return
 
@@ -148,7 +145,7 @@ class UI:
         for choice in user_input2:
             try:
                 # convert the choice number into the index to select the item
-                index = np.zeros(2, dtype=np.int8)
+                index = np.zeros(2, dtype=np.uint8)
                 index[0] = int(choice[0]) - 1
                 sel_option = unit.parser.options_list[index[0]]
 
@@ -223,7 +220,7 @@ class UI:
 
     def _get_user_detachment(self):
         """Gets the user-chosen detachment to edit and returns its index"""
-        print("Which Detachment would you like to add the unit to?")
+        print("Which Detachment would you like to edit the unit to?")
         for index, i in enumerate(self.army.detachments):
             print("{}. {}".format(index + 1, i.name))
 

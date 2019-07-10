@@ -15,8 +15,10 @@ OptionParser:
 """
 import ply.lex as lex
 import ply.yacc as yacc
-import init
+import numpy as np
 import string
+
+import init
 
 
 class Option:
@@ -76,8 +78,9 @@ class Option:
         """
         Chooses the index option in items_involved to be added to selected.
         """
-        if isinstance(index, int):
+        if isinstance(index, int) or isinstance(index, np.uint8):
             index = self.items_involved[index]
+
         if self.selected == []:
             self.selected = [index]
 
