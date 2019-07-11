@@ -41,8 +41,6 @@ class ArmyList:
     add_detachment(self, detach): Adds a detachment to the army list.
 
     del_detachment(self, name): Deletes the detachment with the supplied name.
-
-    get_pts(self): Calculates the total points of the army.
     """
 
     def __init__(self, faction):
@@ -54,11 +52,13 @@ class ArmyList:
         self.detachment_names = []
         return
 
-    def get_pts(self):
+    @property
+    def pts(self):
         """Calculates the total points of the army"""
         pts = 0
         for i in self.detachments:
-            pts += i.get_pts()
+            print(i)
+            pts += i.pts
         return pts
 
     def add_detachment(self, detach):
@@ -204,7 +204,7 @@ class Detachment:
         for key, unit in self.units_dict.items():
             for i in unit:
                 pts += i.pts
-        return
+        return pts
 
     def __repr__(self):
         output = "***" + self.name + "\t\t" + "Total:{}pts".format(self.pts) + "***\n"

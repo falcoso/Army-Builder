@@ -68,7 +68,7 @@ class TreePane(wx.Panel):
 
         # construct tree
         for detach in self.army.detachments:
-            detach.set_treeid(self.tree.AppendItem(self.root, detach.name))
+            detach.treeid = self.tree.AppendItem(self.root, detach.name)
 
             self.tree.SetItemData(detach.treeid, detach)
             self.foc_node[detach.treeid] = {}
@@ -79,7 +79,7 @@ class TreePane(wx.Panel):
                     self.foc_node[detach.treeid][battlefield_role] = foc_node
 
                 for unit in units:
-                    unit.set_treeid(self.tree.AppendItem(foc_node, unit.name))
+                    unit.treeid = self.tree.AppendItem(foc_node, unit.name)
                     self.tree.SetItemData(unit.treeid, unit)
                     self.update_unit(unit)
         self.tree.ExpandAll()
@@ -91,16 +91,10 @@ class TreePane(wx.Panel):
         all parents of the unit.
         """
         # update points labels on all parent nodes
-        self.tree.SetItemText(unit.treeid,
-                              "{} ({}pts)".format(unit.name, unit.pts))
-        detach = unit.parent
-        self.tree.SetItemText(detach.treeid,
-                              "{} ({}pts)".format(detach.name, detach.get_pts()))
-        self.tree.SetItemText(self.root,
-                              "Army ({}pts)".format(self.army.get_pts()))
+        self.update_headers(unit.treeid)
 
         # if only single model just list all wargear
-        if unit.get_size() == 1:
+        if unit.size == 1:
             model = unit.models[0]
             if unit.wargear is not None:
                 for wargear in unit.wargear:
@@ -114,7 +108,7 @@ class TreePane(wx.Panel):
             for model in unit.models:
                 model_id = self.tree.AppendItem(unit.treeid,
                                                 model.__repr__().split("\n")[0])
-                model.set_treeid(model_id)
+                model.treeid = model_id
                 if unit.wargear is not None:
                     for wargear in unit.wargear:
                         self.tree.AppendItem(model_id, wargear.__repr__())
@@ -131,12 +125,12 @@ class TreePane(wx.Panel):
         while treeid.IsOk():
             if treeid == self.root:
                 self.tree.SetItemText(self.root,
-                                      "Army ({}pts)".format(self.army.get_pts()))
+                                      "Army ({}pts)".format(self.army.pts))
                 break
             try:
                 item = self.tree.GetItemData(treeid)
                 self.tree.SetItemText(item.treeid,
-                                      "{} ({}pts)".format(item.name, item.get_pts()))
+                                      "{} ({}pts)".format(item.name, item.pts))
             except AttributeError:
                 pass
             treeid = self.tree.GetItemParent(treeid)
@@ -151,7 +145,7 @@ class TreePane(wx.Panel):
             foc_node = self.tree.AppendItem(parent_node, unit.battlefield_role)
             self.foc_node[parent_node][unit.battlefield_role] = foc_node
 
-        unit.set_treeid(self.tree.AppendItem(foc_node, unit.name))
+        unit.treeid = self.tree.AppendItem(foc_node, unit.name)
         self.tree.SetItemData(unit.treeid, unit)
         self.update_unit(unit)
         self.tree.Expand(foc_node)

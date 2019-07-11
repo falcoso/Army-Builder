@@ -194,7 +194,7 @@ class SizingBox(wx.Panel):
             for i in self.unit.models:
                 # search through the models for the size if they exist
                 if i.label == model:
-                    size = i.get_size()
+                    size = i.size
                     break
 
             # if only 1 allowed per unit, make a checkbox, otherwise spinctrl
@@ -224,13 +224,15 @@ class SizingBox(wx.Panel):
 
     def on_size(self, evt):
         """Event handler for wx.SpinCtrl change."""
-        changed_ctrl = evt.GetEventObject()
         size = np.array([int(i.GetValue()) for i in self.model_ctrls])
 
         # change the spin limits on the default model
         self.model_ctrls[0].SetMax(self.unit.size_range[1]-size[1:].sum())
         self.model_ctrls[0].SetMin(self.unit.size_range[0]-size[1:].sum())
 
-        self.unit.re_size(*size)  # will need updating when multiple models are available
+        # update again incase the sizes are reduced
+        size = np.array([int(i.GetValue()) for i in self.model_ctrls])
+
+        self.unit.re_size(*size)
         evt.Skip()
         return
