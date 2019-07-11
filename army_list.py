@@ -11,6 +11,7 @@ Detachment:
     minimum requirements are met and keeping track of points.
 """
 
+import numpy as np
 import init
 import squad
 
@@ -53,13 +54,7 @@ class ArmyList:
         return
 
     @property
-    def pts(self):
-        """Calculates the total points of the army"""
-        pts = 0
-        for i in self.detachments:
-            print(i)
-            pts += i.pts
-        return pts
+    def pts(self): return np.sum([i.pts for i in self.detachments], dtype=int)
 
     def add_detachment(self, detach):
         """Adds a detachment to the army list"""
@@ -191,20 +186,14 @@ class Detachment:
     @property
     def name(self): return self.__name
 
+    @property
+    def pts(self): return np.sum([np.sum([i.pts for i in unit]) for key, unit in self.units_dict.items()], dtype=int)
+
     @name.setter
     def name(self, new_name):
         """Changes the name of the detachment to the given new_name string."""
         self.__name = new_name
         self.__default_name = False
-
-    @property
-    def pts(self):
-        """Updates any points values after changes to the unit"""
-        pts = 0
-        for key, unit in self.units_dict.items():
-            for i in unit:
-                pts += i.pts
-        return pts
 
     def __repr__(self):
         output = "***" + self.name + "\t\t" + "Total:{}pts".format(self.pts) + "***\n"

@@ -167,15 +167,9 @@ class Unit(init.UnitTypes):
     @property
     def pts(self):
         """Updates any points values after changes to the unit"""
-        pts = 0
-        for i in self.models:
-            pts += i.pts
-
+        pts = np.sum([i.pts for i in self.models])
         if self.wargear is not None:
-            wargear_pts = 0
-            for i in self.wargear:
-                wargear_pts += i.points
-
+            wargear_pts = np.sum([i.points for i in self.wargear])
             pts += wargear_pts * self.size
         return pts
 
@@ -219,8 +213,6 @@ class Unit(init.UnitTypes):
                 count_dict[i.label] += i.size
             else:
                 count_dict[i.label] = i.size
-
-        print(count_dict)
 
         # check model has a sufficient number
         for name, no_of in count_dict.items():
@@ -393,7 +385,6 @@ class Model(Unit):
         if self.options is not None:
             self.parser = option_parser.OptionParser(self.wargear, unit=False)
             self.parser.build()
-        print(self.pts)
         return
 
     @property
@@ -419,8 +410,7 @@ class Model(Unit):
         """Updates any points values after changes to the unit"""
         wargear_pts = 0
         if self.wargear is not None:
-            for i in self.wargear:
-                wargear_pts += i.points
+            wargear_pts = np.sum([i.points for i in self.wargear])
         pts_per_model = self.root_data["pts"] + wargear_pts
         pts = pts_per_model * self.size
         return pts

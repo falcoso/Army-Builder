@@ -3,6 +3,8 @@ import sys
 
 sys.path.append('../')
 import squad
+import army_list
+import init
 
 
 class TreePane(wx.Panel):
@@ -21,6 +23,8 @@ class TreePane(wx.Panel):
     ----------
     army : army_list.ArmyList
         Army to be displayed.
+    detach : army_list.Detachment
+        Last Detachment selected or interacted with.
     tree: wx.TreeCtrl
         Tree object displaying the army.
     treeSizer : wx.TreeCtrl
@@ -48,9 +52,14 @@ class TreePane(wx.Panel):
         Event Handler to update the gui_editpanel.EditPanel in the parent
         window.
     """
+
     def __init__(self, army, *args, **kwargs):
         super(TreePane, self).__init__(*args, **kwargs)
         self.army = army
+        if len(army.detachments) == 1:
+            self.detach = army.detachments[-1]
+        else:
+            self.detach = None
         self.treeSizer = wx.BoxSizer(wx.HORIZONTAL)
         self.SetSizer(self.treeSizer)
         self.build_tree()
@@ -141,7 +150,7 @@ class TreePane(wx.Panel):
         parent_node = unit.parent.treeid
         try:
             foc_node = self.foc_node[parent_node][unit.battlefield_role]
-        except KeyError: #foc role is not yet on the tree
+        except KeyError:  # foc role is not yet on the tree
             foc_node = self.tree.AppendItem(parent_node, unit.battlefield_role)
             self.foc_node[parent_node][unit.battlefield_role] = foc_node
 
@@ -159,8 +168,72 @@ class TreePane(wx.Panel):
         """
         # changes to the unit will change the reference in the whole army
         unit = self.tree.GetItemData(evt.GetItem())
-        if not isinstance(unit, squad.Unit):
+        if isinstance(unit, squad.Unit):
+            main_window = self.GetParent()
+            main_window.reset_edit(unit)
+            self.detach = unit.parent
+        elif isinstance(unit, army_list.Detachment):
+            self.detach = unit
+        return
+
+
+class AddTreePane(wx.Panel):
+    """
+    Class inherited from wx.Panel to to display all the models that can be added
+    to the army.
+
+    Parameters
+    ----------
+    *args : wx.Panel arguments
+    **kwargs : wx.Panel keyword arguments
+
+    Attributes
+    ----------
+    treeSizer : wx.TreeCtrl
+        Main panel sizer.
+    root: wx.TreeID
+        Tree root node.
+
+    Public Methods
+    --------------
+    build_tree(self): Constructs Tree.
+    on_selection(self, evt): Event Handler to add the selected unit to the army.
+    """
+    def __init__(self, *args, **kwargs):
+        super(AddTreePane, self).__init__(*args, **kwargs)
+        self.treeSizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.SetSizer(self.treeSizer)
+        self.build_tree()
+        return
+
+    def build_tree(self):
+        self.tree = wx.TreeCtrl(self, wx.ID_ANY, style=wx.TR_HIDE_ROOT)
+        self.treeSizer.Add(self.tree, 1, wx.EXPAND, 0)
+
+        self.root = self.tree.AddRoot("Army")
+        self.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self.on_selection)
+
+        for role in init.units_dict.keys():
+            role_node = self.tree.AppendItem(self.root, role)
+            for unit in init.units_dict[role]:
+                unit = init.units_dict[role][unit]
+                unit_node = self.tree.AppendItem(role_node,
+                                                 unit.name + "({}pts)".format(unit.pts))
+                self.tree.SetItemData(unit_node, unit)
+
+        self.tree.ExpandAll()
+
+    def on_selection(self, evt):
+        """
+        Event Handler to add the selected unit to the army.
+        """
+        # changes to the unit will change the reference in the whole army
+        unit = self.tree.GetItemData(evt.GetItem())
+        if not isinstance(unit, init.UnitTypes):
             return
+        battlefield_role = self.tree.GetItemParent(evt.GetItem())
+        battlefield_role = self.tree.GetItemText(battlefield_role)
+        unit = squad.Unit(unit.name, battlefield_role)
         main_window = self.GetParent()
-        main_window.reset_edit(unit)
+        main_window.add_unit_from_tree(unit)
         return

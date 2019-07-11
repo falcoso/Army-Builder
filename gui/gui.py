@@ -1,4 +1,5 @@
 import wx
+import wx.lib.agw.aui as aui
 import sys
 from . import gui_armytree, gui_editpanel
 
@@ -76,27 +77,33 @@ class HomeFrame(wx.Frame):
 
         # Main panels
         self.treePane = gui_armytree.TreePane(self.army, self, wx.ID_ANY)
-        self.editPane = gui_editpanel.EditPanel(self, wx.ID_ANY)
+        self.addPane = gui_armytree.AddTreePane(self)
 
-        self.__do_layout()
+        self.mgr = aui.AuiManager(self)
+        self.mgr.AddPane(self.treePane,
+                         aui.AuiPaneInfo().Center().Floatable(False))
+        self.mgr.AddPane(self.addPane,
+                         aui.AuiPaneInfo().Left().Floatable(False))
+        self.mgr.Update()
+        self.Centre()
+
         self.Bind(wx.EVT_CHECKLISTBOX, self.on_edit)
         self.Bind(wx.EVT_SPINCTRL, self.on_edit)
         self.Bind(wx.EVT_CHECKBOX, self.on_edit)
 
-    def __do_layout(self):
-        self.mainSizer = wx.BoxSizer(wx.HORIZONTAL)
-        self.mainSizer.Add(self.treePane, 1, wx.EXPAND, 0)
-        self.mainSizer.Add(self.editPane, 0, wx.EXPAND, 0)
-        self.SetSizer(self.mainSizer)
-        self.Layout()
-
     def reset_edit(self, unit=None):
         """Re-loads the edit panel when a new item is selected."""
-        self.editPane.Destroy()
-        self.editPane = gui_editpanel.EditPanel(self, wx.ID_ANY)
-        self.mainSizer.Add(self.editPane, 0, wx.EXPAND, 0)
         if unit is not None:
-            self.editPane.set_unit(unit)
+            try:
+                self.editPane.set_unit(unit)
+            except AttributeError:
+                self.editPane = gui_editpanel.EditPanel(self, wx.ID_ANY)
+                self.editPane.set_unit(unit)
+                info = aui.AuiPaneInfo().Right().Floatable(False)
+                info.BestSize(self.editPane.GetMaxSize())
+                self.mgr.AddPane(self.editPane, info)
+                self.mgr.Update()
+
         self.Layout()
 
     def on_edit(self, evt):
@@ -113,6 +120,11 @@ class HomeFrame(wx.Frame):
 
     def close_add_unit(self, unit):
         """Event handler when the AddUnitDialog is closed"""
+        self.treePane.add_unit(unit)
+        return
+
+    def add_unit_from_tree(self, unit):
+        self.treePane.detach.add_unit(unit)
         self.treePane.add_unit(unit)
         return
 
@@ -150,9 +162,9 @@ class HomeFrame(wx.Frame):
         return
 
 
-class AddUnitDialog(wx.Dialog):
+class AddDialog(wx.Dialog):
     """
-    Custom wx.Dialog that allows the user to create a new unit.
+    Custom wx.Dialog template class for adding to the army.
 
     Parameters
     ----------
@@ -162,7 +174,71 @@ class AddUnitDialog(wx.Dialog):
     **kw : wx.Dialog keyword arguments
 
     Public Methods
+    -----------
+    InitButtons(self, vbox): Adds Cancel and Add buttons to the supplied sizer.
+
+    on_close(self, event):
+        Event Handler for when the user closes the window by pressing either of
+        the buttons.
+    """
+
+    def __init__(self, army, *args, **kw):
+        super(AddDialog, self).__init__(*args, **kw)
+        self.army = army
+
+    def InitButtons(self, vbox):
+        """Adds Cancel and Add buttons to the supplied sizer."""
+        # add box for close buttom
+        hbox2 = wx.BoxSizer(wx.HORIZONTAL)
+        createButton = wx.Button(self, label='Add')
+        cancelButton = wx.Button(self, label='Cancel')
+        hbox2.Add(createButton)
+        hbox2.Add(cancelButton, flag=wx.LEFT, border=5)
+
+        vbox.Add(hbox2, flag=wx.ALIGN_CENTER | wx.TOP | wx.BOTTOM, border=5)
+
+        self.SetSizer(vbox)
+        self.Fit()
+        self.Layout()
+
+        self.Bind(wx.EVT_BUTTON, self.on_close)
+
+    def on_close(self, event):
+        """
+        Event Handler for when the user closes the window by pressing either of
+        the buttons.
+        """
+        evt = event.GetEventObject().GetLabel()
+        if evt == "Add":
+            if wx.NOT_FOUND in {self.detach_combo.GetSelection(),
+                                self.foc_combo.GetSelection(),
+                                self.unit_choice.GetSelection()}:
+
+                self.warntxt.SetLabel("Fill in all the fields")
+                self.Layout()
+                return
+            detachment = self.army.detachments[self.detach_combo.GetSelection()]
+            battlefield_role = self.foc_combo.GetString(self.foc_combo.GetSelection())
+            unit_string = self.unit_choice.GetString(self.unit_choice.GetSelection())
+            unit = squad.Unit(unit_string, battlefield_role)
+            detachment.add_unit(unit)
+            self.GetParent().close_add_unit(unit)
+        self.Destroy()
+
+
+class AddUnitDialog(AddDialog):
+    """
+    Dialog inherited from AddDialog to add units to the army.
+
+    Parameters
     ----------
+    army : army_list.ArmyList
+
+    *args : wx.Dialog arguments
+    **kw : wx.Dialog keyword arguments
+
+    Public Methods
+    --------------
     on_foc_choice(self, event):
         Event Handler to populate unit options when battlefield role is
         selected.
@@ -177,8 +253,7 @@ class AddUnitDialog(wx.Dialog):
     """
 
     def __init__(self, army, *args, **kw):
-        super(AddUnitDialog, self).__init__(*args, **kw)
-        self.army = army
+        super(AddUnitDialog, self).__init__(army, *args, **kw)
         self.InitUI()
         self.SetSize((300, 400))
 
@@ -216,22 +291,7 @@ class AddUnitDialog(wx.Dialog):
 
         # create Cancel and create buttons
         self.InitButtons(vbox)
-
-    def InitButtons(self, vbox):
-        # add box for close buttom
-        hbox2 = wx.BoxSizer(wx.HORIZONTAL)
-        createButton = wx.Button(self, label='Add')
-        cancelButton = wx.Button(self, label='Cancel')
-        hbox2.Add(createButton)
-        hbox2.Add(cancelButton, flag=wx.LEFT, border=5)
-
-        vbox.Add(hbox2, flag=wx.ALIGN_CENTER | wx.TOP | wx.BOTTOM, border=5)
-
-        self.SetSizer(vbox)
-        self.Fit()
-        self.Layout()
-
-        self.Bind(wx.EVT_BUTTON, self.on_close)
+        return
 
     def on_foc_choice(self, event):
         """
@@ -256,48 +316,28 @@ class AddUnitDialog(wx.Dialog):
         detachment = self.detach_combo.GetSelection()
         detachment = self.army.detachments[detachment]
         # create list of battlefield roles that still have slots left
-        foc = [key for key, item in detachment.units_dict.items() if len(item) < detachment.foc[key][1]]
+        foc = [key for key, item in detachment.units_dict.items() if len(item) <
+               detachment.foc[key][1]]
 
         # get current selection if choice has been made
         choice = self.foc_combo.GetSelection()
-        if not choice == wx.NOT_FOUND: # stops backend Critical warning
+        if not choice == wx.NOT_FOUND:  # stops backend Critical warning
             choice = self.foc_combo.GetString(choice)
         self.foc_combo.Clear()
         self.foc_combo.Append(foc)
 
         # reinstate the choice or clear the unit_choice box
-        if not choice == wx.NOT_FOUND: # stops backend Critical warning
+        if not choice == wx.NOT_FOUND:  # stops backend Critical warning
             if choice in foc:
                 self.foc_combo.SetSelection(foc.index(choice))
             else:
                 self.unit_choice.Clear()
         return
 
-    def on_close(self, event):
-        """
-        Event Handler for when the user closes the window by pressing either of
-        the buttons.
-        """
-        evt = event.GetEventObject().GetLabel()
-        if evt == "Add":
-            if wx.NOT_FOUND in {self.detach_combo.GetSelection(),
-                                self.foc_combo.GetSelection(),
-                                self.unit_choice.GetSelection()}:
 
-                self.warntxt.SetLabel("Fill in all the fields")
-                self.Layout()
-                return
-            detachment = self.army.detachments[self.detach_combo.GetSelection()]
-            battlefield_role = self.foc_combo.GetString(self.foc_combo.GetSelection())
-            unit_string = self.unit_choice.GetString(self.unit_choice.GetSelection())
-            unit = squad.Unit(unit_string, battlefield_role)
-            detachment.add_unit(unit)
-            self.GetParent().close_add_unit(unit)
-        self.Destroy()
-
-class AddDetachDialog(AddUnitDialog):
+class AddDetachDialog(AddDialog):
     """
-    Custom wx.Dialog that allows the user to create a new unit.
+    Dialog inherited from AddDialog to add detachments to the army.
 
     Parameters
     ----------
@@ -307,65 +347,71 @@ class AddDetachDialog(AddUnitDialog):
     **kw : wx.Dialog keyword arguments
 
     Public Methods
-    ----------
-    on_foc_choice(self, event):
-        Event Handler to populate unit options when battlefield role is
-        selected.
-
-    on_detach_choice(self, event):
-        Event Handler to populate foc options when detachment is chosen based on
-        the slots left in the detachment.
-
-    on_close(self, event):
-        Event Handler for when the user closes the window by pressing either of
-        the buttons.
+    -------------
     """
 
     def __init__(self, army, *args, **kw):
         super(AddDetachDialog, self).__init__(army, *args, **kw)
+        self.InitUI()
+        self.SetSize((300, 400))
+        return
 
     def InitUI(self):
         vbox = wx.BoxSizer(wx.VERTICAL)
 
         # add main panel
-        vbox1 = wx.BoxSizer(wx.VERTICAL)
+        ctrl_sizer = wx.BoxSizer(wx.VERTICAL)
         txt1 = wx.StaticText(self, wx.ID_ANY, "Detachment type:")
         self.detach_combo = wx.Choice(self, wx.ID_ANY,
-                                      choices=self.army.detachment_names,
+                                      choices=list(init.detachments_dict.keys()),
                                       style=wx.CB_READONLY)
+        txt2 = wx.StaticText(self, wx.ID_ANY, "Detachment name:")
+        self.name_ctrl = wx.TextCtrl(self)
 
-        txt2 = wx.StaticText(self, wx.ID_ANY, "Battlefield Role:")
-        foc = ["HQ", "Troops", "Elites", "Fast Attack", "Heavy Support"]
-        self.foc_combo = wx.Choice(self, wx.ID_ANY, choices=foc,
-                                   style=wx.CB_READONLY)
+        ctrl_sizer.Add(txt1, border=5)
+        ctrl_sizer.Add(self.detach_combo, 0, wx.EXPAND | wx.ALL, 5)
+        ctrl_sizer.Add(txt2, border=5)
+        ctrl_sizer.Add(self.name_ctrl, 0, wx.EXPAND | wx.ALL, 5)
 
-        txt3 = wx.StaticText(self, wx.ID_ANY, "Unit:")
-        self.unit_choice = wx.ListBox(self, choices=[])
-
-        vbox1.Add(txt1, border=5)
-        vbox1.Add(self.detach_combo, 0, wx.EXPAND | wx.ALL, 5)
-        vbox1.Add(txt2, border=5)
-        vbox1.Add(self.foc_combo, 0, wx.EXPAND | wx.ALL, 5)
+        # create sizer to be populated with unit choices once a type has been
+        # selected
+        self.choice_sizer = wx.BoxSizer(wx.VERTICAL)
 
         self.warntxt = wx.StaticText(self, wx.ID_ANY, '')
 
-        # add box for close buttom
-        hbox2 = wx.BoxSizer(wx.HORIZONTAL)
-        createButton = wx.Button(self, label='Add')
-        cancelButton = wx.Button(self, label='Cancel')
-        hbox2.Add(createButton)
-        hbox2.Add(cancelButton, flag=wx.LEFT, border=5)
-
-        vbox.Add(vbox1, flag=wx.EXPAND, border=5)
-        vbox.Add(txt3, border=5)
-        vbox.Add(self.unit_choice, 1, wx.EXPAND | wx.ALL, 5)
+        vbox.Add(ctrl_sizer, flag=wx.EXPAND, border=5)
+        vbox.Add(self.choice_sizer, 1, wx.EXPAND | wx.ALL, 5)
         vbox.Add(self.warntxt, flag=wx.ALIGN_CENTER | wx.TOP | wx.BOTTOM, border=5)
-        vbox.Add(hbox2, flag=wx.ALIGN_CENTER | wx.TOP | wx.BOTTOM, border=5)
 
-        self.SetSizer(vbox)
-        self.Fit()
-        self.Layout()
-
-        self.Bind(wx.EVT_BUTTON, self.on_close)
         self.Bind(wx.EVT_CHOICE, self.on_detach_choice, self.detach_combo)
-        self.Bind(wx.EVT_CHOICE, self.on_foc_choice, self.foc_combo)
+
+        # create Cancel and create buttons
+        self.InitButtons(vbox)
+        return
+
+    def on_detach_choice(self, event):
+        """
+        Event Handler to populate foc options when detachment is chosen based on
+        the slots left in the detachment.
+        """
+        detachment = self.detach_combo.GetSelection()
+        detachment = self.detach_combo.GetString(detachment)
+
+        # create list of battlefield roles that still have slots left
+        foc = [key for key, item in init.detachments_dict[detachment]["foc"].items() if item[0] > 0]
+        print(foc)
+
+        # get current selection if choice has been made
+        # choice = self.foc_combo.GetSelection()
+        # if not choice == wx.NOT_FOUND:  # stops backend Critical warning
+        #     choice = self.foc_combo.GetString(choice)
+        # self.foc_combo.Clear()
+        # self.foc_combo.Append(foc)
+        #
+        # # reinstate the choice or clear the unit_choice box
+        # if not choice == wx.NOT_FOUND:  # stops backend Critical warning
+        #     if choice in foc:
+        #         self.foc_combo.SetSelection(foc.index(choice))
+        #     else:
+        #         self.unit_choice.Clear()
+        return

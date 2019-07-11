@@ -50,32 +50,42 @@ class EditPanel(ScrolledPanel):
 
         # create options box
         if self.unit.options is not None:
-            self.options_box = wx.StaticBoxSizer(wx.VERTICAL, self, "Options")
-            if self.unit.parser.options_list == []:
-                for option in self.unit.options:
-                    self.unit.parser.parse2(option)
+            self.option_pane = OptionBox(self.unit, parent=self)
+            self.sizer.Add(self.option_pane)
 
-            name = 0
-            for option in self.unit.parser.options_list:
-                option_txt = wx.StaticText(self, wx.ID_ANY,
-                                           "Pick {} from:".format(option.no_picks))
-                option_chkbx = OptionCheckBox(option, self.unit.wargear, self,
-                                              name=str(name))
-                self.options_box.Add(option_txt, 0, wx.ALL, 5)
-                self.options_box.Add(option_chkbx, 0, wx.EXPAND, 5)
-                self.Bind(wx.EVT_CHECKLISTBOX, self.on_choice)
-                name += 1
-
-            self.sizer.Add(self.options_box, 0, wx.EXPAND, 5)
-        self.Fit()
         self.Layout()
         return
 
     def set_unit(self, unit):
         """Sets the unit for the panel and re-generates widgets."""
         self.unit = unit
+        self.DestroyChildren()
         self.__InitUI()
         return
+
+
+class OptionBox(wx.Panel):
+    def __init__(self, unit, *args, **kw):
+        super(OptionBox, self).__init__(*args, **kw)
+        self.unit = unit
+        self.options_box = wx.StaticBoxSizer(wx.VERTICAL, self, "Options")
+        if self.unit.parser.options_list == []:
+            for option in self.unit.options:
+                self.unit.parser.parse2(option)
+
+        name = 0
+        for option in self.unit.parser.options_list:
+            option_txt = wx.StaticText(self, wx.ID_ANY,
+                                       "Pick {} from:".format(option.no_picks))
+            option_chkbx = OptionCheckBox(option, self.unit.wargear, self,
+                                          name=str(name))
+            self.options_box.Add(option_txt, 0, wx.ALL, 5)
+            self.options_box.Add(option_chkbx, 0, wx.EXPAND, 5)
+            name += 1
+        self.Bind(wx.EVT_CHECKLISTBOX, self.on_choice)
+        self.SetSizer(self.options_box)
+        self.Fit()
+
 
     def on_choice(self, evt):
         """Event handler for wx.CheckBoxList choice."""
@@ -177,6 +187,7 @@ class SizingBox(wx.Panel):
     --------------
     on_size(self, evt): Event handler for wx.SpinCtrl change.
     """
+
     def __init__(self, unit, *args, **kw):
         super(SizingBox, self).__init__(*args, **kw)
         self.unit = unit
