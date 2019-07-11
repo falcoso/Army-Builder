@@ -4,6 +4,7 @@ import squad
 
 init.init("Necron")
 
+
 def test_army_list():
     """
     Checks adding of simple detachments and minimum requirement units in
@@ -62,6 +63,6 @@ def test_add_unit_prog_input():
     stalker = detach.units_dict["Elites"][0]
     assert stalker.name == "Triarch Stalker"
     assert stalker.pts == 171
-    assert stalker.get_wargear() == set([init.WargearItem("Heat ray"),
-                                         init.WargearItem("Massive forelimbs")])
+    assert set(stalker.wargear) == set([init.WargearItem("Heat ray"),
+                                        init.WargearItem("Massive forelimbs")])
     return

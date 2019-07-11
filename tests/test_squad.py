@@ -21,11 +21,13 @@ def test_re_size_mono_model():
     warriors.re_size(15)
     # check valid input modifies the unit points
     assert warriors.pts == 180
-    assert warriors.models[0].no_models == 15
+    assert warriors.models[0].size == 15
+    assert warriors.size == 15
 
     # check programmer input raises the correct errors
     warriors.re_size(10)
     assert warriors.pts == 120
+    assert warriors.size == 10
     return
 
 
@@ -36,15 +38,15 @@ def test_re_size_poly_model():
     # check that changes no applied to the whole unit creates a new model
     unit = squad.Unit("Destroyers", "Fast Attack")
     unit.re_size(2, 1)
-    assert unit.get_size() == 3
-    assert unit.models[0].no_models == 2
+    assert unit.size == 3
+    assert unit.models[0].size == 2
     assert unit.models[1].wargear == [init.WargearItem("Heavy gauss cannon")]
 
     # check that when re-sizing and repeating the existing extra model is modified
     size = (5, 1)
     unit.re_size(*size)
-    assert unit.get_size() == 6
-    assert unit.models[0].no_models == 5
+    assert unit.size == 6
+    assert unit.models[0].size == 5
     assert unit.models[1].wargear == [init.WargearItem("Heavy gauss cannon")]
     return
 
@@ -89,11 +91,11 @@ def test_reset():
     sel_option.select(1)
     unit.change_wargear([sel_option])
 
-    assert unit_copy.get_size() != unit.get_size()
+    assert unit_copy.size != unit.size
     assert unit_copy.wargear != unit.wargear
 
     unit.reset()
-    assert unit_copy.get_size() == unit.get_size()
+    assert unit_copy.size == unit.size
     assert unit_copy.wargear == unit.wargear
 
 

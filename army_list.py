@@ -66,7 +66,7 @@ class ArmyList:
         if not isinstance(detach, Detachment):
             raise ValueError("Invalid unit input")
 
-        detach.set_parent(self)
+        detach.parent = self
         self.detachments.append(detach)
         self.detachment_names.append(detach.name)
         self.cp += self.detachments[-1].cp
@@ -94,7 +94,6 @@ class ArmyList:
                 break
         self.__re_calc_cp()
         return
-
 
     def __re_calc_cp(self):
         self.cp = 0
@@ -127,6 +126,10 @@ class Detachment:
 
     Public Attributes
     -----------------
+    parent : Unit
+        Unit to which the model belongs.
+    treeid : wx.TreeItemID
+        ID for wx.TreeCtrl in GUI
     foc : dict
         Force organisation chart for the detachment.
     cp : int
@@ -140,37 +143,67 @@ class Detachment:
     units_dict : dict
         Dictionary split up intol battlefield roles containing lists of
         squad.Unit.
+    pts: int
+        Total points for the detachment.
 
     Public Methods
     --------------
-    set_parent(self, parent): Sets the parent army of the detachment.
-
-    set_treeid(self, id): Sets the treeid from the GUI for this detachment.
-
-    rename(self, new_name):
-        Changes the name of the detachment to the given new_name string.
-
     add_unit(self, unit): Adds the given unit to the detachment.
 
     del_unit(self, unit): Deletes the given unit from the detachment.
-
-    get_pts(self): Calculates the total points of the detachment.
     """
 
     def __init__(self, detachment_type):
-        self.parent = None
-        self.foc = init.detachments_dict[detachment_type]["foc"]
-        self.cp = init.detachments_dict[detachment_type]["cp"]
         self.type = detachment_type
-        self.name = self.type
-        self.default_name = True
-        self.units_dict = {"HQ": [],
-                           "Troops": [],
-                           "Elites": [],
-                           "Fast Attack": [],
-                           "Heavy Support": []}
+        self.__parent = None
+        self.__name = self.type
+        self.__default_name = True
+        self.__units_dict = {"HQ": [],
+                             "Troops": [],
+                             "Elites": [],
+                             "Fast Attack": [],
+                             "Heavy Support": []}
+        # will raise an error if the detachment doesn't exist:
+        init.detachments_dict[self.type]
+        return
 
-        self.__re_calc_points()
+    @property
+    def foc(self): return init.detachments_dict[self.type]["foc"]
+
+    @property
+    def cp(self): return init.detachments_dict[self.type]["cp"]
+
+    @property
+    def units_dict(self): return self.__units_dict
+
+    @property
+    def parent(self): return self.__parent
+
+    @parent.setter
+    def parent(self, parent): self.__parent = parent
+
+    @property
+    def treeid(self): return self.__treeid
+
+    @treeid.setter
+    def treeid(self, id): self.__treeid = id
+
+    @property
+    def name(self): return self.__name
+
+    @name.setter
+    def name(self, new_name):
+        """Changes the name of the detachment to the given new_name string."""
+        self.__name = new_name
+        self.__default_name = False
+
+    @property
+    def pts(self):
+        """Updates any points values after changes to the unit"""
+        pts = 0
+        for key, unit in self.units_dict.items():
+            for i in unit:
+                pts += i.pts
         return
 
     def __repr__(self):
@@ -184,48 +217,15 @@ class Detachment:
 
         return output
 
-    def __re_calc_points(self):
-        """Updates any points values after changes to the unit"""
-        self.pts = 0
-        for key, unit in self.units_dict.items():
-            for i in unit:
-                self.pts += i.get_pts()
-        return
-
-    def set_parent(self, parent):
-        """Sets the parent army of the detachment."""
-        self.parent = parent
-        return
-
-    def set_treeid(self, id):
-        """Sets the treeid from the GUI for this detachment."""
-        self.treeid = id
-        return
-
-    def get_pts(self):
-        """Calculates the total points of the army"""
-        self.__re_calc_points()
-        return self.pts
-
-    def rename(self, new_name):
-        """
-        Changes the name of the detachment to the given new_name string.
-        """
-        self.name = new_name
-        self.default_name = False
-
     def add_unit(self, unit):
         """Adds the given unit to the detachment."""
         if not isinstance(unit, squad.Unit):
             raise ValueError("Invalid unit input")
-
-        unit.set_parent(self)
-        self.units_dict[unit.battlefield_role].append(unit)
-        self.__re_calc_points()
+        unit.parent = self
+        self.__units_dict[unit.battlefield_role].append(unit)
         return
 
     def del_unit(self, unit):
         """Deletes the given unit from the detachment."""
-        self.units_dict[unit.battlefield_role].remove(unit)
-        self.__re_calc_points()
+        self.__units_dict[unit.battlefield_role].remove(unit)
         return

@@ -12,6 +12,7 @@ Model(Unit):
 """
 
 import copy
+import numpy as np
 
 import init
 import option_parser
@@ -31,9 +32,9 @@ class Unit(init.UnitTypes):
 
     Public Attributes
     -----------------
-    parent: army_list.Detachment
+    parent : army_list.Detachment
         Detachment to which the unit belongs.
-    treeid: wx.TreeItemID
+    treeid : wx.TreeItemID
         ID for wx.TreeCtrl in GUI
     type : str
         Name of unit template.
@@ -45,31 +46,25 @@ class Unit(init.UnitTypes):
         Battlefield role of the unit that is being created.
     size_range: tuple (int)
         The upper and lower limits to the number of models in the unit.
-    options: list (str)
+    size : int
+        Total number of models in the unit.
+    options : list (str)
         List of strings that contains each option available to the unit.
-    mod_str: list (str)
+    mod_str : list (str)
         List of strings naming the model types that can be in the unit. If
         mod_str is None then there is only one type of model in the unit.
-    wargear: list (init.WargearItem)
+    wargear : list (init.WargearItem)
         List of base wargear that every model in the unit has.
-    models: list (Model)
+    models : list (Model)
         List of models that are in the unit.
-    parser: option_parser.OptionParser
+    parser : option_parser.OptionParser
         Parser for all the options available to the unit.
-    pts: int
+    pts : int
         Total points for the group of models.
 
     Public Methods
     --------------
-    set_parent(self, parent): Sets the parent detachment of the unit.
-
-    set_treeid(self, id): Sets the treeid from the GUI for this unit.
-
     reset(self): Returns the unit back to its initialised state.
-
-    get_size(self): Returns the current number of models in the unit.
-
-    get_pts(self): Returns the points of the unit.
 
     re_size(self, *args):
         Re-sizes the unit. An int must be provided for every possible type of
@@ -81,64 +76,108 @@ class Unit(init.UnitTypes):
     """
 
     def __init__(self, unit_type, battlefield_role):
-        self.parent = None
-        self.treeid = None
-        self.type = unit_type
-        self.name = self.type
-        self.battlefield_role = battlefield_role
-        self.default_name = True
+        self.__parent = None
+        self.__treeid = None
+        self.__type = unit_type
+        self.__name = self.type
+        self.__default_name = True
+        self.__battlefield_role = battlefield_role
+
+        self.__wargear = copy.deepcopy(self.base_unit.wargear)
+        self.__models = []
+        self.parser = option_parser.OptionParser(current_wargear=self.wargear)
+        self.parser.build()
+        if self.mod_str is None:
+            self.__models = [Model(self, no_models=self.size_range[0],
+                                   base_pts=self.base_unit.base_pts)]
+            self.base_unit.models = [self.type]  # might break here from getter
+        else:
+            # get first model without size-limits
+            for model in self.mod_str:
+                if init.models_dict[model]["no_per_unit"] is None:
+                    self.__models.append(Model(self, model, self.size_range[0]))
+                    break
+
+        # check that the unit can be found in the base dictionary
+        self.base_unit
+        return
+
+    @property
+    def parent(self): return self.__parent
+
+    @parent.setter
+    def parent(self, parent):
+        """Sets the parent army of the detachment."""
+        self.__parent = parent
+        return
+
+    @property
+    def treeid(self): return self.__treeid
+
+    @treeid.setter
+    def treeid(self, id):
+        """Sets the treeid from the GUI for this detachment."""
+        self.__treeid = id
+        return
+
+    @property
+    def battlefield_role(self): return self.__battlefield_role
+
+    @property
+    def type(self): return self.__type
+
+    @property
+    def name(self): return self.__name
+
+    @property
+    def wargear(self): return self.__wargear
+
+    @property
+    def size_range(self): return self.base_unit.size
+
+    @property
+    def options(self): return self.base_unit.options
+
+    @property
+    def mod_str(self): return self.base_unit.models
+
+    @property
+    def models(self): return self.__models
+
+    @property
+    def size(self): return np.sum([i.size for i in self.models])
+
+    @name.setter
+    def name(self, new_name):
+        """
+        Changes the name of the detachment to the given new_name string.
+        """
+        self.__name = new_name
+        self.__default_name = False
+
+    @property
+    def base_unit(self):
         # catch any characters being added
         try:
             base_unit = init.units_dict[self.battlefield_role][self.type]
         except KeyError:
             base_unit = init.units_dict["Named Characters"][self.type]
+        return base_unit
 
-        self.size_range = base_unit.size
-        self.options = base_unit.options  # list of str
-        self.mod_str = base_unit.models
-        self.wargear = copy.deepcopy(base_unit.wargear)
-        self.models = []
-        self.parser = option_parser.OptionParser(current_wargear=self.wargear)
-        self.parser.build()
-        if self.mod_str is None:
-            self.models = [Model(self, no_models=self.size_range[0],
-                                 base_pts=base_unit.base_pts)]
-            self.mod_str = [self.type]
-        else:
-            # get first model without size-limits
-            for model in self.mod_str:
-                if init.models_dict[model]["no_per_unit"] is None:
-                    self.models.append(Model(self, model, self.size_range[0]))
-                    break
-        self.re_calc_points()
-        return
-
-    def set_parent(self, parent):
-        """Sets the parent detachment of the unit."""
-        self.parent = parent
-        return
-
-    def set_treeid(self, id):
-        """Sets the treeid from the GUI for this unit."""
-        self.treeid = id
-        return
-
-    def re_calc_points(self):
+    @property
+    def pts(self):
         """Updates any points values after changes to the unit"""
-        self.pts = 0
+        pts = 0
         for i in self.models:
-            i.re_calc_points()  # may be possible to remove this
-            try:
-                self.pts += i.get_pts()
-            except AttributeError:
-                continue
+            pts += i.pts
 
         if self.wargear is not None:
             wargear_pts = 0
             for i in self.wargear:
                 wargear_pts += i.points
-            self.pts += wargear_pts * self.get_size()
-        return self.pts
+
+            pts += wargear_pts * self.size
+        return pts
 
     def reset(self):
         """
@@ -148,18 +187,7 @@ class Unit(init.UnitTypes):
         self.__init__(self.type, self.battlefield_role)
         return
 
-    def get_size(self):
-        """Returns the current number of models in the unit."""
-        size = 0
-        for i in self.models:
-            size += i.no_models
-        return size
-
-    def get_pts(self):
-        """Returns the points of the unit."""
-        return self.pts
-
-    def get_wargear(self):
+    def get_all_wargear(self):
         """
         Returns a set containing all the wargear present across all models in
         the unit.
@@ -177,7 +205,7 @@ class Unit(init.UnitTypes):
         the number of each type of model
         """
         # check sizes
-        size = self.get_size()
+        size = self.size
         valid = True
         if size < self.size_range[0] or size > self.size_range[1]:
             valid = False
@@ -188,9 +216,9 @@ class Unit(init.UnitTypes):
         count_dict = {}
         for i in self.models:
             if i.label in count_dict.keys():
-                count_dict[i.label] += i.no_models
+                count_dict[i.label] += i.size
             else:
-                count_dict[i.label] = i.no_models
+                count_dict[i.label] = i.size
 
         print(count_dict)
 
@@ -226,22 +254,21 @@ class Unit(init.UnitTypes):
                     continue
                 else:
                     for i in range(no_of - counter):
-                        self.models.append(Model(self, model))
+                        self.__models.append(Model(self, model))
 
             else:
                 # check to see if model exists already
                 flag = True
-                for i in self.models:
+                for i in self.__models:
                     if i.label == model:
-                        i.no_models = no_of
+                        i.size = no_of
                         if no_of == 0:
-                            self.models.remove(i)
+                            self.__models.remove(i)
                         flag = False
                         break
                 # otherwise append to models list
                 if flag and no_of != 0:
-                    self.models.append(Model(self, model, no_of))
-        self.re_calc_points()
+                    self.__models.append(Model(self, model, no_of))
         return
 
     def change_wargear(self, wargear_to_add):
@@ -253,16 +280,16 @@ class Unit(init.UnitTypes):
             return
         for new_wargear in wargear_to_add:
             for i in new_wargear.items_involved:
-                if i in self.wargear:
-                    self.wargear.remove(i)
+                if i in self.__wargear:
+                    self.__wargear.remove(i)
 
-            self.wargear += new_wargear.selected
+            self.__wargear += new_wargear.selected
         return
 
     def __repr__(self):
         ret = self.name + '\t({}pts)'.format(self.pts)
         if self.mod_str is None:
-            size = self.get_size()
+            size = self.size
             if size != 1:
                 ret = str(size) + ' ' + ret
 
@@ -316,7 +343,9 @@ class Model(Unit):
     -----------------
     parent: Unit
         Unit to which the model belongs.
-    no_models : int
+    treeid: wx.TreeItemID
+        ID for wx.TreeCtrl in GUI
+    size : int
         Number of the type of model.
     label : str
         Type of model.
@@ -327,32 +356,22 @@ class Model(Unit):
         List of base wargear that every model in the unit has.
     options : type
         Description of attribute `options`.
-    no_per_unit : int
+    limit : int
         Limit to the number of this type of model allowed in the unit
     parser: option_parser.OptionParser
         Parser for all the options available to the unit.
-    base_pts : int
-        Points value per model without changeable wargear.
-    pts_per_model : int
-        Points value per model with all current wargear.
     pts: int
-        Total points for the group of models
-
-    Public Methods
-    --------------
-    get_size(self): Returns self.no_models
+        Total points for the group of models.
+    size: int
+        Number of models of this label.
     """
 
     def __init__(self, parent, label=None, no_models=1, base_pts=None):
-        self.parent = parent
-        self.no_models = no_models
+        self.__parent = parent
+        self.__size = no_models
         self.label = label
         if label is None:
-            self.base_pts = base_pts
-            self.wargear = None
-            self.name = parent.type
             self.label = parent.type
-            self.re_calc_points()
 
             # add default model to the models_dict
             init.models_dict[self.label] = {"name": None,
@@ -360,46 +379,57 @@ class Model(Unit):
                                             "wargear": None,
                                             "options": None,
                                             "indep": False,
-                                            "pts": self.base_pts}
-            return
+                                            "pts": base_pts}
 
-        root_data = init.models_dict[label]
-
-        if root_data["wargear"] is not None:
-            self.wargear = list(map(lambda s: init.WargearItem(s), root_data["wargear"]))
+        if self.root_data["wargear"] is not None:
+            self.__wargear = list(map(lambda s: init.WargearItem(s), self.root_data["wargear"]))
         else:
-            self.wargear = None
+            self.__wargear = None
 
-        self.options = root_data["options"]
-        self.base_pts = root_data["pts"]
-        self.no_per_unit = root_data["no_per_unit"]
-        if root_data["name"] is None:
+        if self.root_data["name"] is None:
             self.name = self.label
         else:
-            self.name = root_data["name"]
-        self.parser = option_parser.OptionParser(self.wargear, unit=False)
-        self.parser.build()
-        self.re_calc_points()
+            self.name = self.root_data["name"]
+        if self.options is not None:
+            self.parser = option_parser.OptionParser(self.wargear, unit=False)
+            self.parser.build()
+        print(self.pts)
         return
 
-    def get_size(self):
-        return self.no_models
+    @property
+    def root_data(self): return init.models_dict[self.label]
 
-    def re_calc_points(self):
+    @property
+    def options(self): return self.root_data["options"]
+
+    @property
+    def wargear(self): return self.__wargear
+
+    @property
+    def limit(self): return self.root_data["no_per_unit"]
+
+    @property
+    def size(self): return self.__size
+
+    @size.setter
+    def size(self, new_size): self.__size = new_size
+
+    @property
+    def pts(self):
         """Updates any points values after changes to the unit"""
         wargear_pts = 0
         if self.wargear is not None:
             for i in self.wargear:
                 wargear_pts += i.points
-        self.pts_per_model = self.base_pts + wargear_pts
-        self.pts = self.pts_per_model * self.no_models
-        return
+        pts_per_model = self.root_data["pts"] + wargear_pts
+        pts = pts_per_model * self.size
+        return pts
 
     def __repr__(self, indent=''):
-        if self.no_models == 1:
+        if self.size == 1:
             ret = self.name
         else:
-            ret = '{} {}'.format(self.no_models, self.name)
+            ret = '{} {}'.format(self.size, self.name)
             if self.name[-1] != 's':
                 ret += 's'
         if self.wargear is not None:
