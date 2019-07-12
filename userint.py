@@ -70,6 +70,8 @@ class UI:
 
             # populate compulsory slots
             for keys, values in detach.units_dict.items():
+                if keys ==  "Dedicated Transports":
+                    continue
                 while len(values) < detach.foc[keys][0]:
                     print("***Adding compulsory units from " + keys + "***")
                     unit = self._create_user_unit(keys)

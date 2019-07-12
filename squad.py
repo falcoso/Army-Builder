@@ -169,7 +169,7 @@ class Unit(init.UnitTypes):
         """Updates any points values after changes to the unit"""
         pts = np.sum([i.pts for i in self.models])
         if self.wargear is not None:
-            wargear_pts = np.sum([i.points for i in self.wargear])
+            wargear_pts = np.sum([i.pts for i in self.wargear])
             pts += wargear_pts * self.size
         return pts
 
@@ -410,7 +410,7 @@ class Model(Unit):
         """Updates any points values after changes to the unit"""
         wargear_pts = 0
         if self.wargear is not None:
-            wargear_pts = np.sum([i.points for i in self.wargear])
+            wargear_pts = np.sum([i.pts for i in self.wargear])
         pts_per_model = self.root_data["pts"] + wargear_pts
         pts = pts_per_model * self.size
         return pts

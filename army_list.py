@@ -157,7 +157,8 @@ class Detachment:
                              "Troops": [],
                              "Elites": [],
                              "Fast Attack": [],
-                             "Heavy Support": []}
+                             "Heavy Support": [],
+                             "Dedicated Transports": []}
         # will raise an error if the detachment doesn't exist:
         init.detachments_dict[self.type]
         return

@@ -44,7 +44,7 @@ class HomeFrame(wx.Frame):
 
         kwds["style"] = kwds.get("style", 0) | wx.DEFAULT_FRAME_STYLE
         wx.Frame.__init__(self, *args, **kwds)
-        self.SetSize((630, 560))
+        self.SetSize((800, 600))
         self.SetTitle("Army Builder v1.0")
 
         # Menu Bar
@@ -134,26 +134,18 @@ class HomeFrame(wx.Frame):
 
     def delete(self, evt):
         """Event Handler for when a detachment or unit is deleted."""
-        print("Delete detachment")
         selected = self.treePane.tree.GetFocusedItem()
         item = self.treePane.tree.GetItemData(selected)
-        print(item)
+        # reset edit panel if unit is currently selected
         if isinstance(item, squad.Unit):
             try:
                 if self.editPane.unit == item:
                     self.reset_edit()
             except:
                 pass
-            detach = item.parent
-            detach.del_unit(item)
 
-        elif isinstance(item, army_list.Detachment):
-            army = item.parent
-            army.del_detachment(item.name)
-
-        self.treePane.update_headers(selected)
-        self.treePane.tree.Delete(selected)
-        print(self.army)
+        # delete the selected item from the tree and army
+        self.treePane.delete()
         return
 
     def copy(self, evt):

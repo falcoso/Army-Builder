@@ -48,6 +48,8 @@ class TreePane(wx.Panel):
 
     add_unit(self, unit): Adds the given unit to the tree.
 
+    delete(self): Deletes the current selected item from the tree and army.
+
     on_selection(self, evt):
         Event Handler to update the gui_editpanel.EditPanel in the parent
         window.
@@ -130,7 +132,6 @@ class TreePane(wx.Panel):
 
     def update_headers(self, treeid):
         """Updates the points values on the item's parent's headers."""
-        treeid = self.tree.GetItemParent(treeid)
         while treeid.IsOk():
             if treeid == self.root:
                 self.tree.SetItemText(self.root,
@@ -159,6 +160,34 @@ class TreePane(wx.Panel):
         self.update_unit(unit)
         self.tree.Expand(foc_node)
         self.tree.Expand(unit.treeid)
+        return
+
+    def delete(self):
+        """Deletes the current selected item from the tree and army."""
+        id = self.tree.GetFocusedItem()
+        item = self.tree.GetItemData(id)
+        if isinstance(item, squad.Unit):
+            detach = item.parent
+            detach.del_unit(item)
+            foc = item.battlefield_role
+            self.update_headers(id)
+
+            # delete foc_node if there are no units left on the branch
+            foc_node = self.tree.GetItemParent(id)
+            if self.tree.GetChildrenCount(foc_node, False) == 1:
+                detach_node = self.tree.GetItemParent(foc_node)
+                self.tree.Delete(foc_node)
+
+                # remove reference from storage dictionary
+                del self.foc_node[detach_node][foc]
+            else:
+                self.tree.Delete(id)
+
+        elif isinstance(item, army_list.Detachment):
+            army = item.parent
+            army.del_detachment(item.name)
+            self.update_headers(id)
+            self.tree.Delete(id)
         return
 
     def on_selection(self, evt):
@@ -199,6 +228,7 @@ class AddTreePane(wx.Panel):
     build_tree(self): Constructs Tree.
     on_selection(self, evt): Event Handler to add the selected unit to the army.
     """
+
     def __init__(self, *args, **kwargs):
         super(AddTreePane, self).__init__(*args, **kwargs)
         self.treeSizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -207,18 +237,20 @@ class AddTreePane(wx.Panel):
         return
 
     def build_tree(self):
-        self.tree = wx.TreeCtrl(self, wx.ID_ANY, style=wx.TR_HIDE_ROOT)
+        self.tree = wx.TreeCtrl(self, wx.ID_ANY)
         self.treeSizer.Add(self.tree, 1, wx.EXPAND, 0)
 
         self.root = self.tree.AddRoot("Army")
         self.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self.on_selection)
 
-        for role in init.units_dict.keys():
+        roles = ["HQ", "Elites", "Troops", "Fast Attack", "Heavy Support", "Dedicated Transports"]
+
+        for role in roles:
             role_node = self.tree.AppendItem(self.root, role)
             for unit in init.units_dict[role]:
                 unit = init.units_dict[role][unit]
                 unit_node = self.tree.AppendItem(role_node,
-                                                 unit.name + "({}pts)".format(unit.pts))
+                                                 unit.name + " ({}pts)".format(unit.pts))
                 self.tree.SetItemData(unit_node, unit)
 
         self.tree.ExpandAll()
@@ -227,7 +259,6 @@ class AddTreePane(wx.Panel):
         """
         Event Handler to add the selected unit to the army.
         """
-        # changes to the unit will change the reference in the whole army
         unit = self.tree.GetItemData(evt.GetItem())
         if not isinstance(unit, init.UnitTypes):
             return

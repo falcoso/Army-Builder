@@ -87,12 +87,12 @@ class WargearItem:
         Name of the Wargear
     no_of : int
         Number of the Wargear in the collection.
-    points : int
+    pts : int
         Points value of the collection of wargear.
 
     Public Methods
     --------------
-    set_no_of(self, no_of): Set no_of and updates points value.
+    set_no_of(self, no_of): Set no_of and updates pts value.
 
     wargear_search(self, item):
         Searches for a given wargear item in the armoury dictionary
@@ -103,13 +103,17 @@ class WargearItem:
         if '*' in item:
             self.no_of = int(item.split('*')[0])
             self.item = item.split('*')[1]
-        self.points = self.no_of * self.wargear_search(self.item)
+        self.pts = self.no_of * self.wargear_search(self.item)
+        # get the wargear type
+        for key, obj in armoury_dict.items():
+            if item in obj:
+                self.type = key
         return
 
     def set_no_of(self, no_of):
         """Set no_of and updates points value."""
         self.no_of = no_of
-        self.points = self.no_of * self.wargear_search(self.item)
+        self.pts = self.no_of * self.wargear_search(self.item)
         return
 
     def wargear_search(self, item):
@@ -124,20 +128,20 @@ class WargearItem:
         if tidy:
             ret = ret.ljust(28)
         if comparison:
-            ret += " (net {}pts per model)".format(self.points - comparison.points)
-        elif self.points != 0:
-            ret += " ({}pts)".format(self.points)
+            ret += " (net {}pts per model)".format(self.pts - comparison.pts)
+        elif self.pts != 0:
+            ret += " ({}pts)".format(self.pts)
         return ret
 
     def __mul__(self, integer):
-        self.points = self.points * integer
+        self.pts = self.pts * integer
         self.no_of = self.no_of * integer
         return self
 
     def __add__(self, other_item):
         if type(other_item) == MultipleItem:
             other_item.item.append(self.item)
-            other_item.points += self.points
+            other_item.pts += self.pts
             return other_item
 
         elif type(other_item) == WargearItem:
@@ -150,14 +154,14 @@ class WargearItem:
 
     def __eq__(self, other):
         try:
-            if self.item != other.item or self.no_of != self.no_of or self.points != self.points:
+            if self.item != other.item or self.no_of != self.no_of or self.pts != self.pts:
                 return False
             return True
         except:
             return False
 
     def __hash__(self):
-        return hash((tuple(self.item), self.no_of, self.points))
+        return hash((tuple(self.item), self.no_of, self.pts))
 
 
 class MultipleItem(WargearItem):
@@ -176,7 +180,7 @@ class MultipleItem(WargearItem):
         Name of the Wargear
     no_of : int
         Number of the Wargear in the collection.
-    points : int
+    pts : int
         Points value of the collection of wargear.
 
     """
@@ -184,10 +188,20 @@ class MultipleItem(WargearItem):
         if type(args[0]) == str:
             args = (WargearItem(i) for i in args)
         self.item = list(map(lambda s: s.item, args))
-        self.points = 0
+
+        # set type in given priority order
+        types = [i.type for i in args]
+        if "Melee" in types:
+            self.type = "Melee"
+        elif "Range" in types:
+            self.type = "Range"
+        else:
+            self.type = "Other Wargear"
+
+        self.pts = 0
         self.no_of = 1
         for i in args:
-            self.points += i.points
+            self.pts += i.pts
         return
 
     def __mul__(self, other):
@@ -199,7 +213,7 @@ class MultipleItem(WargearItem):
             self.item += other_item.item
         else:
             self.item.append(other_item.item)
-        self.points += other_item.points
+        self.pts += other_item.pts
         return self
 
     def __repr__(self, comparison=None, tidy=False):
@@ -216,9 +230,9 @@ class MultipleItem(WargearItem):
         if tidy:
             ret = ret.ljust(28)
         if comparison:
-            ret += " \t(net {}pts per model)".format(self.points - comparison.points)
+            ret += " \t(net {}pts per model)".format(self.pts - comparison.pts)
         else:
-            ret += " ({}pts)".format(self.points)
+            ret += " ({}pts)".format(self.pts)
         return ret
 
 
@@ -292,9 +306,10 @@ class UnitTypes:
                 if type(i) == MultipleItem:
                     self.wargear_pts += i.wargear_search(i.item[0])
                 else:
-                    self.wargear_pts += i.points
+                    self.wargear_pts += i.pts
 
         self.pts += self.wargear_pts
+        self.pts *= self.size[0]
         return
 
     def wargear_search(self, item):
