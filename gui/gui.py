@@ -35,6 +35,9 @@ class HomeFrame(wx.Frame):
     reset_edit(self, unit): Re-loads the edit panel when a new item is selected.
     on_edit(self, evt): Event Handler for when selected item is editted.
     add_unit(self, evt): Event Handler for when a new unit is added.
+    close_add_unit(self, unit): Event handler when the AddUnitDialog is closed.
+    add_unit_from_tree(self, unit):
+        Called by gui_armytree.AddTreePane to add a unit to the army.
     add_detach(self, evt): Event Handler for when a new detachment is added.
     delete(self, evt): Event Handler for when a detachment or unit is deleted.
     """
@@ -80,10 +83,14 @@ class HomeFrame(wx.Frame):
         self.addPane = gui_armytree.AddTreePane(self)
 
         self.mgr = aui.AuiManager(self)
-        self.mgr.AddPane(self.treePane,
-                         aui.AuiPaneInfo().Center().Floatable(False))
-        self.mgr.AddPane(self.addPane,
-                         aui.AuiPaneInfo().Left().Floatable(False))
+        info = aui.AuiPaneInfo().Center().Floatable(False)
+        info.BestSize(wx.Size(100, -1))
+        self.mgr.AddPane(self.treePane, info)
+
+        info = aui.AuiPaneInfo().Left().Floatable(False)
+        info.BestSize(wx.Size(300, -1))
+        self.mgr.AddPane(self.addPane, info)
+
         self.mgr.Update()
         self.Centre()
 
@@ -100,7 +107,7 @@ class HomeFrame(wx.Frame):
                 self.editPane = gui_editpanel.EditPanel(self, wx.ID_ANY)
                 self.editPane.set_unit(unit)
                 info = aui.AuiPaneInfo().Right().Floatable(False)
-                info.BestSize(self.editPane.GetMaxSize())
+                info.BestSize(wx.Size(500, -1))
                 self.mgr.AddPane(self.editPane, info)
                 self.mgr.Update()
 
@@ -119,11 +126,20 @@ class HomeFrame(wx.Frame):
         cdDialog.ShowModal()
 
     def close_add_unit(self, unit):
-        """Event handler when the AddUnitDialog is closed"""
+        """Event handler when the AddUnitDialog is closed."""
         self.treePane.add_unit(unit)
         return
 
     def add_unit_from_tree(self, unit):
+        """Called by gui_armytree.AddTreePane to add a unit to the army."""
+        detach = self.treePane.detach # last chosen detachment
+        battlefield_role = unit.battlefield_role
+        if detach.foc[battlefield_role][1] <= len(detach.units_dict[battlefield_role]):
+            msg = "Unable to add unit to {} \n".format(detach.name)
+            msg += "as {} slots are full.".format(battlefield_role)
+            infoDialog = wx.MessageDialog(self, msg)
+            infoDialog.ShowModal()
+            return
         self.treePane.detach.add_unit(unit)
         self.treePane.add_unit(unit)
         return
