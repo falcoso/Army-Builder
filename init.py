@@ -110,6 +110,14 @@ class WargearItem:
                 self.type = key
         return
 
+    def save(self):
+        """Generates a string to be stored in a file for saving."""
+        save = ''
+        if self.no_of != 1:
+            save += str(self.no_of) + '*'
+        save += self.item
+        return save
+
     def set_no_of(self, no_of):
         """Set no_of and updates points value."""
         self.no_of = no_of
@@ -185,8 +193,9 @@ class MultipleItem(WargearItem):
 
     """
     def __init__(self, *args):
+        # check all items exist
         if type(args[0]) == str:
-            args = (WargearItem(i) for i in args)
+            args = [WargearItem(i) for i in args]
         self.item = list(map(lambda s: s.item, args))
 
         # set type in given priority order
@@ -198,11 +207,17 @@ class MultipleItem(WargearItem):
         else:
             self.type = "Other Wargear"
 
+        # set points
         self.pts = 0
         self.no_of = 1
         for i in args:
+            print(i.pts)
             self.pts += i.pts
         return
+
+    def save(self):
+        """Generates a string to be stored in a file for saving."""
+        return '+'.join(self.item)
 
     def __mul__(self, other):
         raise TypeError("Multiplication of MultiplItem types not yet defined")

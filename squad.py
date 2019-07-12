@@ -145,7 +145,7 @@ class Unit(init.UnitTypes):
     def models(self): return self.__models
 
     @property
-    def size(self): return np.sum([i.size for i in self.models])
+    def size(self): return np.sum([i.size for i in self.models], dtype=int)
 
     @name.setter
     def name(self, new_name):
@@ -209,10 +209,10 @@ class Unit(init.UnitTypes):
         # count instances of each model
         count_dict = {}
         for i in self.models:
-            if i.label in count_dict.keys():
-                count_dict[i.label] += i.size
+            if i.type in count_dict.keys():
+                count_dict[i.type] += i.size
             else:
-                count_dict[i.label] = i.size
+                count_dict[i.type] = i.size
 
         # check model has a sufficient number
         for name, no_of in count_dict.items():
@@ -239,7 +239,7 @@ class Unit(init.UnitTypes):
                 counter = 0
                 for i in self.models:
                     # count how many instances of model and add difference
-                    if i.label == model:
+                    if i.type == model:
                         counter += 1
                 if no_of - counter < 0:
                     print("Unable to remove models as each is independant")
@@ -252,7 +252,7 @@ class Unit(init.UnitTypes):
                 # check to see if model exists already
                 flag = True
                 for i in self.__models:
-                    if i.label == model:
+                    if i.type == model:
                         i.size = no_of
                         if no_of == 0:
                             self.__models.remove(i)
@@ -277,6 +277,28 @@ class Unit(init.UnitTypes):
 
             self.__wargear += new_wargear.selected
         return
+
+    def save(self):
+        """Creates a dictionary of the unit's data"""
+        save = {}
+        save["type"] = self.type
+        save["size"] = int(self.size)
+        if self.wargear is not None:
+            save["wargear"] = [i.save() for i in self.wargear]
+        else:
+            save["wargear"] = None
+        # in try so it can be used by Model()
+        try:
+            model_saves = [i.save() for i in self.models]
+            save["models"] = model_saves
+            if self.__default_name:
+                save["name"] = None
+            else:
+                save["name"] = self.name
+        except AttributeError:
+            pass
+
+        return save
 
     def __repr__(self):
         ret = self.name + '\t({}pts)'.format(self.pts)
@@ -323,7 +345,7 @@ class Model(Unit):
 
     Parameters
     ----------
-    label : str
+    type : str
         Type of model to be initialised.
     no_models : int (default=1)
         Number of that type of model.
@@ -339,11 +361,11 @@ class Model(Unit):
         ID for wx.TreeCtrl in GUI
     size : int
         Number of the type of model.
-    label : str
+    type : str
         Type of model.
     name : str
         String that will be displayed in GUI, may be the same as models with
-        different labels.
+        different types.
     wargear : list (init.WargearItem)
         List of base wargear that every model in the unit has.
     options : type
@@ -355,23 +377,23 @@ class Model(Unit):
     pts: int
         Total points for the group of models.
     size: int
-        Number of models of this label.
+        Number of models of this type.
     """
 
-    def __init__(self, parent, label=None, no_models=1, base_pts=None):
+    def __init__(self, parent, type=None, no_models=1, base_pts=None):
         self.__parent = parent
         self.__size = no_models
-        self.label = label
-        if label is None:
-            self.label = parent.type
+        self.__type = type
+        if type is None:
+            self.__type = parent.type
 
             # add default model to the models_dict
-            init.models_dict[self.label] = {"name": None,
-                                            "no_per_unit": None,
-                                            "wargear": None,
-                                            "options": None,
-                                            "indep": False,
-                                            "pts": base_pts}
+            init.models_dict[self.type] = {"name": None,
+                                           "no_per_unit": None,
+                                           "wargear": None,
+                                           "options": None,
+                                           "indep": False,
+                                           "pts": base_pts}
 
         if self.root_data["wargear"] is not None:
             self.__wargear = list(map(lambda s: init.WargearItem(s), self.root_data["wargear"]))
@@ -379,7 +401,7 @@ class Model(Unit):
             self.__wargear = None
 
         if self.root_data["name"] is None:
-            self.name = self.label
+            self.name = self.type
         else:
             self.name = self.root_data["name"]
         if self.options is not None:
@@ -388,7 +410,10 @@ class Model(Unit):
         return
 
     @property
-    def root_data(self): return init.models_dict[self.label]
+    def type(self): return self.__type
+
+    @property
+    def root_data(self): return init.models_dict[self.type]
 
     @property
     def options(self): return self.root_data["options"]
@@ -442,7 +467,7 @@ class Model(Unit):
             return False
 
     def __hash__(self):
-        ret = hash(self.name) + hash(self.label)
+        ret = hash(self.name) + hash(self.type)
         if self.wargear is not None:
             ret += hash(tuple(self.wargear))
         return ret

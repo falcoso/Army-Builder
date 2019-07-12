@@ -72,10 +72,14 @@ class HomeFrame(wx.Frame):
         copy_icon = wx.Bitmap("./gui/icons/copy.png")
         copy = self.toolbar.AddTool(wx.ID_ANY, 'Copy',
                                     copy_icon)
+        save_icon = wx.Bitmap("./gui/icons/save.png")
+        save = self.toolbar.AddTool(wx.ID_ANY, 'Save',
+                                    save_icon)
         self.Bind(wx.EVT_TOOL, self.add_unit, add_unit)
         self.Bind(wx.EVT_TOOL, self.add_detach, add_detach)
         self.Bind(wx.EVT_TOOL, self.delete, delete)
         self.Bind(wx.EVT_TOOL, self.copy, copy)
+        self.Bind(wx.EVT_TOOL, self.save, save)
         self.toolbar.Realize()
 
         # Main panels
@@ -167,6 +171,11 @@ class HomeFrame(wx.Frame):
     def copy(self, evt):
         """Event Handler for when a detachment or unit is copied."""
         print("Copy")
+        return
+
+    def save(self, evt):
+        """Event Handler for saving the the army"""
+        print("Save")
         return
 
 

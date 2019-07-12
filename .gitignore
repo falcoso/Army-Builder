@@ -6,3 +6,4 @@ __pycache__/
 parsetab*
 .pytest_cache/
 *.wxg*
+*.army

@@ -12,14 +12,16 @@ if __name__ == "__main__":
     init.init("Necron")
     army = army_list.ArmyList("Necron")
     detach = army_list.Detachment("Patrol")
-    unit = squad.Unit("Necron Warriors", "Troops")
-    detach.add_unit(unit)
-    unit1 = squad.Unit("Immortals", "Troops")
-    detach.add_unit(unit1)
-    unit2 = squad.Unit("Overlord", "HQ")
-    detach.add_unit(unit2)
+
+    units = [("Necron Warriors", "Troops"),
+             ("Immortals", "Troops"),
+             ("Overlord", "HQ")]
+    for unit in units:
+        unit = squad.Unit(*unit)
+        detach.add_unit(unit)
+        
     army.add_detachment(detach)
-    print(army)
+    print(army.save("./test_army.army"))
 
     # fire up the gui
     app = wx.App()

@@ -12,6 +12,8 @@ Detachment:
 """
 
 import numpy as np
+import json
+
 import init
 import squad
 
@@ -44,17 +46,28 @@ class ArmyList:
     del_detachment(self, name): Deletes the detachment with the supplied name.
     """
 
-    def __init__(self, faction):
-        self.faction = faction
-        self.detachments = []
-        self.cp = 0
-
-        # define list of names to make searching and labelling easier
-        self.detachment_names = []
+    def __init__(self, faction, load=False):
+        if load:
+            self.load(faction)
+        else:
+            self.faction = faction
+            self.detachments = []
+            self.cp = 0
         return
 
     @property
     def pts(self): return np.sum([i.pts for i in self.detachments], dtype=int)
+
+    @property
+    def detachment_names(self): return [i.name for i in self.detachments]
+
+    def save(self, file_path):
+        save = {}
+        save["faction"] = self.faction
+        save["detachments"] = [i.save() for i in self.detachments]
+        with open(file_path, 'w') as fp:
+            json.dump(save, fp)
+        return save
 
     def add_detachment(self, detach):
         """Adds a detachment to the army list"""
@@ -74,7 +87,6 @@ class ArmyList:
                 counter += 1
                 if detachment.name in self.detachment_names[i]:
                     detachment.name = detachment.type + ' ' + str(counter)
-                    self.detachment_names[i] = detachment.name
         return
 
     def del_detachment(self, name):
@@ -206,6 +218,21 @@ class Detachment:
                 output += "\n"
 
         return output
+
+    def save(self):
+        """Creates a dictionary to save the current detachment."""
+        save = {}
+        # name can be saved in the upper level
+        save["type"] = self.type
+        if self.__default_name:
+            save["name"] = None
+        else:
+            save["name"] = self.name
+        unit_saves = {}
+        for foc_role, unit_list in self.__units_dict.items():
+            unit_saves[foc_role] = [i.save() for i in unit_list]
+        save["units"] = unit_saves
+        return save
 
     def add_unit(self, unit):
         """Adds the given unit to the detachment."""

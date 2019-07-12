@@ -30,14 +30,17 @@ def test_re_size_mono_model():
     assert warriors.size == 10
     return
 
+@pytest.fixture
+def unit():
+    unit = squad.Unit("Destroyers", "Fast Attack")
+    unit.re_size(2, 1)
+    return unit
 
-def test_re_size_poly_model():
+def test_re_size_poly_model(unit):
     """
     Checks the Unit.test_resize() method for unist containing multiple models
     """
     # check that changes no applied to the whole unit creates a new model
-    unit = squad.Unit("Destroyers", "Fast Attack")
-    unit.re_size(2, 1)
     assert unit.size == 3
     assert unit.models[0].size == 2
     assert unit.models[1].wargear == [init.WargearItem("Heavy gauss cannon")]
@@ -99,11 +102,11 @@ def test_reset():
     assert unit_copy.wargear == unit.wargear
 
 
-def test_check_validity():
+def test_check_validity(unit):
     """
     Checks the Unit.check_validty method highlights errors in the unit
     """
-    unit = squad.Unit("Destroyers", "Fast Attack")
+    assert unit.check_validity() is True
     unit.re_size(5, 5)
     assert unit.check_validity() is False  # initial state too big and too many Heavy Destroyers
 
@@ -112,3 +115,37 @@ def test_check_validity():
 
     unit.re_size(5, 1)  # Valid unit
     assert unit.check_validity() is True
+    return
+
+def test_save_unit(unit):
+    """Checks that units are saved in the correct dictionary format."""
+    save = unit.save()
+    assert save == {"type": "Destroyers",
+                    "size": 3,
+                    "wargear": None,
+                    "models": [i.save() for i in unit.models],
+                    "name": None}
+    return
+
+@pytest.fixture
+def model():
+    unit = squad.Unit("Destroyers", "Fast Attack")
+    model = squad.Model(unit, "Heavy Destroyer")
+    return model
+
+def test_init_Model(model):
+    """Checks that a model can be initialised."""
+    assert model.pts == 30 + 27
+    assert model.type == "Heavy Destroyer"
+    assert model.type == "Heavy Destroyer"
+    assert model.wargear == [init.WargearItem("Heavy gauss cannon")]
+    assert model.limit == 1
+    return
+
+
+def test_save_Model(model):
+    """Checks that models are saved in the correct dictionary format."""
+    save = model.save()
+    assert save == {"type": "Heavy Destroyer",
+                    "size": 1,
+                    "wargear": [init.WargearItem("Heavy gauss cannon").save()]}
