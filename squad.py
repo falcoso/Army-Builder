@@ -73,25 +73,50 @@ class Unit(init.UnitTypes):
     change_wargear(self, wargear_to_add):
         Changes the wargear options for the unit. wargear_to_add is a list of
         option_parser.Option with an init.WargearItem selected for each item.
+
+    get_all_wargear(self):
+        Returns a set containing all the wargear present across all models in
+        the unit.
+
+    check_validity(self):
+        Checks that the unit is legal by looking at the size of the unit and
+        the number of each type of model
+
+    save(self): Creates a dictionary of the unit's data.
+
+    load(self, loaded_dict): Loads the unit from a pre-made dictionary.
     """
 
     def __init__(self, unit_type, battlefield_role):
         self.__parent = None
         self.__treeid = None
-        self.__type = unit_type
-        self.__name = self.type
         self.__default_name = True
         self.__battlefield_role = battlefield_role
+        self.__models = []
+        if type(unit_type) == dict:
+            self.load(unit_type)
+        elif type(unit_type) == str:
+            self.__type = unit_type
+            self.__name = self.type
+            self.__wargear = copy.deepcopy(self.base_unit.wargear)
+        else:
+            raise TypeError("detachment type must be a dict or string got {}".format(
+                type(unit_type)))
 
-        self.__wargear = copy.deepcopy(self.base_unit.wargear)
         self.__models = []
         self.parser = option_parser.OptionParser(current_wargear=self.wargear)
         self.parser.build()
         if self.mod_str is None:
             self.__models = [Model(self, no_models=self.size_range[0],
                                    base_pts=self.base_unit.base_pts)]
-            self.base_unit.models = [self.type]  # might break here from getter
-        else:
+            # self.base_unit.models = [self.type]  # might break here from getter
+
+            try:
+                self.__models[0].size = unit_type["size"]
+            except TypeError:
+                pass
+
+        elif self.models == []:  # models not yet populated from load
             # get first model without size-limits
             for model in self.mod_str:
                 if init.models_dict[model]["no_per_unit"] is None:
@@ -230,10 +255,17 @@ class Unit(init.UnitTypes):
         Re-sizes the unit. An int must be provided for every possible type of
         model in the unit.
         """
-        # check if the model is already in the list
-        if len(args) != len(self.mod_str):
+        # if default model has been made just set that to the value
+        if self.mod_str is None:
+            self.models[0].size = args[0]
+            return
+
+        # validate corrrect number of args otherwise
+        elif len(args) != len(self.mod_str):
             raise TypeError("Got {} sizes for {} models".format(len(args),
                                                                 len(self.mod_str)))
+
+        # check if the model is already in the list
         for model, no_of in zip(self.mod_str, args):
             if init.models_dict[model]["indep"]:
                 counter = 0
@@ -279,7 +311,7 @@ class Unit(init.UnitTypes):
         return
 
     def save(self):
-        """Creates a dictionary of the unit's data"""
+        """Creates a dictionary of the unit's data."""
         save = {}
         save["type"] = self.type
         save["size"] = int(self.size)
@@ -289,7 +321,11 @@ class Unit(init.UnitTypes):
             save["wargear"] = None
         # in try so it can be used by Model()
         try:
-            model_saves = [i.save() for i in self.models]
+            # if models have been added as a default don't bother saving
+            if self.mod_str is None:
+                model_saves = None
+            else:
+                model_saves = [i.save() for i in self.models]
             save["models"] = model_saves
             if self.__default_name:
                 save["name"] = None
@@ -299,6 +335,28 @@ class Unit(init.UnitTypes):
             pass
 
         return save
+
+    def load(self, loaded_dict):
+        """Loads the unit from a pre-made dictionary."""
+        self.__type = loaded_dict ["type"]
+        if loaded_dict["wargear"] is None:
+            self.__wargear = None
+        else:
+            self.__wargear = list(map(lambda x: init.MultipleItem(x.split('+')) if '+' in x else init.WargearItem(x),
+                                      loaded_dict["wargear"]))
+
+        try:
+            # first condition will raise KeyError for models
+            if loaded_dict["models"] is not None:
+                self.__models = [Model(self, i) for i in loaded_dict["models"]]
+            if loaded_dict["name"] is None:
+                self.__name = self.type
+            else:
+                self.__name = loaded_dict["name"]
+                self.__default_name = False
+
+        except KeyError:
+            pass
 
     def __repr__(self):
         ret = self.name + '\t({}pts)'.format(self.pts)
@@ -324,7 +382,9 @@ class Unit(init.UnitTypes):
             return False
 
         try:
-            if self.name == other.name and set(self.wargear) == set(other.wargear) and self.models == other.models:
+            if self.name == other.name \
+                and set(self.wargear) == set(other.wargear)  \
+                    and self.models == other.models:
                 return True
             else:
                 return False
@@ -368,8 +428,8 @@ class Model(Unit):
         different types.
     wargear : list (init.WargearItem)
         List of base wargear that every model in the unit has.
-    options : type
-        Description of attribute `options`.
+    options : list (str)
+        List of strings that contains each option available to the unit.
     limit : int
         Limit to the number of this type of model allowed in the unit
     parser: option_parser.OptionParser
@@ -396,7 +456,8 @@ class Model(Unit):
                                            "pts": base_pts}
 
         if self.root_data["wargear"] is not None:
-            self.__wargear = list(map(lambda s: init.WargearItem(s), self.root_data["wargear"]))
+            self.__wargear = list(map(lambda x: init.MultipleItem(x.split('+')) if '+' in x else init.WargearItem(x),
+                                      self.root_data["wargear"]))
         else:
             self.__wargear = None
 
@@ -411,6 +472,9 @@ class Model(Unit):
 
     @property
     def type(self): return self.__type
+
+    @property
+    def parent(self): return self.__parent
 
     @property
     def root_data(self): return init.models_dict[self.type]

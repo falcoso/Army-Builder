@@ -26,7 +26,10 @@ class ArmyList:
     Parameters
     ----------
     faction : str
-        The faction of the Army list being made
+        The faction of the Army list being made.
+    load : bool (default=False)
+        If true the faction parameter is a filepath to a json from which the
+        army is to be loaded.
 
     Public Attributes
     -----------------
@@ -36,11 +39,17 @@ class ArmyList:
         List of names of each of the detachments for quick reference.
     cp : int
         Total number of command points in the army.
+    pts : int
+        Total points in the army.
     faction : str
-        The faction of the Army list being made
+        The faction of the Army list being made.
 
     Public Methods
     --------------
+    save(self, file_path): "Saves the army as a json to the given file_path.
+
+    load(self, file_path): Loads the army from the specified filepath.
+
     add_detachment(self, detach): Adds a detachment to the army list.
 
     del_detachment(self, name): Deletes the detachment with the supplied name.
@@ -52,8 +61,10 @@ class ArmyList:
         else:
             self.faction = faction
             self.detachments = []
-            self.cp = 0
         return
+
+    @property
+    def cp(self): return np.sum([i.cp for i in self.detachments], dtype=int)
 
     @property
     def pts(self): return np.sum([i.pts for i in self.detachments], dtype=int)
@@ -62,31 +73,29 @@ class ArmyList:
     def detachment_names(self): return [i.name for i in self.detachments]
 
     def save(self, file_path):
+        """Saves the army as a json to the given file_path."""
         save = {}
         save["faction"] = self.faction
         save["detachments"] = [i.save() for i in self.detachments]
         with open(file_path, 'w') as fp:
-            json.dump(save, fp)
+            json.dump(save, fp, indent=4)
         return save
+
+    def load(self, file_path):
+        """Loads the army from the specified filepath."""
+        with open(file_path, 'r') as file:
+            army = json.load(file)
+
+        self.faction = army["faction"]
+        self.detachments = [Detachment(i) for i in army["detachments"]]
+        for i in self.detachments:
+            i.parent = self
+        return
 
     def add_detachment(self, detach):
         """Adds a detachment to the army list"""
-        if not isinstance(detach, Detachment):
-            raise ValueError("Invalid unit input")
-
-        detach.parent = self
         self.detachments.append(detach)
-        self.detachment_names.append(detach.name)
-        self.cp += self.detachments[-1].cp
-
-        # number repeated detachment types
-        counter = 0
-        for i in range(len(self.detachments)):
-            detachment = self.detachments[i]
-            if detachment.type == detach.type:
-                counter += 1
-                if detachment.name in self.detachment_names[i]:
-                    detachment.name = detachment.type + ' ' + str(counter)
+        detach.parent = self
         return
 
     def del_detachment(self, name):
@@ -99,13 +108,7 @@ class ArmyList:
                 self.detachments.pop(self.detachment_names.index(detach))
                 self.detachment_names.remove(detach)
                 break
-        self.__re_calc_cp()
         return
-
-    def __re_calc_cp(self):
-        self.cp = 0
-        for i in self.detachments:
-            self.cp += i.cp
 
     def __repr__(self):
         ret = self.faction + '\n'
@@ -125,16 +128,14 @@ class Detachment:
 
     Parameters
     ----------
-    parent: ArmyList
-        ArmyList to which the detachment belongs.
-    detachment_type : str
-        Type of detachment to be created.
-
+    detachment_type : str/ dict
+        Type of detachment to be created, or dictionary from which to generate
+        a pre-made army.
 
     Public Attributes
     -----------------
-    parent : Unit
-        Unit to which the model belongs.
+    parent : ArmyList
+        Army to which the detachment belongs.
     treeid : wx.TreeItemID
         ID for wx.TreeCtrl in GUI
     foc : dict
@@ -155,15 +156,17 @@ class Detachment:
 
     Public Methods
     --------------
+    save(self): Creates a dictionary to save the current detachment.
+
+    load(self): Dictionary from which to generate a pre-made detachment.
+
     add_unit(self, unit): Adds the given unit to the detachment.
 
     del_unit(self, unit): Deletes the given unit from the detachment.
     """
 
     def __init__(self, detachment_type):
-        self.type = detachment_type
         self.__parent = None
-        self.__name = self.type
         self.__default_name = True
         self.__units_dict = {"HQ": [],
                              "Troops": [],
@@ -171,8 +174,16 @@ class Detachment:
                              "Fast Attack": [],
                              "Heavy Support": [],
                              "Dedicated Transports": []}
-        # will raise an error if the detachment doesn't exist:
-        init.detachments_dict[self.type]
+        if type(detachment_type) == dict:
+            self.load(detachment_type)
+        elif type(detachment_type) == str:
+            self.type = detachment_type
+            self.__name = self.type
+            # will raise an error if the detachment doesn't exist:
+            init.detachments_dict[self.type]
+        else:
+            raise TypeError("detachment type must be a dict or string got {}".format(
+                type(detachment_type)))
         return
 
     @property
@@ -188,7 +199,16 @@ class Detachment:
     def parent(self): return self.__parent
 
     @parent.setter
-    def parent(self, parent): self.__parent = parent
+    def parent(self, parent):
+        self.__parent = parent
+
+        # number name if same detachment already exists
+        if self.__default_name:
+            counter = 0
+            for i in self.parent.detachment_names:
+                if self.type in i:
+                    counter += 1
+            self.__name = self.type + ' ' + str(counter)
 
     @property
     def treeid(self): return self.__treeid
@@ -200,7 +220,9 @@ class Detachment:
     def name(self): return self.__name
 
     @property
-    def pts(self): return np.sum([np.sum([i.pts for i in unit]) for key, unit in self.units_dict.items()], dtype=int)
+    def pts(self): return np.sum([np.sum([i.pts for i in unit])
+                                  for key, unit in self.units_dict.items()],
+                                 dtype=int)
 
     @name.setter
     def name(self, new_name):
@@ -234,6 +256,22 @@ class Detachment:
         save["units"] = unit_saves
         return save
 
+    def load(self, loaded_dict):
+        """Dictionary from which to generate a pre-made detachment."""
+        self.type = loaded_dict["type"]
+        if loaded_dict["name"] is None:
+            self.__name = self.type
+        else:
+            self.__name = loaded_dict["name"]
+            self.__default_name = False
+
+        for foc_role, unit_list in self.__units_dict.items():
+            self.__units_dict[foc_role] = [squad.Unit(i, foc_role)
+                                           for i in loaded_dict["units"][foc_role]]
+            for unit in self.__units_dict[foc_role]:
+                unit.parent = self
+        return
+
     def add_unit(self, unit):
         """Adds the given unit to the detachment."""
         if not isinstance(unit, squad.Unit):
@@ -246,3 +284,13 @@ class Detachment:
         """Deletes the given unit from the detachment."""
         self.__units_dict[unit.battlefield_role].remove(unit)
         return
+
+    def __eq__(self, other):
+        if type(other) != Detachment:
+            return False
+
+        if self.name == other.name and self.type == other.type and self.units_dict == other.units_dict:
+            return True
+
+        else:
+            return False

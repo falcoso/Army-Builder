@@ -13,10 +13,12 @@ def detach():
 
     units = [("Necron Warriors", "Troops"),
              ("Immortals", "Troops"),
-             ("Overlord", "HQ")]
+             ("Overlord", "HQ"),
+             ("Destroyers", "Fast Attack")]
     for unit in units:
         unit = squad.Unit(*unit)
         detach.add_unit(unit)
+    unit.re_size(2, 1)
     return detach
 
 
@@ -64,10 +66,10 @@ def test_auto_naming():
     army.add_detachment(detach2)
     army.add_detachment(detach3)
     for i in range(len(army.detachments)):
-        print(army.detachments[i])
         assert army.detachments[i].name == "Patrol {}".format(i + 1)
     assert army.detachment_names == ['Patrol 1', 'Patrol 2', 'Patrol 3']
     return
+
 
 def test_save_army(detach):
     army = army_list.ArmyList("Necron")
@@ -78,8 +80,20 @@ def test_save_army(detach):
     return
 
 
+# def test_load_army(detach):
+#     army1 = army_list.ArmyList("./test_army.army", True)
+#     army2 = army_list.ArmyList("Necron")
+#     army2.add_detachment(detach)
+#     print(army1)
+#     print(army2)
+#     for detachment in army1.detachments:
+#         assert detachment.parent == army1
+#     assert army1.faction == army2.faction
+#     assert army1.detachments == army2.detachments
+
+
 def test_detachment(detach):
-    assert detach.pts == 299
+    assert detach.pts == 456
     assert len(detach.units_dict["HQ"]) == 1
     assert len(detach.units_dict["Troops"]) == 2
     assert detach.name == "Patrol"
@@ -95,7 +109,7 @@ def test_add_unit(detach):
     assert set(stalker.wargear) == set([init.WargearItem("Heat ray"),
                                         init.WargearItem("Massive forelimbs")])
 
-    assert detach.pts == 299 + 171
+    assert detach.pts == 456 + 171
     return
 
 
@@ -106,7 +120,20 @@ def test_save_detachment(detach):
                     "units": {"HQ": [i.save() for i in detach.units_dict["HQ"]],
                               "Troops": [i.save() for i in detach.units_dict["Troops"]],
                               "Elites": [],
-                              "Fast Attack": [],
+                              "Fast Attack": [i.save() for i in detach.units_dict["Fast Attack"]],
                               "Heavy Support": [],
                               "Dedicated Transports": []}}
-    pass
+    return
+
+
+# def test_load_detachment(detach):
+#     load = {"type": "Patrol",
+#                     "name": None,
+#                     "units": {"HQ": [i.save() for i in detach.units_dict["HQ"]],
+#                               "Troops": [i.save() for i in detach.units_dict["Troops"]],
+#                               "Elites": [],
+#                               "Fast Attack": [],
+#                               "Heavy Support": [],
+#                               "Dedicated Transports": []}}
+#     detach2 = army_list.Detachment(load)
+#     assert detach == detach2

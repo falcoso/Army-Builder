@@ -5,6 +5,20 @@ import pytest
 init.init('Necron')
 
 
+@pytest.fixture
+def unit():
+    unit = squad.Unit("Destroyers", "Fast Attack")
+    unit.re_size(2, 1)
+    return unit
+
+
+@pytest.fixture
+def model():
+    unit = squad.Unit("Destroyers", "Fast Attack")
+    model = squad.Model(unit, "Heavy Destroyer")
+    return model
+
+
 def test_squad():
     """Checks the attributes of the units class"""
     warriors = squad.Unit("Necron Warriors", "Troops")
@@ -30,11 +44,6 @@ def test_re_size_mono_model():
     assert warriors.size == 10
     return
 
-@pytest.fixture
-def unit():
-    unit = squad.Unit("Destroyers", "Fast Attack")
-    unit.re_size(2, 1)
-    return unit
 
 def test_re_size_poly_model(unit):
     """
@@ -117,6 +126,7 @@ def test_check_validity(unit):
     assert unit.check_validity() is True
     return
 
+
 def test_save_unit(unit):
     """Checks that units are saved in the correct dictionary format."""
     save = unit.save()
@@ -125,13 +135,11 @@ def test_save_unit(unit):
                     "wargear": None,
                     "models": [i.save() for i in unit.models],
                     "name": None}
+
+    # unit2 = squad.Unit(save, "Fast Attack")
+    # assert unit == unit2
     return
 
-@pytest.fixture
-def model():
-    unit = squad.Unit("Destroyers", "Fast Attack")
-    model = squad.Model(unit, "Heavy Destroyer")
-    return model
 
 def test_init_Model(model):
     """Checks that a model can be initialised."""
@@ -149,3 +157,8 @@ def test_save_Model(model):
     assert save == {"type": "Heavy Destroyer",
                     "size": 1,
                     "wargear": [init.WargearItem("Heavy gauss cannon").save()]}
+
+    # model1 = squad.Model(model.parent, save)
+    # print(model)
+    # print(model1)
+    # assert model == model1

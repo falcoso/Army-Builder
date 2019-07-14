@@ -27,6 +27,7 @@ UnitTypes:
 """
 
 import json
+import numpy as np
 
 
 def wargear_search_base(item):
@@ -340,3 +341,92 @@ class UnitTypes:
             for i in self.wargear:
                 output += i.__repr__() + ", "
         return output
+
+class BoardObj:
+    def __init__(self, root_data):
+        self.__parent = None
+        self.__treeid = None
+        self.__name = None
+        self.__type = None
+        self.__options = None
+        self.__wargear = None
+        return
+
+    @property
+    def treeid(self): return self.__treeid
+
+    @treeid.setter
+    def treeid(self, id):
+        self.__treeid = id
+        return
+
+    @property
+    def type(self): return self.__type
+
+    @property
+    def name(self): return self.__name
+
+    @property
+    def wargear(self): return self.__wargear
+
+    @property
+    def options(self): return self.base_unit.options
+
+    @property
+    def base_unit(self):
+        raise AttributeError("Attribute needs to be set for this class")
+
+    @property
+    def size(self):
+        raise AttributeError("Attribute needs to be set for this class")
+
+    @property
+    def pts(self):
+        if self.wargear is not None:
+            wargear_pts = np.sum([i.pts for i in self.wargear])
+            pts = wargear_pts * self.size
+        return pts
+
+    def wargear_search(self, item):
+        try:
+            return wargear_search_base(item)
+        except KeyError:
+            raise KeyError("{} for {} not found in Armoury.json file".format(item,
+                                                                             self.name))
+        return
+
+    def change_wargear(self, wargear_to_add):
+        """
+        Changes the wargear options for the unit. wargear_to_add is a list of
+        option_parser.Option with an init.WargearItem selected for each item.
+        """
+        if not wargear_to_add:  # user selected a quit option
+            return
+        for new_wargear in wargear_to_add:
+            for i in new_wargear.items_involved:
+                if i in self.__wargear:
+                    self.__wargear.remove(i)
+
+            self.__wargear += new_wargear.selected
+        return
+
+    def save(self):
+        """Creates a dictionary of the unit's data."""
+        save = {}
+        save["type"] = self.type
+        save["size"] = int(self.size)
+        if self.wargear is not None:
+            save["wargear"] = [i.save() for i in self.wargear]
+        else:
+            save["wargear"] = None
+
+        return save
+
+    def load(self, loaded_dict):
+        """Loads the unit from a pre-made dictionary."""
+        self.__type = loaded_dict ["type"]
+        if loaded_dict["wargear"] is None:
+            self.__wargear = None
+        else:
+            self.__wargear = list(map(lambda x: init.MultipleItem(x.split('+')) if '+' in x else init.WargearItem(x),
+                                      loaded_dict["wargear"]))
