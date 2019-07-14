@@ -3,10 +3,14 @@ Implements the Unit level objects for the army builder.
 
 Classes
 -------
-Unit(init.UnitTypes):
+BoardObj:
+    Template class for creating wargaming objects. Not to be used directly.
+    root_data and size need to be set in the subclasses for the methods to work.
+
+Unit(BoardObj):
     Keeps track of the attributes of an individual unit in an army list.
 
-Model(Unit):
+Model(BoardObj):
     Used to keep track of the attributes of individual groups of models within
     the same unit.
 """
@@ -19,7 +23,136 @@ import option_parser
 from collections import Counter
 
 
-class Unit(init.UnitTypes):
+class BoardObj:
+    """
+    Template class for creating wargaming objects. Not to be used directly.
+    root_data and size need to be set in the subclasses for the methods to work.
+
+    Parameters
+    ----------
+    type : str
+        Reference to the type of BoardObj being created to search in resource
+        data.
+
+    Public Attributes
+    -----------------
+    parent : ?
+        Parent to which the BoardObj belongs
+    treeid : wx.TreeItemID
+        ID for wx.TreeCtrl in GUI
+    type : str
+        Reference to the type of BoardObj being created to search in resource
+        data.
+    name : str
+        Name of the BoardObj for displaying.
+    size : int
+        Total number of models in the BoardObj.
+    options : list (str)
+        List of strings that contains each option available to the unit.
+    wargear : list (init.WargearItem)
+        List of wargear in the BoardObj.
+    pts : int
+        Total points for the BoardObj.
+
+    Public Methods
+    --------------
+    change_wargear(self, wargear_to_add):
+        Changes the wargear options for the BoardObj.
+
+    save(self): Creates a dictionary of the BoardObj's data.
+
+    load(self, loaded_dict): Loads the unit from a pre-made dictionary.
+    """
+
+    def __init__(self, type):
+        self.__type = type
+        self.parent = None
+        self.treeid = None
+        self.__name = None
+        if self.root_data["wargear"] is not None:
+            self.__wargear = list(map(lambda x: init.MultipleItem(x.split('+')) if '+' in x else init.WargearItem(x),
+                                      self.root_data["wargear"]))
+        else:
+            self.__wargear = None
+        return
+
+    @property
+    def type(self): return self.__type
+
+    @property
+    def name(self): return self.__name
+
+    @property
+    def wargear(self): return self.__wargear
+
+    @property
+    def options(self): return self.root_data["options"]
+
+    @property
+    def pts(self):
+        pts = 0
+        if self.wargear is not None:
+            wargear_pts = np.sum([i.pts for i in self.wargear])
+            pts = wargear_pts * self.size
+        return pts
+
+    def change_wargear(self, wargear_to_add):
+        """
+        Changes the wargear options for the BoardObj.
+
+        Parameters
+        ----------
+        *wargear_to_add : option_parser.Option/ init.WargearItem
+            Option will add the items selected in the option to the current
+            wargear. WargearItem will replace the current wargear with all the
+            items provided.
+        """
+        for new_wargear in wargear_to_add:
+            for i in new_wargear.items_involved:
+                if i in self.__wargear:
+                    self.__wargear.remove(i)
+
+            self.__wargear += new_wargear.selected
+        return
+
+    def save(self):
+        """Creates a dictionary of the unit's data."""
+        save = {}
+        save["type"] = self.type
+        save["size"] = int(self.size)
+        if self.wargear is not None:
+            save["wargear"] = [i.save() for i in self.wargear]
+        else:
+            save["wargear"] = None
+
+        return save
+
+    def load(self, loaded_dict):
+        """Loads the unit from a pre-made dictionary."""
+        self.__type = loaded_dict["type"]
+        if loaded_dict["wargear"] is None:
+            self.__wargear = None
+        else:
+            self.__wargear = list(map(lambda x: init.MultipleItem(x.split('+')) if '+' in x else init.WargearItem(x),
+                                      loaded_dict["wargear"]))
+
+    def __eq__(self, other):
+        try:
+            if self.name == other.name and set(self.wargear) == set(other.wargear):
+                return True
+            else:
+                return False
+        except TypeError: # set(None) will throw a TypeError
+            if self.wargear is None and other.wargear is None \
+                    and self.name == other.name:
+                return True
+            else:
+                return False
+        except:
+            return False
+
+
+class Unit(BoardObj):
     """
     Keeps track of the attributes of an individual unit in an army list.
 
@@ -70,10 +203,6 @@ class Unit(init.UnitTypes):
         Re-sizes the unit. An int must be provided for every possible type of
         model.
 
-    change_wargear(self, wargear_to_add):
-        Changes the wargear options for the unit. wargear_to_add is a list of
-        option_parser.Option with an init.WargearItem selected for each item.
-
     get_all_wargear(self):
         Returns a set containing all the wargear present across all models in
         the unit.
@@ -88,35 +217,18 @@ class Unit(init.UnitTypes):
     """
 
     def __init__(self, unit_type, battlefield_role):
-        self.__parent = None
-        self.__treeid = None
         self.__default_name = True
         self.__battlefield_role = battlefield_role
+        super().__init__(unit_type)
         self.__models = []
-        if type(unit_type) == dict:
-            self.load(unit_type)
-        elif type(unit_type) == str:
-            self.__type = unit_type
-            self.__name = self.type
-            self.__wargear = copy.deepcopy(self.base_unit.wargear)
-        else:
-            raise TypeError("detachment type must be a dict or string got {}".format(
-                type(unit_type)))
+        self._BoardObj__name = self.type
 
-        self.__models = []
         self.parser = option_parser.OptionParser(current_wargear=self.wargear)
         self.parser.build()
         if self.mod_str is None:
             self.__models = [Model(self, no_models=self.size_range[0],
-                                   base_pts=self.base_unit.base_pts)]
-            # self.base_unit.models = [self.type]  # might break here from getter
-
-            try:
-                self.__models[0].size = unit_type["size"]
-            except TypeError:
-                pass
-
-        elif self.models == []:  # models not yet populated from load
+                                   base_pts=self.root_data["base_pts"])]
+        else:
             # get first model without size-limits
             for model in self.mod_str:
                 if init.models_dict[model]["no_per_unit"] is None:
@@ -124,47 +236,17 @@ class Unit(init.UnitTypes):
                     break
 
         # check that the unit can be found in the base dictionary
-        self.base_unit
-        return
-
-    @property
-    def parent(self): return self.__parent
-
-    @parent.setter
-    def parent(self, parent):
-        """Sets the parent army of the detachment."""
-        self.__parent = parent
-        return
-
-    @property
-    def treeid(self): return self.__treeid
-
-    @treeid.setter
-    def treeid(self, id):
-        """Sets the treeid from the GUI for this detachment."""
-        self.__treeid = id
+        self.root_data
         return
 
     @property
     def battlefield_role(self): return self.__battlefield_role
 
     @property
-    def type(self): return self.__type
+    def size_range(self): return self.root_data["size"]
 
     @property
-    def name(self): return self.__name
-
-    @property
-    def wargear(self): return self.__wargear
-
-    @property
-    def size_range(self): return self.base_unit.size
-
-    @property
-    def options(self): return self.base_unit.options
-
-    @property
-    def mod_str(self): return self.base_unit.models
+    def mod_str(self): return self.root_data["models"]
 
     @property
     def models(self): return self.__models
@@ -172,30 +254,26 @@ class Unit(init.UnitTypes):
     @property
     def size(self): return np.sum([i.size for i in self.models], dtype=int)
 
-    @name.setter
+    @BoardObj.name.setter
     def name(self, new_name):
-        """
-        Changes the name of the detachment to the given new_name string.
-        """
-        self.__name = new_name
+        """Changes the name of the detachment to the given new_name string."""
+        self._BoardObj__name = new_name
         self.__default_name = False
 
     @property
-    def base_unit(self):
+    def root_data(self):
         # catch any characters being added
         try:
-            base_unit = init.units_dict[self.battlefield_role][self.type]
+            root_data = init.units_dict[self.battlefield_role][self.type]
         except KeyError:
-            base_unit = init.units_dict["Named Characters"][self.type]
-        return base_unit
+            root_data = init.units_dict["Named Characters"][self.type]
+        return root_data
 
     @property
     def pts(self):
         """Updates any points values after changes to the unit"""
-        pts = np.sum([i.pts for i in self.models])
-        if self.wargear is not None:
-            wargear_pts = np.sum([i.pts for i in self.wargear])
-            pts += wargear_pts * self.size
+        pts = super(Unit, self).pts
+        pts += np.sum([i.pts for i in self.models])
         return pts
 
     def reset(self):
@@ -295,50 +373,24 @@ class Unit(init.UnitTypes):
                     self.__models.append(Model(self, model, no_of))
         return
 
-    def change_wargear(self, wargear_to_add):
-        """
-        Changes the wargear options for the unit. wargear_to_add is a list of
-        option_parser.Option with an init.WargearItem selected for each item.
-        """
-        if not wargear_to_add:  # user selected a quit option
-            return
-        for new_wargear in wargear_to_add:
-            for i in new_wargear.items_involved:
-                if i in self.__wargear:
-                    self.__wargear.remove(i)
-
-            self.__wargear += new_wargear.selected
-        return
-
     def save(self):
         """Creates a dictionary of the unit's data."""
-        save = {}
-        save["type"] = self.type
-        save["size"] = int(self.size)
-        if self.wargear is not None:
-            save["wargear"] = [i.save() for i in self.wargear]
+        save = super(Unit, self).save()
+        if self.mod_str is None:
+            model_saves = None
         else:
-            save["wargear"] = None
-        # in try so it can be used by Model()
-        try:
-            # if models have been added as a default don't bother saving
-            if self.mod_str is None:
-                model_saves = None
-            else:
-                model_saves = [i.save() for i in self.models]
-            save["models"] = model_saves
-            if self.__default_name:
-                save["name"] = None
-            else:
-                save["name"] = self.name
-        except AttributeError:
-            pass
+            model_saves = [i.save() for i in self.models]
 
+        save["models"] = model_saves
+        if self.__default_name:
+            save["name"] = None
+        else:
+            save["name"] = self.name
         return save
 
     def load(self, loaded_dict):
         """Loads the unit from a pre-made dictionary."""
-        self.__type = loaded_dict ["type"]
+        self.__type = loaded_dict["type"]
         if loaded_dict["wargear"] is None:
             self.__wargear = None
         else:
@@ -378,27 +430,16 @@ class Unit(init.UnitTypes):
         return ret
 
     def __eq__(self, other):
-        if not isinstance(other, Unit):
-            return False
-
         try:
-            if self.name == other.name \
-                and set(self.wargear) == set(other.wargear)  \
-                    and self.models == other.models:
+            if super().__eq__(other) and self.models == other.models:
                 return True
             else:
                 return False
-        except TypeError:
-            if self.wargear is None and other.wargear is None:
-                return True
-            else:
-                return False
-
         except:
             return False
 
 
-class Model(Unit):
+class Model(BoardObj):
     """
     Inherits from Unit. Used to keep track of the attributes of individual
     groups of models within the same unit.
@@ -441,68 +482,33 @@ class Model(Unit):
     """
 
     def __init__(self, parent, type=None, no_models=1, base_pts=None):
-        self.__parent = parent
-        self.__size = no_models
-        self.__type = type
+        self.size = no_models
         if type is None:
-            self.__type = parent.type
-
             # add default model to the models_dict
-            init.models_dict[self.type] = {"name": None,
-                                           "no_per_unit": None,
-                                           "wargear": None,
-                                           "options": None,
-                                           "indep": False,
-                                           "pts": base_pts}
-
-        if self.root_data["wargear"] is not None:
-            self.__wargear = list(map(lambda x: init.MultipleItem(x.split('+')) if '+' in x else init.WargearItem(x),
-                                      self.root_data["wargear"]))
+            init.models_dict[parent.type] = {"name": None,
+                                             "no_per_unit": None,
+                                             "wargear": None,
+                                             "options": None,
+                                             "indep": False,
+                                             "pts": base_pts}
+            super().__init__(parent.type)
         else:
-            self.__wargear = None
+            super().__init__(type)
 
-        if self.root_data["name"] is None:
-            self.name = self.type
-        else:
-            self.name = self.root_data["name"]
+        self._BoardObj__name = self.type
         if self.options is not None:
             self.parser = option_parser.OptionParser(self.wargear, unit=False)
             self.parser.build()
         return
 
     @property
-    def type(self): return self.__type
-
-    @property
-    def parent(self): return self.__parent
-
-    @property
     def root_data(self): return init.models_dict[self.type]
-
-    @property
-    def options(self): return self.root_data["options"]
-
-    @property
-    def wargear(self): return self.__wargear
 
     @property
     def limit(self): return self.root_data["no_per_unit"]
 
     @property
-    def size(self): return self.__size
-
-    @size.setter
-    def size(self, new_size): self.__size = new_size
-
-    @property
-    def pts(self):
-        """Updates any points values after changes to the unit"""
-        wargear_pts = 0
-        if self.wargear is not None:
-            wargear_pts = np.sum([i.pts for i in self.wargear])
-        pts_per_model = self.root_data["pts"] + wargear_pts
-        pts = pts_per_model * self.size
-        return pts
+    def pts(self): return super(Model, self).pts + self.size*self.root_data["pts"]
 
     def __repr__(self, indent=''):
         if self.size == 1:
@@ -515,20 +521,6 @@ class Model(Unit):
             for i in self.wargear:
                 ret += '\n\t' + indent + i.__repr__()
         return ret
-
-    def __eq__(self, other):
-        try:
-            if self.name == other.name and set(self.wargear) == set(other.wargear):
-                return True
-            else:
-                return False
-        except TypeError:
-            if self.wargear is None and other.wargear is None:
-                return True
-            else:
-                return False
-        except:
-            return False
 
     def __hash__(self):
         ret = hash(self.name) + hash(self.type)

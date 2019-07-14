@@ -251,7 +251,7 @@ class UI:
             top_len = len(max(keys, key=len))
             for index, [keys, value] in enumerate(init.units_dict["Named Characters"].items()):
                 print("A" + str(index + 1) + ". " +
-                      keys.ljust(top_len) + "\t({}pts)".format(value.pts))
+                      keys.ljust(top_len) + "\t({}pts)".format(value["pts"]))
             print('')  # create space between set of options
 
             print("Other Characters (Including base Wargear):")
@@ -259,7 +259,7 @@ class UI:
             top_len = len(max(units, key=len))
             for index, [keys, value] in enumerate(init.units_dict[battlefield_role].items()):
                 print("B" + str(index + 1) + ". " + keys.ljust(top_len) +
-                      "\t({}pts)".format(value.pts))
+                      "\t({}pts)".format(value["pts"]))
         else:
             # print available models and their points with the points value
             # left adjusted so they are in the same column
@@ -268,7 +268,7 @@ class UI:
             top_len = len(max(units, key=len))
             for index, [keys, value] in enumerate(init.units_dict[battlefield_role].items()):
                 print(str(index + 1) + ". " + keys.ljust(top_len) +
-                      "\t({}pts for {} models)".format(value.pts * value.size[0], value.size[0]))
+                      "\t({}pts for {} models)".format(value["pts"] * value["size"][0], value["size"][0]))
 
         user_input = input(">> ")
         try:

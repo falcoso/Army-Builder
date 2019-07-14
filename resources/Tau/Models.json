@@ -1,5 +1,4 @@
 {"Breacher Shas'el": {
-    "name": null,
     "no_per_unit": null,
     "wargear": null,
     "options": ["Markerlight+Target Lock"],
@@ -7,7 +6,6 @@
     "indep": false
 },
 "Breacher Shas'ui": {
-    "name": null,
     "no_per_unit": 1,
     "wargear": null,
     "options": null,
@@ -15,7 +13,6 @@
     "indep": false
 },
 "Broadside Shas'ui": {
-    "name": null,
     "no_per_unit": null,
     "wargear": null,
     "options": ["Heavy rail rifle/2*High-yield missile pod",
@@ -26,7 +23,6 @@
     "indep": true
 },
 "Broadside Shas'vre": {
-    "name": null,
     "no_per_unit": 1,
     "wargear": null,
     "options": ["Heavy rail rifle/2*High-yield missile pod",
@@ -37,7 +33,6 @@
     "indep": true
 },
 "Crisis Bodyguard Shas'ui": {
-    "name": null,
     "no_per_unit": null,
     "wargear": ["Burst cannon"],
     "options": ["3#Airbursting fragmentation projector/Burst cannon/Cyclic ion blaster/Flamer/Fusion blaster/Missile pod/Plasma rifle/Advanced targeting system/Counterfire defence system/Drone controller/Early warning override/Multi-tracker/Shield generator/Target lock/Velocity tracker",
@@ -46,7 +41,6 @@
     "indep": true
 },
 "Crisis Bodyguard Shas'vre": {
-    "name": null,
     "no_per_unit": 1,
     "wargear": ["Burst cannon"],
     "options": ["3#Airbursting fragmentation projector/Burst cannon/Cyclic ion blaster/Flamer/Fusion blaster/Missile pod/Plasma rifle/Advanced targeting system/Counterfire defence system/Drone controller/Early warning override/Multi-tracker/Shield generator/Target lock/Velocity tracker",
@@ -55,7 +49,6 @@
     "indep": true
 },
 "Crisis Shas'ui": {
-    "name": null,
     "no_per_unit": null,
     "wargear": ["Burst cannon"],
     "options": ["3#Airbursting fragmentation projector/Burst cannon/Cyclic ion blaster/Flamer/Fusion blaster/Missile pod/Plasma rifle/Advanced targeting system/Counterfire defence system/Drone controller/Early warning override/Multi-tracker/Shield generator/Target lock/Velocity tracker",
@@ -64,7 +57,6 @@
     "indep": true
 },
 "Crisis Shas'vre": {
-    "name": null,
     "no_per_unit": 1,
     "wargear": ["Burst cannon"],
     "options": ["3#Airbursting fragmentation projector/Burst cannon/Cyclic ion blaster/Flamer/Fusion blaster/Missile pod/Plasma rifle/Advanced targeting system/Counterfire defence system/Drone controller/Early warning override/Multi-tracker/Shield generator/Target lock/Velocity tracker",
@@ -73,7 +65,6 @@
     "indep": true
 },
 "Pathfinder Shas'el": {
-    "name": null,
     "no_per_unit": null,
     "wargear": null,
     "options": null,
@@ -81,7 +72,6 @@
     "indep": false
 },
 "Pathfinder Shas'ui": {
-    "name": null,
     "no_per_unit": 1,
     "wargear": null,
     "options": null,
@@ -89,7 +79,6 @@
     "indep": false
 },
 "Pathfinder Specialist": {
-    "name": null,
     "no_per_unit": 3,
     "wargear": ["Ion rifle"],
     "options": ["Ion rifle/Rail rifle"],
@@ -97,7 +86,6 @@
     "indep": true
 },
 "Stealth Shas'ui": {
-    "name": null,
     "no_per_unit": null,
     "wargear": ["Burst cannon"],
     "options": ["Burst cannon/ Fusion blaster"],
@@ -105,7 +93,6 @@
     "indep": true
 },
 "Stealth Shas'vre": {
-    "name": null,
     "no_per_unit": 1,
     "wargear": ["Burst cannon"],
     "options": ["Burst cannon/ Fusion blaster",
@@ -114,7 +101,6 @@
     "indep": true
 },
 "Strike Shas'el w/Pulse carbine": {
-    "name": "Strike Shas'el",
     "no_per_unit": null,
     "wargear": ["Pulse carbine"],
     "options": ["Pulse pistol"],
@@ -122,7 +108,6 @@
     "indep": false
 },
 "Strike Shas'el w/Pulse rifle": {
-    "name": "Strike Shas'el",
     "no_per_unit": null,
     "wargear": ["Pulse rifle"],
     "options": ["Pulse pistol"],
@@ -130,7 +115,6 @@
     "indep": false
 },
 "Strike Shas'ui": {
-    "name": null,
     "no_per_unit": 1,
     "wargear": ["Pulse carbine"],
     "options": ["Markerlight+Target lock",

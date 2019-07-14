@@ -1,5 +1,4 @@
 {"Destroyer": {
-    "name": null,
     "no_per_unit": null,
     "wargear": ["Gauss cannon"],
     "options": null,
@@ -7,7 +6,6 @@
     "pts": 30
 },
 "Heavy Destroyer": {
-    "name": null,
     "no_per_unit": 1,
     "wargear": ["Heavy gauss cannon"],
     "options": null,

@@ -12,7 +12,7 @@ def test_units_dict():
         units = json.load(file)
 
     # check that points for wargear are being added
-    assert units["Elites"]["Lychguard"]["base_pts"] != units_dict["Elites"]["Lychguard"].pts
+    assert units["Elites"]["Lychguard"]["base_pts"] != units_dict["Elites"]["Lychguard"]["pts"]
     return
 
 
@@ -27,8 +27,8 @@ def test_units_dict_wargear():
         detachments_dict, armoury_dict, units_dict = init.init(faction)
         for foc, units in units_dict.items():
             for key, unit in units.items():
-                if unit.options is not None:
-                    for i in unit.options:
+                if unit["options"] is not None:
+                    for i in unit["options"]:
                         parser.parse2(i)
     return
 

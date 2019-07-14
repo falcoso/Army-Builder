@@ -4,9 +4,6 @@ data files for the given faction.
 
 Functions:
 ----------
-wargear_search_base(item):
-    Searches for a given wargear item in the armoury dictionary
-
 init(faction):
     Initialises the global variables for the chosen faction:
     detachments_dict - dict containing the data in Detachments.json
@@ -20,25 +17,11 @@ WargearItem: Collection of Wargear items for assignment to a unit.
 MultipleItem(WargearItem):
     Created for when several independant items are grouped together within an
     option i.e. Stormshield and Thunderhammer.
-
-UnitTypes:
-    Template class to group together the information in the <faction>/Units.json
-    for easy access in other modules
 """
 
 import json
 import numpy as np
 
-
-def wargear_search_base(item):
-    """
-    Searches for a given wargear item in the armoury dictionary
-    """
-    for key, obj in armoury_dict.items():
-        if item in obj:
-            return obj[item]
-    raise KeyError("{} not found in Armoury.json file".format(item))
-    return
 
 def init(faction):
     """
@@ -57,18 +40,30 @@ def init(faction):
     with open("./resources/{}/Armoury.json".format(faction), 'r') as file:
         armoury_dict = json.load(file)
 
-    global units_dict
-    units_dict = {}
-    with open("./resources/{}/Units.json".format(faction), 'r') as file:
-        units = json.load(file)
-    for key in units.keys():
-        units_dict[key] = {}
-        for index, rows in units[key].items():
-            units_dict[key][index] = UnitTypes(rows)
-
     global models_dict
     with open("./resources/{}/Models.json".format(faction), 'r') as file:
         models_dict = json.load(file)
+
+    global units_dict
+    units_dict = {}
+    with open("./resources/{}/Units.json".format(faction), 'r') as file:
+        units_dict = json.load(file)
+    for key in units_dict.keys():
+        for index, rows in units_dict[key].items():
+            # generate the default unit pts value
+            pts = 0
+            if rows["wargear"] is not None:
+                pts += np.sum([MultipleItem(i).pts if '+' in i else WargearItem(i)
+                               .pts for i in rows["wargear"]])*rows["size"][0]
+            if rows["models"] is not None:
+                for model in rows["models"]:
+                    if models_dict[model]["no_per_unit"] is None:
+                        break
+                if models_dict[model]["wargear"] is not None:
+                    pts += np.sum([MultipleItem(i).pts if '+' in i else WargearItem(i).pts
+                                   for i in models_dict[model]["wargear"]])*rows["size"][0]
+
+            units_dict[key][index]["pts"] = pts
 
     return detachments_dict, armoury_dict, units_dict
 
@@ -98,6 +93,7 @@ class WargearItem:
     wargear_search(self, item):
         Searches for a given wargear item in the armoury dictionary
     """
+
     def __init__(self, item):
         self.item = item
         self.no_of = 1
@@ -126,7 +122,12 @@ class WargearItem:
         return
 
     def wargear_search(self, item):
-        return wargear_search_base(item)
+        """Searches for a given wargear item in the armoury dictionary."""
+        for key, obj in armoury_dict.items():
+            if item in obj:
+                return obj[item]
+        raise KeyError("{} not found in Armoury.json file".format(item))
+        return
 
     def __repr__(self, comparison=None, tidy=False):
         if self.no_of == 1:
@@ -193,6 +194,7 @@ class MultipleItem(WargearItem):
         Points value of the collection of wargear.
 
     """
+
     def __init__(self, *args):
         # check all items exist
         if type(args[0]) == str:
@@ -221,6 +223,8 @@ class MultipleItem(WargearItem):
         return '+'.join(self.item)
 
     def __mul__(self, other):
+        print(self)
+        print(other)
         raise TypeError("Multiplication of MultiplItem types not yet defined")
         return
 
@@ -250,183 +254,3 @@ class MultipleItem(WargearItem):
         else:
             ret += " ({}pts)".format(self.pts)
         return ret
-
-
-class UnitTypes:
-    """
-    Template class to group together the information in the <faction>/Units.json
-    for easy access in other modules
-
-    Parameters
-    ----------
-    root_data : dict
-        Dictionary generated from the <faction>/Units.json
-
-    Attributes
-    ----------
-    name : str
-        Default name of the unit.
-    base_pts : int
-        The points per model without wargear
-    pts : int
-        The default points for the unit
-    options : list (str)
-        List of all the option strings for the unit.
-    models : list (str)
-        List of all the possible models in the unit.
-    limits : dict
-        Dictionary of {Model: int} that gives the max number of a given model
-        allowed in the unit. Does not exist if there are no limits.
-    size : tuple (int)
-        The min and max size of the unit.
-    wargear : list (WargearItem)
-        The default wargear the unit has.
-    """
-    def __init__(self, root_data):
-        self.name = root_data["name"]
-        try:
-            self.base_pts = root_data["base_pts"]
-        except:
-            raise ValueError("Unable to load base_pts from {} for {}".format(root_data[1], self.name))
-        self.pts = self.base_pts
-        self.options = root_data["options"]
-        self.models = root_data["models"]
-        try:
-            self.limits = root_data["limits"]
-        except KeyError:
-            pass
-
-        # if range of unit size, save as array, otherwise single number
-        self.size = root_data["size"]
-
-        if root_data["wargear"] is not None:
-            wargear_temp = root_data["wargear"]
-            self.wargear = []
-            for i in wargear_temp:
-                try:
-                    self.wargear.append(WargearItem(i))
-                except KeyError:
-                    try:
-                        self.wargear.append(MultipleItem(*i.split('/')))
-                    except:
-                        raise KeyError(
-                            "{} for {} not found in Armoury.json file".format(i, self.name))
-        else:
-            self.wargear = None
-        # find default wargear costs
-        self.wargear_pts = 0
-        if self.wargear is None:
-            return
-        else:
-            for i in self.wargear:
-                if type(i) == MultipleItem:
-                    self.wargear_pts += i.wargear_search(i.item[0])
-                else:
-                    self.wargear_pts += i.pts
-
-        self.pts += self.wargear_pts
-        self.pts *= self.size[0]
-        return
-
-    def wargear_search(self, item):
-        try:
-            return wargear_search_base(item)
-        except KeyError:
-            raise KeyError("{} for {} not found in Armoury.json file".format(item, self.name))
-        return
-
-    def __repr__(self):
-        output = self.name + "\t" + str(self.pts) + "pts per model\t"
-        if self.wargear is not None:
-            for i in self.wargear:
-                output += i.__repr__() + ", "
-        return output
-
-class BoardObj:
-    def __init__(self, root_data):
-        self.__parent = None
-        self.__treeid = None
-        self.__name = None
-        self.__type = None
-        self.__options = None
-        self.__wargear = None
-        return
-
-    @property
-    def treeid(self): return self.__treeid
-
-    @treeid.setter
-    def treeid(self, id):
-        self.__treeid = id
-        return
-
-    @property
-    def type(self): return self.__type
-
-    @property
-    def name(self): return self.__name
-
-    @property
-    def wargear(self): return self.__wargear
-
-    @property
-    def options(self): return self.base_unit.options
-
-    @property
-    def base_unit(self):
-        raise AttributeError("Attribute needs to be set for this class")
-
-    @property
-    def size(self):
-        raise AttributeError("Attribute needs to be set for this class")
-
-    @property
-    def pts(self):
-        if self.wargear is not None:
-            wargear_pts = np.sum([i.pts for i in self.wargear])
-            pts = wargear_pts * self.size
-        return pts
-
-    def wargear_search(self, item):
-        try:
-            return wargear_search_base(item)
-        except KeyError:
-            raise KeyError("{} for {} not found in Armoury.json file".format(item,
-                                                                             self.name))
-        return
-
-    def change_wargear(self, wargear_to_add):
-        """
-        Changes the wargear options for the unit. wargear_to_add is a list of
-        option_parser.Option with an init.WargearItem selected for each item.
-        """
-        if not wargear_to_add:  # user selected a quit option
-            return
-        for new_wargear in wargear_to_add:
-            for i in new_wargear.items_involved:
-                if i in self.__wargear:
-                    self.__wargear.remove(i)
-
-            self.__wargear += new_wargear.selected
-        return
-
-    def save(self):
-        """Creates a dictionary of the unit's data."""
-        save = {}
-        save["type"] = self.type
-        save["size"] = int(self.size)
-        if self.wargear is not None:
-            save["wargear"] = [i.save() for i in self.wargear]
-        else:
-            save["wargear"] = None
-
-        return save
-
-    def load(self, loaded_dict):
-        """Loads the unit from a pre-made dictionary."""
-        self.__type = loaded_dict ["type"]
-        if loaded_dict["wargear"] is None:
-            self.__wargear = None
-        else:
-            self.__wargear = list(map(lambda x: init.MultipleItem(x.split('+')) if '+' in x else init.WargearItem(x),
-                                      loaded_dict["wargear"]))

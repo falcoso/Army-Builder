@@ -1,6 +1,5 @@
 {"Dedicated Transports": {
         "Ghost Ark": {
-            "name": "Ghost Ark",
             "base_pts": 160,
             "options": null,
             "size": [1],
@@ -9,7 +8,6 @@
 }},
 "Elites": {
         "Deathmarks": {
-            "name": "Deathmarks",
             "base_pts": 19,
             "options": null,
             "size": [5,10],
@@ -18,7 +16,6 @@
         },
 
         "Flayed Ones": {
-            "name": "Flayed Ones",
             "base_pts": 17,
             "options": null,
             "size": [5,10],
@@ -26,7 +23,6 @@
             "models": null
         },
         "Lychguard": {
-            "name": "Lychguard",
             "base_pts": 19,
             "options": ["Warscythe/Hyperphase sword+Dispersion shield"],
             "size": [5,10],
@@ -34,7 +30,6 @@
             "models": null
         },
         "Triarch Praetorians": {
-            "name": "Triarch Praetorians",
             "base_pts": 22,
             "options": ["Rod of covenant/Particle caster+Voidblade"],
             "size": [5,10],
@@ -42,17 +37,15 @@
             "models": null
         },
         "Triarch Stalker": {
-            "name": "Triarch Stalker",
             "base_pts": 117,
             "options": ["Heat ray/2*Heavy gauss cannon/Particle shredder"],
             "size": [1],
             "wargear": ["Heat ray",
                         "Massive forelimbs"],
-                        "models": null
+            "models": null
 }},
 "Fast Attack": {
         "Canoptek Scarabs": {
-            "name": "Canoptek Scarabs",
             "base_pts": 13,
             "options": null,
             "size": [3,9],
@@ -60,7 +53,6 @@
             "models": null
         },
         "Canoptek Wraiths": {
-            "name": "Canoptek Wraiths",
             "base_pts": 55,
             "options": ["Whip coils",
                         "Transdimensional beamer/Particle caster"],
@@ -69,7 +61,6 @@
             "models": null
         },
         "Destroyers": {
-            "name": "Destroyers",
             "base_pts": 30,
             "options": null,
             "size": [1,6],
@@ -77,7 +68,6 @@
             "models": ["Destroyer", "Heavy Destroyer"]
         },
         "Tomb Blades": {
-            "name": "Tomb Blades",
             "base_pts": 14,
             "options": ["Shieldvanes",
                         "Nebuloscope/Shadowloom"],
@@ -87,7 +77,6 @@
 }},
 "Heavy Support": {
         "Annihilation Barge": {
-            "name": "Annihilation Barge",
             "base_pts": 133,
             "options": ["Gauss cannon/Tesla cannon"],
             "size": [1],
@@ -96,7 +85,6 @@
             "models": null
         },
         "Canoptek Spyders": {
-            "name": "Canoptek Spyders",
             "base_pts": 65,
             "options": ["Gloom prism",
                         "Fabricator claw array"],
@@ -105,7 +93,6 @@
             "models": null
         },
         "Doomsday Ark": {
-            "name": "Doomsday Ark",
             "base_pts": 193,
             "options": null,
             "size": [1],
@@ -114,7 +101,6 @@
             "models": null
         },
         "Heavy Destroyers": {
-            "name": "Heavy Destroyers",
             "base_pts": 30,
             "options": null,
             "size": [1,3],
@@ -122,7 +108,6 @@
             "models": null
         },
         "Monolith": {
-            "name": "Monolith",
             "base_pts": 381,
             "options": null,
             "size": [1],
@@ -131,7 +116,6 @@
             "models": null
         },
         "Transcendent C'tan": {
-            "name": "Transcendent C'tan",
             "base_pts": 225,
             "options": null,
             "size": [1],
@@ -140,7 +124,6 @@
 }},
 "HQ": {
         "Catacomb Command Barge": {
-            "name": "Catacomb Command Barge",
             "base_pts": 138,
             "options": ["Gauss cannon/Tesla cannon",
                         "Staff of light/Warscythe/Hyperphase sword/Voidblade",
@@ -152,7 +135,6 @@
             "models": null
         },
         "Cryptek": {
-            "name": "Cryptek",
             "base_pts": 70,
             "options": ["Phylactery",
                         "Canoptek cloak/Chronometron"],
@@ -161,7 +143,6 @@
             "models": null
         },
         "Destroyer Lord": {
-            "name": "Destroyer Lord",
             "base_pts": 110,
             "options": ["Staff of light/Warscythe/Hyperphase sword/Voidblade",
                         "Phylactery",
@@ -171,7 +152,6 @@
             "models": null
         },
         "Lord": {
-            "name": "Lord",
             "base_pts": 73,
             "options": ["Staff of light/Warscythe/Hyperphase sword/Voidblade",
                         "Phylactery",
@@ -181,7 +161,6 @@
             "models": null
         },
         "Overlord": {
-            "name": "Overlord",
             "base_pts": 84,
             "options": ["Staff of light/Warscythe/Hyperphase sword/Voidblade",
                         "Phylactery",
@@ -193,7 +172,6 @@
     },
 "Named Characters": {
         "Anrakyr the Traveller": {
-            "name": "Anrakyr the Traveller",
             "base_pts": 167,
             "options": null,
             "size": [1],
@@ -201,7 +179,6 @@
             "models": null
         },
         "C'tan Shard of the Deciever": {
-            "name": "C'tan Shard of the Deciever",
             "base_pts": 225,
             "options": null,
             "size": [1],
@@ -209,7 +186,6 @@
             "models": null
         },
         "C'tan Shard of the Nightbringer": {
-            "name": "C'tan Shard of the Nightbringer",
             "base_pts": 210,
             "options": null,
             "size": [1],
@@ -217,7 +193,6 @@
             "models": null
         },
         "Illuminor Szeras": {
-            "name": "Illuminor Szeras",
             "base_pts": 143,
             "options": null,
             "size": [1],
@@ -225,7 +200,6 @@
             "models": null
         },
         "Imotekh the Stormlord": {
-            "name": "Imotekh the Stormlord",
             "base_pts": 200,
             "options": null,
             "size": [1],
@@ -233,7 +207,6 @@
             "models": null
         },
         "Nemesor Zandrekh": {
-            "name": "Nemesor Zandrekh",
             "base_pts": 180,
             "options": null,
             "size": [1],
@@ -241,7 +214,6 @@
             "models": null
         },
         "Orikan the Diviner": {
-            "name": "Orikan the Diviner",
             "base_pts": 115,
             "options": null,
             "size": [1],
@@ -249,7 +221,6 @@
             "models": null
         },
         "Trazyn the Infinite": {
-            "name": "Trazyn the Infinite",
             "base_pts": 100,
             "options": null,
             "size": [1],
@@ -257,7 +228,6 @@
             "models": null
         },
         "Vargard Obyron": {
-            "name": "Vargard Obyron",
             "base_pts": 140,
             "options": null,
             "size": [1],
@@ -266,7 +236,6 @@
 }},
 "Troops": {
         "Immortals": {
-            "name": "Immortals",
             "base_pts": 8,
             "options": ["Gauss blaster/Tesla carbine"],
             "size": [5,10],
@@ -274,7 +243,6 @@
             "models": null
         },
         "Necron Warriors": {
-            "name": "Necron Warriors",
             "base_pts": 12,
             "options": null,
             "size": [10,20],

@@ -17,14 +17,14 @@ def test_units_dict_options():
         detachments_dict, armoury_dict, units_dict = init.init(faction)
         for foc, units in units_dict.items():
             for title, i in units.items():
-                if i.options is None:
+                if i["options"] is None:
                     continue
 
-                for option in i.options:
+                for option in i["options"]:
                     try:
                         parser.parse2(option)
                     except Exception as e:
-                        raise ValueError('Error in {}:{}'.format(i.name, str(e)))
+                        raise ValueError('Error in {}:{}'.format(title, str(e)))
     return
 
 

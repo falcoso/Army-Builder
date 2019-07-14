@@ -93,6 +93,7 @@ def test_save_army(detach):
 
 
 def test_detachment(detach):
+    print(detach)
     assert detach.pts == 456
     assert len(detach.units_dict["HQ"]) == 1
     assert len(detach.units_dict["Troops"]) == 2
