@@ -46,7 +46,7 @@ class ArmyList:
 
     Public Methods
     --------------
-    save(self, file_path): "Saves the army as a json to the given file_path.
+    save(self, file_path): Saves the army as a json to the given file_path.
 
     load(self, file_path): Loads the army from the specified filepath.
 
@@ -158,7 +158,7 @@ class Detachment:
     --------------
     save(self): Creates a dictionary to save the current detachment.
 
-    load(self): Dictionary from which to generate a pre-made detachment.
+    load(self): Loads the detachment from a pre-made dictionary.
 
     add_unit(self, unit): Adds the given unit to the detachment.
 
@@ -166,6 +166,7 @@ class Detachment:
     """
 
     def __init__(self, detachment_type):
+        self.treeid = None
         self.__parent = None
         self.__default_name = True
         self.__units_dict = {"HQ": [],
@@ -211,24 +212,18 @@ class Detachment:
             self.__name = self.type + ' ' + str(counter)
 
     @property
-    def treeid(self): return self.__treeid
-
-    @treeid.setter
-    def treeid(self, id): self.__treeid = id
-
-    @property
     def name(self): return self.__name
-
-    @property
-    def pts(self): return np.sum([np.sum([i.pts for i in unit])
-                                  for key, unit in self.units_dict.items()],
-                                 dtype=int)
 
     @name.setter
     def name(self, new_name):
         """Changes the name of the detachment to the given new_name string."""
         self.__name = new_name
         self.__default_name = False
+
+    @property
+    def pts(self): return np.sum([np.sum([i.pts for i in unit])
+                                  for key, unit in self.units_dict.items()],
+                                 dtype=int)
 
     def __repr__(self):
         output = "***" + self.name + "\t\t" + "Total:{}pts".format(self.pts) + "***\n"
@@ -257,7 +252,15 @@ class Detachment:
         return save
 
     def load(self, loaded_dict):
-        """Dictionary from which to generate a pre-made detachment."""
+        """
+        Loads the detachment from a pre-made dictionary.
+
+        Parameters
+        ----------
+        loaded_dict: dict
+            {"type": str, "name": str, "units_dict":{"HQ": [unit_saves...]...}}
+            dictionary of the base data required to re-construct the detachment.
+        """
         self.type = loaded_dict["type"]
         if loaded_dict["name"] is None:
             self.__name = self.type

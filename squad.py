@@ -65,13 +65,21 @@ class BoardObj:
     """
 
     def __init__(self, type):
-        self.__type = type
         self.parent = None
         self.treeid = None
         self.__name = None
-        if self.root_data["wargear"] is not None:
-            self.__wargear = list(map(lambda x: init.MultipleItem(x.split('+')) if '+' in x else init.WargearItem(x),
-                                      self.root_data["wargear"]))
+        self.__parsed = False
+        if isinstance(type, dict): #data is being loaded
+            self.__type = type["type"]
+            source = type["wargear"]
+        else:
+            self.__type = type
+            source = self.root_data["wargear"]
+
+        if source is not None:
+            self.__wargear = list(map(lambda x: init.MultipleItem(x.split('+'))
+                                      if '+' in x else init.WargearItem(x),
+                                      source))
         else:
             self.__wargear = None
         return
@@ -86,7 +94,13 @@ class BoardObj:
     def wargear(self): return self.__wargear
 
     @property
-    def options(self): return self.root_data["options"]
+    def options(self):
+        if self.root_data["options"] is None:
+            return None
+        elif not self.__parsed and self.root_data["options"]:
+            self.__parsed = True
+            self.__options = option_parser.main_parser.parse2(self.root_data["options"])
+        return self.__options
 
     @property
     def pts(self):
@@ -107,12 +121,17 @@ class BoardObj:
             wargear. WargearItem will replace the current wargear with all the
             items provided.
         """
-        for new_wargear in wargear_to_add:
-            for i in new_wargear.items_involved:
-                if i in self.__wargear:
-                    self.__wargear.remove(i)
+        if isinstance(wargear_to_add[0], option_parser.Option):
+            for new_wargear in wargear_to_add:
+                for i in new_wargear.items_involved:
+                    if i in self.__wargear:
+                        self.__wargear.remove(i)
 
-            self.__wargear += new_wargear.selected
+                self.__wargear += new_wargear.selected
+        elif type(wargear_to_add[0]) in {init.WargearItem, init.MultipleItem}:
+            self.__wargear = wargear_to_add
+        else:
+            raise TypeError("wargear_to_add must be an Option or WargearItem")
         return
 
     def save(self):
@@ -127,14 +146,22 @@ class BoardObj:
 
         return save
 
-    def load(self, loaded_dict):
-        """Loads the unit from a pre-made dictionary."""
-        self.__type = loaded_dict["type"]
-        if loaded_dict["wargear"] is None:
-            self.__wargear = None
-        else:
-            self.__wargear = list(map(lambda x: init.MultipleItem(x.split('+')) if '+' in x else init.WargearItem(x),
-                                      loaded_dict["wargear"]))
+    # def load(self, loaded_dict):
+    #     """
+    #     Loads the unit from a pre-made dictionary.
+    #
+    #     Parameters
+    #     ----------
+    #     loaded_dict: dict
+    #         {"type": str, "name": str, "size": int, "wargear":[str, ...]}
+    #         dictionary of the base data required to re-construct the detachment.
+    #     """
+    #     self.__type = loaded_dict["type"]
+    #     if loaded_dict["wargear"] is None:
+    #         self.__wargear = None
+    #     else:
+    #         self.__wargear = list(map(lambda x: init.MultipleItem(x.split('+')) if '+' in x else init.WargearItem(x),
+    #                                   loaded_dict["wargear"]))
 
     def __eq__(self, other):
         try:
@@ -142,7 +169,7 @@ class BoardObj:
                 return True
             else:
                 return False
-        except TypeError: # set(None) will throw a TypeError
+        except TypeError:  # set(None) will throw a TypeError
             if self.wargear is None and other.wargear is None \
                     and self.name == other.name:
                 return True
@@ -496,9 +523,6 @@ class Model(BoardObj):
             super().__init__(type)
 
         self._BoardObj__name = self.type
-        if self.options is not None:
-            self.parser = option_parser.OptionParser(self.wargear, unit=False)
-            self.parser.build()
         return
 
     @property

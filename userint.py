@@ -124,9 +124,8 @@ class UI:
         print("Options:")
         unit.parser.options_list = []
         for option in unit.options:
-            unit.parser.parse2(option)
+            print(option)
 
-        print(unit.parser)
         user_input = input(">> ")
 
         # santise and create list of options
@@ -149,7 +148,7 @@ class UI:
                 # convert the choice number into the index to select the item
                 index = np.zeros(2, dtype=np.uint8)
                 index[0] = int(choice[0]) - 1
-                sel_option = unit.parser.options_list[index[0]]
+                sel_option = unit.options[index[0]]
 
                 if len(choice) == 2:
                     # find the index corresponding to the lowercase letter

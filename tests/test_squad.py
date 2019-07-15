@@ -66,14 +66,11 @@ def test_re_size_poly_model(unit):
 def test_change_wargear():
     """Checks the Unit.change_wargear() method"""
     unit = squad.Unit("Catacomb Command Barge", "HQ")
-    unit.parser.options_list = []
-    for option in unit.options:
-        unit.parser.parse2(option)
 
     choices = [(0, 1), (1, 2), (2, 0), (3, 0)]
     wargear_to_add = []
     for choice in choices:
-        sel_option = unit.parser.options_list[choice[0]]
+        sel_option = unit.options[choice[0]]
         sel_option.select(choice[1])
         wargear_to_add.append(sel_option)
     unit.change_wargear(wargear_to_add)
@@ -94,12 +91,8 @@ def test_reset():
     unit = squad.Unit("Immortals", "Troops")
     unit_copy = squad.Unit("Immortals", "Troops")
 
-    unit.parser.options_list = []
-    for option in unit.options:
-        unit.parser.parse2(option)
-
     unit.re_size(10)
-    sel_option = unit.parser.options_list[0]
+    sel_option = unit.options[0]
     sel_option.select(1)
     unit.change_wargear([sel_option])
 

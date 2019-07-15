@@ -6,8 +6,8 @@ import option_parser
 def test_units_dict_options():
     """
     Parses all the options in the units pict to check that they run without
-    error. Similar to the test_units_dict() in test_init but parses the option strings
-    directly rather than through the main module.
+    error. Similar to the test_units_dict() in test_init but parses the option
+    strings directly rather than through the main module.
     """
     # create parser
     parser = option_parser.OptionParser()
@@ -20,11 +20,10 @@ def test_units_dict_options():
                 if i["options"] is None:
                     continue
 
-                for option in i["options"]:
-                    try:
-                        parser.parse2(option)
-                    except Exception as e:
-                        raise ValueError('Error in {}:{}'.format(title, str(e)))
+                try:
+                    parser.parse2(i["options"])
+                except Exception as e:
+                    raise ValueError('Error in {}:{}'.format(title, str(e)))
     return
 
 

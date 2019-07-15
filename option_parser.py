@@ -211,10 +211,12 @@ class OptionParser:
 
     def parse2(self, parse_string, **kwargs):
         """Wrapper for parser function to check the items being parsed"""
-        self.swap_wargear = []  # saves all items being parsed
-        # changes to swap_wargear will change this item
-        self.options_list.append(Option(self.swap_wargear))
-        return self.parser.parse(parse_string, **kwargs)
+        self.options_list = []
+        for item in parse_string:
+            self.swap_wargear = []  # saves all items being parsed
+            self.options_list.append(Option(self.swap_wargear))
+            self.parser.parse(item, **kwargs)
+        return self.options_list
 
     tokens = OptionLexer.tokens
 
@@ -363,3 +365,8 @@ class OptionParser:
         if top_level:  # if top level save the output to be manipulated
             self.options_list[-1].header = ret
         return ret
+
+
+global main_parser
+main_parser = OptionParser()
+main_parser.build()

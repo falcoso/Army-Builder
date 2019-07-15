@@ -69,12 +69,9 @@ class OptionBox(wx.Panel):
         super(OptionBox, self).__init__(*args, **kw)
         self.unit = unit
         self.options_box = wx.StaticBoxSizer(wx.VERTICAL, self, "Options")
-        if self.unit.parser.options_list == []:
-            for option in self.unit.options:
-                self.unit.parser.parse2(option)
 
         name = 0
-        for option in self.unit.parser.options_list:
+        for option in self.options:
             option_txt = wx.StaticText(self, wx.ID_ANY,
                                        "Pick {} from:".format(option.no_picks))
             option_chkbx = OptionCheckBox(option, self.unit.wargear, self,
