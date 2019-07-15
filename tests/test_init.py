@@ -12,7 +12,11 @@ def test_units_dict():
         units = json.load(file)
 
     # check that points for wargear are being added
-    assert units["Elites"]["Lychguard"]["base_pts"] != units_dict["Elites"]["Lychguard"]["pts"]
+    assert units["Elites"]["Lychguard"]["base_pts"] < units_dict["Elites"]["Lychguard"]["pts"]
+    for foc, dict in units.items():
+        for unit_name in dict.keys():
+            print(unit_name)
+            assert units[foc][unit_name]["base_pts"] <= units_dict[foc][unit_name]["pts"]
     return
 
 

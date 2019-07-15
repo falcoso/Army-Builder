@@ -63,6 +63,8 @@ def init(faction):
                     pts += np.sum([MultipleItem(i).pts if '+' in i else WargearItem(i).pts
                                    for i in models_dict[model]["wargear"]])*rows["size"][0]
 
+            pts += rows["base_pts"]*rows["size"][0]
+
             units_dict[key][index]["pts"] = pts
 
     return detachments_dict, armoury_dict, units_dict

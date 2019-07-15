@@ -236,6 +236,10 @@ class AddTreePane(wx.Panel):
         self.build_tree()
         return
 
+    @property
+    def unit_ids(self): return [i[1] for i in self.unit_nodes]
+
+
     def build_tree(self):
         self.tree = wx.TreeCtrl(self, wx.ID_ANY)
         self.treeSizer.Add(self.tree, 1, wx.EXPAND, 0)
@@ -244,27 +248,27 @@ class AddTreePane(wx.Panel):
         self.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self.on_selection)
 
         roles = ["HQ", "Elites", "Troops", "Fast Attack", "Heavy Support", "Dedicated Transports"]
+        self.unit_nodes = []
 
         for role in roles:
             role_node = self.tree.AppendItem(self.root, role)
-            for unit in init.units_dict[role]:
-                unit = init.units_dict[role][unit]
+            for unit_name in init.units_dict[role]:
+                unit = init.units_dict[role][unit_name]
                 unit_node = self.tree.AppendItem(role_node,
-                                                 unit.name + " ({}pts)".format(unit.pts))
-                self.tree.SetItemData(unit_node, unit)
+                                                 unit_name + " ({}pts)".format(unit["pts"]))
+                self.tree.SetItemData(unit_node, unit_name)
+                self.unit_nodes.append(unit_node)
 
         self.tree.ExpandAll()
 
     def on_selection(self, evt):
-        """
-        Event Handler to add the selected unit to the army.
-        """
-        unit = self.tree.GetItemData(evt.GetItem())
-        if not isinstance(unit, init.UnitTypes):
+        """Event Handler to add the selected unit to the army."""
+        if evt.GetItem() not in self.unit_nodes:
             return
+        unit = self.tree.GetItemData(evt.GetItem())
         battlefield_role = self.tree.GetItemParent(evt.GetItem())
         battlefield_role = self.tree.GetItemText(battlefield_role)
-        unit = squad.Unit(unit.name, battlefield_role)
+        unit = squad.Unit(unit, battlefield_role)
         main_window = self.GetParent()
         main_window.add_unit_from_tree(unit)
         return
