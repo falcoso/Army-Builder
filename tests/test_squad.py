@@ -105,9 +105,7 @@ def test_reset():
 
 
 def test_check_validity(unit):
-    """
-    Checks the Unit.check_validty method highlights errors in the unit
-    """
+    """Checks the Unit.check_validty method highlights errors in the unit."""
     assert unit.check_validity() is True
     unit.re_size(5, 5)
     assert unit.check_validity() is False  # initial state too big and too many Heavy Destroyers
@@ -129,8 +127,10 @@ def test_save_unit(unit):
                     "models": [i.save() for i in unit.models],
                     "name": None}
 
-    # unit2 = squad.Unit(save, "Fast Attack")
-    # assert unit == unit2
+    unit2 = squad.Unit(save, "Fast Attack")
+    print(unit2)
+    print(unit)
+    assert unit == unit2
     return
 
 
@@ -151,7 +151,7 @@ def test_save_Model(model):
                     "size": 1,
                     "wargear": [init.WargearItem("Heavy gauss cannon").save()]}
 
-    # model1 = squad.Model(model.parent, save)
-    # print(model)
-    # print(model1)
-    # assert model == model1
+    model1 = squad.Model(model.parent, save)
+    print(model)
+    print(model1)
+    assert model == model1

@@ -69,7 +69,7 @@ class BoardObj:
         self.treeid = None
         self.__name = None
         self.__parsed = False
-        if isinstance(type, dict): #data is being loaded
+        if isinstance(type, dict):  # data is being loaded
             self.__type = type["type"]
             source = type["wargear"]
         else:
@@ -145,23 +145,6 @@ class BoardObj:
             save["wargear"] = None
 
         return save
-
-    # def load(self, loaded_dict):
-    #     """
-    #     Loads the unit from a pre-made dictionary.
-    #
-    #     Parameters
-    #     ----------
-    #     loaded_dict: dict
-    #         {"type": str, "name": str, "size": int, "wargear":[str, ...]}
-    #         dictionary of the base data required to re-construct the detachment.
-    #     """
-    #     self.__type = loaded_dict["type"]
-    #     if loaded_dict["wargear"] is None:
-    #         self.__wargear = None
-    #     else:
-    #         self.__wargear = list(map(lambda x: init.MultipleItem(x.split('+')) if '+' in x else init.WargearItem(x),
-    #                                   loaded_dict["wargear"]))
 
     def __eq__(self, other):
         try:
@@ -247,11 +230,20 @@ class Unit(BoardObj):
         self.__default_name = True
         self.__battlefield_role = battlefield_role
         super().__init__(unit_type)
-        self.__models = []
         self._BoardObj__name = self.type
 
-        self.parser = option_parser.OptionParser(current_wargear=self.wargear)
-        self.parser.build()
+        if isinstance(unit_type, dict): # loading from dict
+            if unit_type["name"] is not None:
+                self._BoardObj__name = unit_type["name"]
+                self.__default_name = False
+
+            if unit_type["models"] is not None:
+                self.__models = [Model(self, i) for i in unit_type["models"]]
+            else:
+                self.__models = [Model(self, no_models=unit_type["size"],
+                                       base_pts=self.root_data["base_pts"])]
+            return
+
         if self.mod_str is None:
             self.__models = [Model(self, no_models=self.size_range[0],
                                    base_pts=self.root_data["base_pts"])]
@@ -259,7 +251,7 @@ class Unit(BoardObj):
             # get first model without size-limits
             for model in self.mod_str:
                 if init.models_dict[model]["no_per_unit"] is None:
-                    self.__models.append(Model(self, model, self.size_range[0]))
+                    self.__models = [Model(self, model, self.size_range[0])]
                     break
 
         # check that the unit can be found in the base dictionary
@@ -521,6 +513,8 @@ class Model(BoardObj):
             super().__init__(parent.type)
         else:
             super().__init__(type)
+            if isinstance(type, dict):  # for loading
+                self.size = type["size"]
 
         self._BoardObj__name = self.type
         return

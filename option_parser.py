@@ -192,23 +192,6 @@ class OptionParser:
         self.options_list = []  # stores all available wargear in an options list
         return
 
-    def __repr__(self):
-        ret = ''
-        for index, i in enumerate(self.options_list):
-            ret += str(index + 1) + ". "
-            pr = False
-            if i.no_picks == 1:
-                for j in i.items_involved:
-                    if j in self.current_wargear:
-                        ret += i.__repr__(comparison=j) + "\n"
-                        pr = True
-                        break
-                if pr:
-                    continue
-
-            ret += i.__repr__() + "\n\n"
-        return ret
-
     def parse2(self, parse_string, **kwargs):
         """Wrapper for parser function to check the items being parsed"""
         self.options_list = []

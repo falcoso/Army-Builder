@@ -122,7 +122,6 @@ class UI:
         """Gets the user-chosen option for a supplied unit."""
         print(unit)
         print("Options:")
-        unit.parser.options_list = []
         for option in unit.options:
             print(option)
 
